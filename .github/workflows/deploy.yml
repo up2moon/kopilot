@@ -1,0 +1,33 @@
+name: Rolling Deploy Test
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-app-1:
+    runs-on: [self-hosted, linux, app-1]
+
+    steps:
+      - name: Deploy app-1
+        run: |
+          cd ~/kopilot
+          docker compose -f compose.yml pull
+          docker compose -f compose.yml up -d --wait
+          curl -f http://localhost:8080
+
+  deploy-app-2:
+    needs: deploy-app-1
+    runs-on: [self-hosted, linux, app-2]
+
+    steps:
+      - name: Deploy app-2
+        run: |
+          cd ~/kopilot
+          docker compose -f compose.yml pull
+          docker compose -f compose.yml up -d --wait
+          curl -f http://localhost:8080
