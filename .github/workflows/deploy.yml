@@ -15,10 +15,22 @@ jobs:
     steps:
       - name: Deploy app-1
         run: |
+          echo "APP-1 START: $(date '+%Y-%m-%d %H:%M:%S')"
+          hostname
+
           cd ~/kopilot
+          echo "app-1 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
+
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
-          curl -f http://localhost:8080
+
+          echo "app-1 health check"
+          curl -f http://localhost
+
+          echo "app-1 waiting 60 seconds..."
+          sleep 60
+
+          echo "APP-1 END: $(date '+%Y-%m-%d %H:%M:%S')"
 
   deploy-app-2:
     needs: deploy-app-1
@@ -27,7 +39,16 @@ jobs:
     steps:
       - name: Deploy app-2
         run: |
+          echo "APP-2 START: $(date '+%Y-%m-%d %H:%M:%S')"
+          hostname
+
           cd ~/kopilot
+          echo "app-2 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
+
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
-          curl -f http://localhost:8080
+
+          echo "app-2 health check"
+          curl -f http://localhost
+
+          echo "APP-2 END: $(date '+%Y-%m-%d %H:%M:%S')"
