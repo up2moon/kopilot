@@ -28,7 +28,8 @@ jobs:
             if ncloud vloadbalancer removeTarget \
               --regionCode "$REGION_CODE" \
               --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_1_TARGET_NO"; then
+              --targetNoList "$APP_1_TARGET_NO" \
+              > /dev/null 2>&1; then
 
               echo "app-1 removed from target group"
               break
@@ -73,7 +74,8 @@ jobs:
             if ncloud vloadbalancer addTarget \
               --regionCode "$REGION_CODE" \
               --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_1_TARGET_NO"; then
+              --targetNoList "$APP_1_TARGET_NO" \
+              > /dev/null 2>&1; then
 
               echo "app-1 added successfully"
               break
@@ -100,7 +102,8 @@ jobs:
             if ncloud vloadbalancer removeTarget \
               --regionCode "$REGION_CODE" \
               --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_2_TARGET_NO"; then
+              --targetNoList "$APP_2_TARGET_NO" \
+              > /dev/null 2>&1; then
 
               echo "app-2 removed successfully"
               break
@@ -146,7 +149,8 @@ jobs:
             if ncloud vloadbalancer addTarget \
               --regionCode "$REGION_CODE" \
               --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_2_TARGET_NO"; then
+              --targetNoList "$APP_2_TARGET_NO" \
+              > /dev/null 2>&1; then
 
               echo "app-2 added successfully"
               break
