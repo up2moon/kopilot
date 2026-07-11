@@ -16,20 +16,20 @@ jobs:
     steps:
       - name: Deploy app-1
         run: |
+          set -euo pipefail
           echo "APP-1 START: $(date '+%Y-%m-%d %H:%M:%S')"
           hostname
 
-          cd ~/kopilot
+          cd /opt/kopilot
+          git fetch origin main
+          git reset --hard "${{ github.sha }}"
           echo "app-1 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
 
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
 
           echo "app-1 health check"
-          curl -f http://localhost
-
-          echo "app-1 waiting 10 seconds..."
-          sleep 10
+          curl -fsS http://localhost
 
           echo "APP-1 END: $(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -40,16 +40,19 @@ jobs:
     steps:
       - name: Deploy app-2
         run: |
+          set -euo pipefail
           echo "APP-2 START: $(date '+%Y-%m-%d %H:%M:%S')"
           hostname
 
-          cd ~/kopilot
+          cd /opt/kopilot
+          git fetch origin main
+          git reset --hard "${{ github.sha }}"
           echo "app-2 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
 
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
 
           echo "app-2 health check"
-          curl -f http://localhost
+          curl -fsS http://localhost
 
           echo "APP-2 END: $(date '+%Y-%m-%d %H:%M:%S')"
