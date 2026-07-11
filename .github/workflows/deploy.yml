@@ -10,10 +10,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGION_CODE: ${{ vars.REGION_CODE }}
-  TARGET_GROUP_NO: ${{ vars.TARGET_GROUP_NO }}
-  APP_1_TARGET_NO: ${{ vars.APP_1_TARGET_NO }}
-  APP_2_TARGET_NO: ${{ vars.APP_2_TARGET_NO }}
+  REGION_CODE: ${{ secrets.REGION_CODE }}
+  TARGET_GROUP_NO: ${{ secrets.TARGET_GROUP_NO }}
+  APP_1_TARGET_NO: ${{ secrets.APP_1_TARGET_NO }}
+  APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
 
 jobs:
   deploy-app-1:
