@@ -24,13 +24,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          ncloud vloadbalancer removeTarget \
-            --regionCode "$REGION_CODE" \
-            --targetGroupNo "$TARGET_GROUP_NO" \
-            --targetNoList "$APP_1_TARGET_NO"
+          for i in {1..20}; do
+            if ncloud vloadbalancer removeTarget \
+              --regionCode "$REGION_CODE" \
+              --targetGroupNo "$TARGET_GROUP_NO" \
+              --targetNoList "$APP_1_TARGET_NO"; then
 
-          echo "app-1 removed from target group"
-          sleep 10
+              echo "app-1 removed from target group"
+              break
+            fi
+            if [ "$i" -eq 20 ]; then
+              echo "app-1 제거 실패: 최대 재시도 횟수 초과"
+              exit 1
+            fi
+            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
+            sleep 3
+          done
 
       - name: Deploy app-1
         run: |
@@ -56,13 +65,24 @@ jobs:
       - name: Add app-1 to load balancer
         run: |
           set -euo pipefail
-          ncloud vloadbalancer addTarget \
-            --regionCode "$REGION_CODE" \
-            --targetGroupNo "$TARGET_GROUP_NO" \
-            --targetNoList "$APP_1_TARGET_NO"
 
-          echo "app-1 added to target group"
-          sleep 10
+          for i in {1..20}; do
+            if ncloud vloadbalancer addTarget \
+              --regionCode "$REGION_CODE" \
+              --targetGroupNo "$TARGET_GROUP_NO" \
+              --targetNoList "$APP_1_TARGET_NO"; then
+
+              echo "app-1 added successfully"
+              break
+            fi
+            if [ "$i" -eq 20 ]; then
+              echo "app-1 추가 실패: 최대 재시도 횟수 초과" 
+              exit 1
+            fi
+
+            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
+            sleep 3
+          done
 
   deploy-app-2:
     needs: deploy-app-1
@@ -73,13 +93,24 @@ jobs:
         run: |
           set -euo pipefail
 
-          ncloud vloadbalancer removeTarget \
-            --regionCode "$REGION_CODE" \
-            --targetGroupNo "$TARGET_GROUP_NO" \
-            --targetNoList "$APP_2_TARGET_NO"
+          for i in {1..20}; do
+            if ncloud vloadbalancer removeTarget \
+              --regionCode "$REGION_CODE" \
+              --targetGroupNo "$TARGET_GROUP_NO" \
+              --targetNoList "$APP_2_TARGET_NO"; then
 
-          echo "app-2 removed from target group"
-          sleep 10
+              echo "app-2 removed successfully"
+              break
+            fi
+
+            if [ "$i" -eq 20 ]; then
+              echo "app-2 제거 실패: 최대 재시도 횟수 초과"
+              exit 1
+            fi
+
+            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
+            sleep 3
+          done
 
       - name: Deploy app-2
         run: |
@@ -105,10 +136,21 @@ jobs:
         run: |
           set -euo pipefail
 
-          ncloud vloadbalancer addTarget \
-            --regionCode "$REGION_CODE" \
-            --targetGroupNo "$TARGET_GROUP_NO" \
-            --targetNoList "$APP_2_TARGET_NO"
+          for i in {1..20}; do
+            if ncloud vloadbalancer addTarget \
+              --regionCode "$REGION_CODE" \
+              --targetGroupNo "$TARGET_GROUP_NO" \
+              --targetNoList "$APP_2_TARGET_NO"; then
 
-          echo "app-2 added to target group"
-          sleep 10
+              echo "app-2 added successfully"
+              break
+            fi
+
+            if [ "$i" -eq 20 ]; then
+              echo "app-2 추가 실패: 최대 재시도 횟수 초과"
+              exit 1
+            fi
+            
+            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
+            sleep 3
+          done
