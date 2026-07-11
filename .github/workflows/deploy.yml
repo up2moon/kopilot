@@ -9,20 +9,40 @@ concurrency:
   group: production-deploy
   cancel-in-progress: false
 
+env:
+  REGION_CODE: ${{ vars.REGION_CODE }}
+  TARGET_GROUP_NO: ${{ vars.TARGET_GROUP_NO }}
+  APP_1_TARGET_NO: ${{ vars.APP_1_TARGET_NO }}
+  APP_2_TARGET_NO: ${{ vars.APP_2_TARGET_NO }}
+
 jobs:
   deploy-app-1:
     runs-on: [self-hosted, linux, app-1]
 
     steps:
+      - name: Remove app-1 from load balancer
+        run: |
+          set -euo pipefail
+
+          ncloud vloadbalancer removeTarget \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$TARGET_GROUP_NO" \
+            --targetNoList "$APP_1_TARGET_NO"
+
+          echo "app-1 removed from target group"
+          sleep 10
+
       - name: Deploy app-1
         run: |
           set -euo pipefail
+
           echo "APP-1 START: $(date '+%Y-%m-%d %H:%M:%S')"
           hostname
 
           cd /opt/kopilot
           git fetch origin main
           git reset --hard "${{ github.sha }}"
+
           echo "app-1 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
 
           docker compose -f compose.yml pull
@@ -33,14 +53,38 @@ jobs:
 
           echo "APP-1 END: $(date '+%Y-%m-%d %H:%M:%S')"
 
+      - name: Add app-1 to load balancer
+        run: |
+          set -euo pipefail
+          ncloud vloadbalancer addTarget \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$TARGET_GROUP_NO" \
+            --targetNoList "$APP_1_TARGET_NO"
+
+          echo "app-1 added to target group"
+          sleep 10
+
   deploy-app-2:
     needs: deploy-app-1
     runs-on: [self-hosted, linux, app-2]
 
     steps:
+      - name: Remove app-2 from load balancer
+        run: |
+          set -euo pipefail
+
+          ncloud vloadbalancer removeTarget \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$TARGET_GROUP_NO" \
+            --targetNoList "$APP_2_TARGET_NO"
+
+          echo "app-2 removed from target group"
+          sleep 10
+
       - name: Deploy app-2
         run: |
           set -euo pipefail
+
           echo "APP-2 START: $(date '+%Y-%m-%d %H:%M:%S')"
           hostname
 
@@ -56,3 +100,15 @@ jobs:
           curl -fsS http://localhost
 
           echo "APP-2 END: $(date '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Add app-2 to load balancer
+        run: |
+          set -euo pipefail
+
+          ncloud vloadbalancer addTarget \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$TARGET_GROUP_NO" \
+            --targetNoList "$APP_2_TARGET_NO"
+
+          echo "app-2 added to target group"
+          sleep 10
