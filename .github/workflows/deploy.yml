@@ -41,6 +41,9 @@ jobs:
             sleep 3
           done
 
+          echo "기존 연결 정리 대기"
+          sleep 15
+
       - name: Deploy app-1
         run: |
           set -euo pipefail
@@ -111,6 +114,9 @@ jobs:
             echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
             sleep 3
           done
+
+          echo "기존 연결 정리 대기"
+          sleep 15
 
       - name: Deploy app-2
         run: |
