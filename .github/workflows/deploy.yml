@@ -99,11 +99,8 @@ jobs:
           git fetch origin main
           git reset --hard "${{ github.sha }}"
 
-          # Keep the bind-mounted directory itself. Replacing it would require
-          # recreating nginx for Docker to mount the new directory.
-          mkdir -p html
-          find html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-          cp -a frontend-dist/. html/
+          rm -rf html
+          mv frontend-dist html
 
           echo "Deployed frontend files:"
           find html -maxdepth 2 -type f | sort
@@ -111,7 +108,7 @@ jobs:
           test -d html/assets
 
           docker compose -f compose.yml pull
-          if ! docker compose -f compose.yml up -d --wait; then
+          if ! docker compose -f compose.yml up -d --force-recreate --wait; then
             echo "Nginx service logs:"
             docker compose -f compose.yml logs --tail=100 app || true
             echo "Nginx health check details:"
@@ -209,11 +206,8 @@ jobs:
           cd /opt/kopilot
           git fetch origin main
           git reset --hard "${{ github.sha }}"
-          # Keep the bind-mounted directory itself. Replacing it would require
-          # recreating nginx for Docker to mount the new directory.
-          mkdir -p html
-          find html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-          cp -a frontend-dist/. html/
+          rm -rf html
+          mv frontend-dist html
 
           echo "Deployed frontend files:"
           find html -maxdepth 2 -type f | sort
@@ -221,7 +215,7 @@ jobs:
           test -d html/assets
 
           docker compose -f compose.yml pull
-          if ! docker compose -f compose.yml up -d --wait; then
+          if ! docker compose -f compose.yml up -d --force-recreate --wait; then
             echo "Nginx service logs:"
             docker compose -f compose.yml logs --tail=100 app || true
             echo "Nginx health check details:"
