@@ -55,6 +55,14 @@ jobs:
           name: frontend-dist
           path: /opt/kopilot/frontend-dist
 
+      - name: Validate frontend artifact
+        run: |
+          set -euo pipefail
+          echo "Downloaded frontend artifact:"
+          find /opt/kopilot/frontend-dist -maxdepth 2 -type f | sort
+          test -f /opt/kopilot/frontend-dist/index.html
+          test -d /opt/kopilot/frontend-dist/assets
+
       - name: Remove app-1 from load balancer
         run: |
           set -euo pipefail
@@ -94,8 +102,16 @@ jobs:
           rm -rf html
           mv frontend-dist html
 
+          echo "Deployed frontend files:"
+          find html -maxdepth 2 -type f | sort
+          test -f html/index.html
+          test -d html/assets
+
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
+
+          echo "Nginx document root:"
+          docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
 
           echo "app-1 health check"
           curl -fsS http://localhost
@@ -139,6 +155,14 @@ jobs:
           name: frontend-dist
           path: /opt/kopilot/frontend-dist
 
+      - name: Validate frontend artifact
+        run: |
+          set -euo pipefail
+          echo "Downloaded frontend artifact:"
+          find /opt/kopilot/frontend-dist -maxdepth 2 -type f | sort
+          test -f /opt/kopilot/frontend-dist/index.html
+          test -d /opt/kopilot/frontend-dist/assets
+
       - name: Remove app-2 from load balancer
         run: |
           set -euo pipefail
@@ -179,8 +203,16 @@ jobs:
           rm -rf html
           mv frontend-dist html
 
+          echo "Deployed frontend files:"
+          find html -maxdepth 2 -type f | sort
+          test -f html/index.html
+          test -d html/assets
+
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
+
+          echo "Nginx document root:"
+          docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
 
           echo "app-2 health check"
           curl -fsS http://localhost
