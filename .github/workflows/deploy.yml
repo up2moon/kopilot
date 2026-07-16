@@ -16,10 +16,45 @@ env:
   APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
 
 jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
+
   deploy-app-1:
+    needs: build-frontend
     runs-on: [self-hosted, linux, app-1]
 
     steps:
+      - name: Prepare frontend artifact directory
+        run: rm -rf /opt/kopilot/frontend-dist
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: /opt/kopilot/frontend-dist
+
       - name: Remove app-1 from load balancer
         run: |
           set -euo pipefail
@@ -56,7 +91,8 @@ jobs:
           git fetch origin main
           git reset --hard "${{ github.sha }}"
 
-          echo "app-1 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
+          rm -rf html
+          mv frontend-dist html
 
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
@@ -94,6 +130,15 @@ jobs:
     runs-on: [self-hosted, linux, app-2]
 
     steps:
+      - name: Prepare frontend artifact directory
+        run: rm -rf /opt/kopilot/frontend-dist
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: /opt/kopilot/frontend-dist
+
       - name: Remove app-2 from load balancer
         run: |
           set -euo pipefail
@@ -131,7 +176,8 @@ jobs:
           cd /opt/kopilot
           git fetch origin main
           git reset --hard "${{ github.sha }}"
-          echo "app-2 deployed at $(date '+%Y-%m-%d %H:%M:%S')" > html/index.html
+          rm -rf html
+          mv frontend-dist html
 
           docker compose -f compose.yml pull
           docker compose -f compose.yml up -d --wait
