@@ -108,7 +108,13 @@ jobs:
           test -d html/assets
 
           docker compose -f compose.yml pull
-          docker compose -f compose.yml up -d --wait
+          if ! docker compose -f compose.yml up -d --wait; then
+            echo "Nginx service logs:"
+            docker compose -f compose.yml logs --tail=100 app || true
+            echo "Nginx health check details:"
+            docker inspect --format='{{json .State.Health}}' kopilot-test-app || true
+            exit 1
+          fi
 
           echo "Nginx document root:"
           docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
@@ -209,7 +215,13 @@ jobs:
           test -d html/assets
 
           docker compose -f compose.yml pull
-          docker compose -f compose.yml up -d --wait
+          if ! docker compose -f compose.yml up -d --wait; then
+            echo "Nginx service logs:"
+            docker compose -f compose.yml logs --tail=100 app || true
+            echo "Nginx health check details:"
+            docker inspect --format='{{json .State.Health}}' kopilot-test-app || true
+            exit 1
+          fi
 
           echo "Nginx document root:"
           docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
