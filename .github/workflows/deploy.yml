@@ -99,8 +99,11 @@ jobs:
           git fetch origin main
           git reset --hard "${{ github.sha }}"
 
-          rm -rf html
-          mv frontend-dist html
+          # Keep the bind-mounted directory itself. Replacing it would require
+          # recreating nginx for Docker to mount the new directory.
+          mkdir -p html
+          find html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+          cp -a frontend-dist/. html/
 
           echo "Deployed frontend files:"
           find html -maxdepth 2 -type f | sort
@@ -206,8 +209,11 @@ jobs:
           cd /opt/kopilot
           git fetch origin main
           git reset --hard "${{ github.sha }}"
-          rm -rf html
-          mv frontend-dist html
+          # Keep the bind-mounted directory itself. Replacing it would require
+          # recreating nginx for Docker to mount the new directory.
+          mkdir -p html
+          find html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+          cp -a frontend-dist/. html/
 
           echo "Deployed frontend files:"
           find html -maxdepth 2 -type f | sort
