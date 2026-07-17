@@ -3,12 +3,29 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: kopilot-app
+    container_name: kopilot-frontend
     ports:
       - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kopilot-backend
+    expose:
+      - "3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 10s
       timeout: 3s
       retries: 5

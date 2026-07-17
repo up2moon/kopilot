@@ -16,9 +16,11 @@ env:
   APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
 
   DEPLOY_SCRIPT: |
-    SERVICE_NAME="frontend"
     COMPOSE_FILE="compose.yml"
     PROJECT_DIR="/opt/kopilot"
+
+    FRONTEND_SERVICE="frontend"
+    BACKEND_SERVICE="backend"
 
     retry_lb_command() {
       local action="$1"
@@ -37,7 +39,7 @@ env:
         fi
 
         if [ "$i" -eq 20 ]; then
-          echo "$app_name: ${action} 실패 - 최대 재시도 횟수 초과"
+          echo "$app_name: ${action} 실패"
           return 1
         fi
 
@@ -46,27 +48,42 @@ env:
       done
     }
 
-    show_logs() {
-      cd "$PROJECT_DIR"
-
-      echo "Container status:"
-      docker compose -f "$COMPOSE_FILE" ps || true
-
-      echo "Container logs:"
-      docker compose -f "$COMPOSE_FILE" \
-        logs --tail=200 "$SERVICE_NAME" || true
+    show_service_health() {
+      local service_name="$1"
 
       container_id="$(
         docker compose -f "$COMPOSE_FILE" \
-          ps -q "$SERVICE_NAME"
+          ps -q "$service_name"
       )"
 
-      if [ -n "$container_id" ]; then
-        echo "Health check details:"
-        docker inspect \
-          --format='{{json .State.Health}}' \
-          "$container_id" || true
+      if [ -z "$container_id" ]; then
+        echo "$service_name 컨테이너를 찾을 수 없음"
+        return 0
       fi
+
+      echo "===== $service_name health ====="
+
+      docker inspect \
+        --format='{{json .State.Health}}' \
+        "$container_id" || true
+    }
+
+    show_logs() {
+      cd "$PROJECT_DIR"
+
+      echo "===== Container status ====="
+      docker compose -f "$COMPOSE_FILE" ps || true
+
+      echo "===== Frontend logs ====="
+      docker compose -f "$COMPOSE_FILE" \
+        logs --tail=200 "$FRONTEND_SERVICE" || true
+
+      echo "===== Backend logs ====="
+      docker compose -f "$COMPOSE_FILE" \
+        logs --tail=200 "$BACKEND_SERVICE" || true
+
+      show_service_health "$FRONTEND_SERVICE"
+      show_service_health "$BACKEND_SERVICE"
     }
 
     deploy_app() {
@@ -80,7 +97,10 @@ env:
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
       hostname
 
-      retry_lb_command removeTarget "$target_no" "$app_name"
+      retry_lb_command removeTarget \
+        "$target_no" \
+        "$app_name"
+
       removed_from_lb=true
 
       echo "기존 연결 정리 대기"
@@ -99,14 +119,17 @@ env:
         --build \
         --force-recreate \
         --remove-orphans \
-        --wait; then
+        --wait \
+        --wait-timeout 120; then
 
         echo "$app_name 컨테이너 배포 실패"
         show_logs
 
         if [ "$removed_from_lb" = true ]; then
-          echo "$app_name을 LB에 복구 시도"
-          retry_lb_command addTarget "$target_no" "$app_name" || true
+          echo "$app_name LB 복구 시도"
+          retry_lb_command addTarget \
+            "$target_no" \
+            "$app_name" || true
         fi
 
         return 1
@@ -114,10 +137,10 @@ env:
 
       echo "Nginx document root:"
       docker compose -f "$COMPOSE_FILE" \
-        exec -T "$SERVICE_NAME" \
+        exec -T "$FRONTEND_SERVICE" \
         ls -la /usr/share/nginx/html
 
-      echo "로컬 헬스체크:"
+      echo "프론트엔드 헬스체크:"
       if ! curl \
         --fail \
         --silent \
@@ -126,18 +149,49 @@ env:
         --retry-delay 2 \
         http://localhost/; then
 
-        echo "$app_name 헬스체크 실패"
+        echo "$app_name 프론트엔드 헬스체크 실패"
         show_logs
 
         if [ "$removed_from_lb" = true ]; then
-          echo "$app_name을 LB에 복구 시도"
-          retry_lb_command addTarget "$target_no" "$app_name" || true
+          retry_lb_command addTarget \
+            "$target_no" \
+            "$app_name" || true
         fi
 
         return 1
       fi
 
-      retry_lb_command addTarget "$target_no" "$app_name"
+      echo
+      echo "백엔드 헬스체크:"
+
+      if ! curl \
+        --fail \
+        --silent \
+        --show-error \
+        --retry 10 \
+        --retry-delay 2 \
+        http://localhost/api/health; then
+
+        echo "$app_name 백엔드 헬스체크 실패"
+        show_logs
+
+        if [ "$removed_from_lb" = true ]; then
+          retry_lb_command addTarget \
+            "$target_no" \
+            "$app_name" || true
+        fi
+
+        return 1
+      fi
+
+      echo
+      echo "컨테이너 상태:"
+      docker compose -f "$COMPOSE_FILE" ps
+
+      retry_lb_command addTarget \
+        "$target_no" \
+        "$app_name"
+
       removed_from_lb=false
 
       echo "LB 헬스체크 반영 대기"
