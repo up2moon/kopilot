@@ -1,4 +1,4 @@
-name: Rolling Deploy Test
+name: Rolling Deploy
 
 on:
   push:
@@ -15,242 +15,132 @@ env:
   APP_1_TARGET_NO: ${{ secrets.APP_1_TARGET_NO }}
   APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
 
+  DEPLOY_SCRIPT: |
+    retry_lb_command() {
+      local action="$1"
+      local target_no="$2"
+      local app_name="$3"
+
+      for i in {1..20}; do
+        if ncloud vloadbalancer "$action" \
+          --regionCode "$REGION_CODE" \
+          --targetGroupNo "$TARGET_GROUP_NO" \
+          --targetNoList "$target_no" \
+          >/dev/null 2>&1; then
+
+          echo "$app_name: ${action} 성공"
+          return 0
+        fi
+
+        echo "$app_name: LB 변경 처리 중, 3초 후 재시도 ($i/20)"
+        sleep 3
+      done
+
+      echo "$app_name: ${action} 실패"
+      return 1
+    }
+
+    show_logs() {
+      cd /opt/kopilot
+
+      echo "Container status:"
+      docker compose -f compose.yml ps || true
+
+      echo "Container logs:"
+      docker compose -f compose.yml logs --tail=200 app || true
+
+      container_id="$(docker compose -f compose.yml ps -q app)"
+
+      if [ -n "$container_id" ]; then
+        echo "Health check details:"
+        docker inspect \
+          --format='{{json .State.Health}}' \
+          "$container_id" || true
+      fi
+    }
+
+    deploy_app() {
+      local target_no="$1"
+      local app_name="$2"
+
+      set -euo pipefail
+
+      echo "===== $app_name 배포 시작 ====="
+      echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
+      hostname
+
+      retry_lb_command removeTarget "$target_no" "$app_name"
+
+      echo "기존 연결 정리 대기"
+      sleep 15
+
+      cd /opt/kopilot
+
+      git fetch --prune origin main
+      git reset --hard "$GITHUB_SHA"
+
+      if ! docker compose -f compose.yml up \
+        -d \
+        --build \
+        --force-recreate \
+        --remove-orphans \
+        --wait; then
+
+        echo "$app_name 컨테이너 배포 실패"
+        show_logs
+        return 1
+      fi
+
+      echo "Nginx document root:"
+      docker compose -f compose.yml \
+        exec -T app \
+        ls -la /usr/share/nginx/html
+
+      echo "로컬 헬스체크:"
+      if ! curl \
+        --fail \
+        --silent \
+        --show-error \
+        --retry 10 \
+        --retry-delay 2 \
+        http://localhost/; then
+
+        echo "$app_name 헬스체크 실패"
+        show_logs
+        return 1
+      fi
+
+      retry_lb_command addTarget "$target_no" "$app_name"
+
+      echo "LB 헬스체크 반영 대기"
+      sleep 15
+
+      echo "===== $app_name 배포 완료 ====="
+      echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
+    }
+
 jobs:
-  build-frontend:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install and build frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Upload frontend artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-          if-no-files-found: error
-
   deploy-app-1:
-    needs: build-frontend
     runs-on: [self-hosted, linux, app-1]
 
     steps:
-      - name: Prepare frontend artifact directory
-        run: rm -rf /opt/kopilot/frontend-dist
-
-      - name: Download frontend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: /opt/kopilot/frontend-dist
-
-      - name: Validate frontend artifact
-        run: |
-          set -euo pipefail
-          echo "Downloaded frontend artifact:"
-          find /opt/kopilot/frontend-dist -maxdepth 2 -type f | sort
-          test -f /opt/kopilot/frontend-dist/index.html
-          test -d /opt/kopilot/frontend-dist/assets
-
-      - name: Remove app-1 from load balancer
-        run: |
-          set -euo pipefail
-
-          for i in {1..20}; do
-            if ncloud vloadbalancer removeTarget \
-              --regionCode "$REGION_CODE" \
-              --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_1_TARGET_NO" \
-              > /dev/null 2>&1; then
-
-              echo "app-1 removed from target group"
-              break
-            fi
-            if [ "$i" -eq 20 ]; then
-              echo "app-1 제거 실패: 최대 재시도 횟수 초과"
-              exit 1
-            fi
-            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
-            sleep 3
-          done
-
-          echo "기존 연결 정리 대기"
-          sleep 15
-
       - name: Deploy app-1
+        shell: bash
+        env:
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
-
-          echo "APP-1 START: $(date '+%Y-%m-%d %H:%M:%S')"
-          hostname
-
-          cd /opt/kopilot
-          git fetch origin main
-          git reset --hard "${{ github.sha }}"
-
-          rm -rf html
-          mv frontend-dist html
-
-          echo "Deployed frontend files:"
-          find html -maxdepth 2 -type f | sort
-          test -f html/index.html
-          test -d html/assets
-
-          docker compose -f compose.yml pull
-          if ! docker compose -f compose.yml up -d --force-recreate --wait; then
-            echo "Nginx service logs:"
-            docker compose -f compose.yml logs --tail=100 app || true
-            echo "Nginx health check details:"
-            docker inspect --format='{{json .State.Health}}' kopilot-test-app || true
-            exit 1
-          fi
-
-          echo "Nginx document root:"
-          docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
-
-          echo "app-1 health check"
-          curl -fsS http://localhost
-
-          echo "APP-1 END: $(date '+%Y-%m-%d %H:%M:%S')"
-
-      - name: Add app-1 to load balancer
-        run: |
-          set -euo pipefail
-
-          for i in {1..20}; do
-            if ncloud vloadbalancer addTarget \
-              --regionCode "$REGION_CODE" \
-              --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_1_TARGET_NO" \
-              > /dev/null 2>&1; then
-
-              echo "app-1 added successfully"
-              break
-            fi
-            if [ "$i" -eq 20 ]; then
-              echo "app-1 추가 실패: 최대 재시도 횟수 초과" 
-              exit 1
-            fi
-
-            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
-            sleep 3
-          done
+          eval "$DEPLOY_SCRIPT"
+          deploy_app "$APP_1_TARGET_NO" "app-1"
 
   deploy-app-2:
     needs: deploy-app-1
     runs-on: [self-hosted, linux, app-2]
 
     steps:
-      - name: Prepare frontend artifact directory
-        run: rm -rf /opt/kopilot/frontend-dist
-
-      - name: Download frontend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: /opt/kopilot/frontend-dist
-
-      - name: Validate frontend artifact
-        run: |
-          set -euo pipefail
-          echo "Downloaded frontend artifact:"
-          find /opt/kopilot/frontend-dist -maxdepth 2 -type f | sort
-          test -f /opt/kopilot/frontend-dist/index.html
-          test -d /opt/kopilot/frontend-dist/assets
-
-      - name: Remove app-2 from load balancer
-        run: |
-          set -euo pipefail
-
-          for i in {1..20}; do
-            if ncloud vloadbalancer removeTarget \
-              --regionCode "$REGION_CODE" \
-              --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_2_TARGET_NO" \
-              > /dev/null 2>&1; then
-
-              echo "app-2 removed successfully"
-              break
-            fi
-
-            if [ "$i" -eq 20 ]; then
-              echo "app-2 제거 실패: 최대 재시도 횟수 초과"
-              exit 1
-            fi
-
-            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
-            sleep 3
-          done
-
-          echo "기존 연결 정리 대기"
-          sleep 15
-
       - name: Deploy app-2
+        shell: bash
+        env:
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
-
-          echo "APP-2 START: $(date '+%Y-%m-%d %H:%M:%S')"
-          hostname
-
-          cd /opt/kopilot
-          git fetch origin main
-          git reset --hard "${{ github.sha }}"
-          rm -rf html
-          mv frontend-dist html
-
-          echo "Deployed frontend files:"
-          find html -maxdepth 2 -type f | sort
-          test -f html/index.html
-          test -d html/assets
-
-          docker compose -f compose.yml pull
-          if ! docker compose -f compose.yml up -d --force-recreate --wait; then
-            echo "Nginx service logs:"
-            docker compose -f compose.yml logs --tail=100 app || true
-            echo "Nginx health check details:"
-            docker inspect --format='{{json .State.Health}}' kopilot-test-app || true
-            exit 1
-          fi
-
-          echo "Nginx document root:"
-          docker compose -f compose.yml exec -T app ls -la /usr/share/nginx/html
-
-          echo "app-2 health check"
-          curl -fsS http://localhost
-
-          echo "APP-2 END: $(date '+%Y-%m-%d %H:%M:%S')"
-
-      - name: Add app-2 to load balancer
-        run: |
-          set -euo pipefail
-
-          for i in {1..20}; do
-            if ncloud vloadbalancer addTarget \
-              --regionCode "$REGION_CODE" \
-              --targetGroupNo "$TARGET_GROUP_NO" \
-              --targetNoList "$APP_2_TARGET_NO" \
-              > /dev/null 2>&1; then
-
-              echo "app-2 added successfully"
-              break
-            fi
-
-            if [ "$i" -eq 20 ]; then
-              echo "app-2 추가 실패: 최대 재시도 횟수 초과"
-              exit 1
-            fi
-            
-            echo "아직 변경 중이라 실패함. 3초 후 재시도... ($i/20)"
-            sleep 3
-          done
+          eval "$DEPLOY_SCRIPT"
+          deploy_app "$APP_2_TARGET_NO" "app-2"
