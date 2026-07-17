@@ -16,6 +16,10 @@ env:
   APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
 
   DEPLOY_SCRIPT: |
+    SERVICE_NAME="frontend"
+    COMPOSE_FILE="compose.yml"
+    PROJECT_DIR="/opt/kopilot"
+
     retry_lb_command() {
       local action="$1"
       local target_no="$2"
@@ -32,24 +36,30 @@ env:
           return 0
         fi
 
+        if [ "$i" -eq 20 ]; then
+          echo "$app_name: ${action} 실패 - 최대 재시도 횟수 초과"
+          return 1
+        fi
+
         echo "$app_name: LB 변경 처리 중, 3초 후 재시도 ($i/20)"
         sleep 3
       done
-
-      echo "$app_name: ${action} 실패"
-      return 1
     }
 
     show_logs() {
-      cd /opt/kopilot
+      cd "$PROJECT_DIR"
 
       echo "Container status:"
-      docker compose -f compose.yml ps || true
+      docker compose -f "$COMPOSE_FILE" ps || true
 
       echo "Container logs:"
-      docker compose -f compose.yml logs --tail=200 app || true
+      docker compose -f "$COMPOSE_FILE" \
+        logs --tail=200 "$SERVICE_NAME" || true
 
-      container_id="$(docker compose -f compose.yml ps -q app)"
+      container_id="$(
+        docker compose -f "$COMPOSE_FILE" \
+          ps -q "$SERVICE_NAME"
+      )"
 
       if [ -n "$container_id" ]; then
         echo "Health check details:"
@@ -62,6 +72,7 @@ env:
     deploy_app() {
       local target_no="$1"
       local app_name="$2"
+      local removed_from_lb=false
 
       set -euo pipefail
 
@@ -70,16 +81,20 @@ env:
       hostname
 
       retry_lb_command removeTarget "$target_no" "$app_name"
+      removed_from_lb=true
 
       echo "기존 연결 정리 대기"
       sleep 15
 
-      cd /opt/kopilot
+      cd "$PROJECT_DIR"
 
       git fetch --prune origin main
       git reset --hard "$GITHUB_SHA"
 
-      if ! docker compose -f compose.yml up \
+      echo "Compose 서비스 확인:"
+      docker compose -f "$COMPOSE_FILE" config --services
+
+      if ! docker compose -f "$COMPOSE_FILE" up \
         -d \
         --build \
         --force-recreate \
@@ -88,12 +103,18 @@ env:
 
         echo "$app_name 컨테이너 배포 실패"
         show_logs
+
+        if [ "$removed_from_lb" = true ]; then
+          echo "$app_name을 LB에 복구 시도"
+          retry_lb_command addTarget "$target_no" "$app_name" || true
+        fi
+
         return 1
       fi
 
       echo "Nginx document root:"
-      docker compose -f compose.yml \
-        exec -T app \
+      docker compose -f "$COMPOSE_FILE" \
+        exec -T "$SERVICE_NAME" \
         ls -la /usr/share/nginx/html
 
       echo "로컬 헬스체크:"
@@ -107,10 +128,17 @@ env:
 
         echo "$app_name 헬스체크 실패"
         show_logs
+
+        if [ "$removed_from_lb" = true ]; then
+          echo "$app_name을 LB에 복구 시도"
+          retry_lb_command addTarget "$target_no" "$app_name" || true
+        fi
+
         return 1
       fi
 
       retry_lb_command addTarget "$target_no" "$app_name"
+      removed_from_lb=false
 
       echo "LB 헬스체크 반영 대기"
       sleep 15
