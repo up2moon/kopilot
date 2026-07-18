@@ -31,10 +31,10 @@ env:
       local target_no="$3"
       local node_name="$4"
 
-      local command_output
+      local response
 
       for i in {1..20}; do
-        if command_output="$(
+        if response="$(
           ncloud vloadbalancer "$action" \
             --regionCode "$REGION_CODE" \
             --targetGroupNo "$target_group_no" \
@@ -46,74 +46,19 @@ env:
           return 0
         fi
 
-        echo "$node_name: $action 응답:"
-        echo "$command_output"
+        echo "$node_name: $action 응답"
+        echo "$response"
 
         if [ "$i" -eq 20 ]; then
           echo "$node_name: $action 최종 실패"
           return 1
         fi
 
-        echo "$node_name: LB 변경 처리 중, 3초 후 재시도 ($i/20)"
+        echo "$node_name: LB 변경 작업 처리 중"
+        echo "$node_name: 3초 후 재시도 ($i/20)"
+
         sleep 3
       done
-    }
-
-    wait_for_lb_up() {
-      local target_group_no="$1"
-      local target_no="$2"
-      local node_name="$3"
-
-      local response
-      local status
-
-      echo "$node_name: LB 헬스체크 정상 상태 대기"
-
-      for i in {1..24}; do
-        response="$(
-          ncloud vloadbalancer getTargetList \
-            --regionCode "$REGION_CODE" \
-            --targetGroupNo "$target_group_no" \
-            --output json \
-            2>&1 || true
-        )"
-
-        status="$(
-          printf '%s\n' "$response" |
-            grep -A 15 "\"targetNo\": \"$target_no\"" |
-            grep -m1 '"code"' |
-            cut -d'"' -f4 ||
-            true
-        )"
-
-        echo "$node_name: LB 상태=${status:-조회안됨} ($i/24)"
-
-        case "$status" in
-          UP)
-            echo "$node_name: LB 헬스체크 정상"
-            return 0
-            ;;
-
-          DOWN)
-            echo "$node_name: LB 헬스체크 DOWN"
-            ;;
-
-          UNUSED)
-            echo "$node_name: LB 반영 중"
-            ;;
-
-          *)
-            echo "$node_name: LB 타깃 또는 상태 반영 대기 중"
-            ;;
-        esac
-
-        if [ "$i" -lt 24 ]; then
-          sleep 5
-        fi
-      done
-
-      echo "$node_name: LB 헬스체크 시간 초과"
-      return 1
     }
 
     show_logs() {
@@ -122,16 +67,24 @@ env:
       cd "$PROJECT_DIR"
 
       echo "===== Container status ====="
-      docker compose -f "$COMPOSE_FILE" ps || true
+
+      docker compose \
+        -f "$COMPOSE_FILE" \
+        ps || true
 
       echo "===== $service_name logs ====="
-      docker compose -f "$COMPOSE_FILE" \
-        logs --tail=200 "$service_name" || true
+
+      docker compose \
+        -f "$COMPOSE_FILE" \
+        logs \
+        --tail=200 \
+        "$service_name" || true
 
       local container_id
 
       container_id="$(
-        docker compose -f "$COMPOSE_FILE" \
+        docker compose \
+          -f "$COMPOSE_FILE" \
           ps -q "$service_name"
       )"
 
@@ -159,6 +112,21 @@ env:
       echo "서비스: $service_name"
       echo "커밋: $GITHUB_SHA"
 
+      if ! command -v ncloud >/dev/null 2>&1; then
+        echo "ncloud CLI를 찾을 수 없습니다."
+        return 1
+      fi
+
+      if ! command -v docker >/dev/null 2>&1; then
+        echo "docker를 찾을 수 없습니다."
+        return 1
+      fi
+
+      if ! command -v curl >/dev/null 2>&1; then
+        echo "curl을 찾을 수 없습니다."
+        return 1
+      fi
+
       if [ ! -d "$PROJECT_DIR/.git" ]; then
         echo "$PROJECT_DIR에 Git 저장소가 없습니다."
         return 1
@@ -184,8 +152,14 @@ env:
 
       echo "===== 소스 업데이트 ====="
 
-      git fetch --prune origin main
-      git reset --hard "$GITHUB_SHA"
+      git fetch \
+        --prune \
+        origin \
+        main
+
+      git reset \
+        --hard \
+        "$GITHUB_SHA"
 
       echo "===== Compose 설정 확인 ====="
 
@@ -213,6 +187,7 @@ env:
         "$service_name"; then
 
         echo "$node_name: 컨테이너 배포 실패"
+
         show_logs "$service_name"
 
         echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
@@ -253,18 +228,6 @@ env:
         "$target_no" \
         "$node_name"
 
-      echo "===== LB 헬스체크 확인 ====="
-
-      if ! wait_for_lb_up \
-        "$target_group_no" \
-        "$target_no" \
-        "$node_name"; then
-
-        echo "$node_name: LB 헬스체크 실패"
-        echo "다음 서버 배포를 중단합니다."
-        return 1
-      fi
-
       echo "===== $node_name 배포 완료 ====="
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
     }
@@ -283,6 +246,7 @@ jobs:
     steps:
       - name: Deploy was-1
         shell: bash
+
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
@@ -296,6 +260,7 @@ jobs:
 
   deploy-was-2:
     name: Deploy WAS 2
+
     needs:
       - deploy-was-1
 
@@ -310,6 +275,7 @@ jobs:
     steps:
       - name: Deploy was-2
         shell: bash
+
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
@@ -323,6 +289,7 @@ jobs:
 
   deploy-web-1:
     name: Deploy Web 1
+
     needs:
       - deploy-was-2
 
@@ -337,6 +304,7 @@ jobs:
     steps:
       - name: Deploy web-1
         shell: bash
+
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
@@ -350,6 +318,7 @@ jobs:
 
   deploy-web-2:
     name: Deploy Web 2
+
     needs:
       - deploy-web-1
 
@@ -364,6 +333,7 @@ jobs:
     steps:
       - name: Deploy web-2
         shell: bash
+
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
