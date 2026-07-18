@@ -73,6 +73,7 @@ env:
 
       if [ -n "$container_id" ]; then
         echo "===== $service_name health ====="
+
         docker inspect \
           --format='{{json .State.Health}}' \
           "$container_id" || true
@@ -94,6 +95,16 @@ env:
       echo "서비스: $service_name"
       echo "커밋: $GITHUB_SHA"
 
+      if [ ! -d "$PROJECT_DIR/.git" ]; then
+        echo "$PROJECT_DIR에 Git 저장소가 없습니다."
+        return 1
+      fi
+
+      if [ ! -f "$PROJECT_DIR/$COMPOSE_FILE" ]; then
+        echo "$PROJECT_DIR/$COMPOSE_FILE 파일이 없습니다."
+        return 1
+      fi
+
       echo "===== LB에서 타깃 제거 ====="
 
       retry_lb_command \
@@ -112,12 +123,22 @@ env:
       git fetch --prune origin main
       git reset --hard "$GITHUB_SHA"
 
-      echo "===== Compose 서비스 확인 ====="
-      docker compose -f "$COMPOSE_FILE" config --services
+      echo "===== Compose 설정 확인 ====="
+
+      docker compose \
+        -f "$COMPOSE_FILE" \
+        config --quiet
+
+      echo "===== Compose 서비스 목록 ====="
+
+      docker compose \
+        -f "$COMPOSE_FILE" \
+        config --services
 
       echo "===== $service_name 배포 ====="
 
-      if ! docker compose -f "$COMPOSE_FILE" \
+      if ! docker compose \
+        -f "$COMPOSE_FILE" \
         up \
         -d \
         --build \
@@ -147,6 +168,7 @@ env:
 
         echo
         echo "$node_name: 헬스체크 실패"
+
         show_logs "$service_name"
 
         echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
@@ -154,7 +176,10 @@ env:
       fi
 
       echo
-      docker compose -f "$COMPOSE_FILE" ps "$service_name"
+
+      docker compose \
+        -f "$COMPOSE_FILE" \
+        ps "$service_name"
 
       echo "===== LB에 타깃 재등록 ====="
 
@@ -169,10 +194,12 @@ env:
 
       echo "===== $node_name 배포 완료 ====="
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
+    }
 
 jobs:
   deploy-was-1:
     name: Deploy WAS 1
+    timeout-minutes: 20
 
     runs-on:
       - self-hosted
@@ -184,6 +211,7 @@ jobs:
       - name: Deploy was-1
         shell: bash
         run: |
+          bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
           deploy_node \
@@ -198,6 +226,8 @@ jobs:
     needs:
       - deploy-was-1
 
+    timeout-minutes: 20
+
     runs-on:
       - self-hosted
       - Linux
@@ -208,6 +238,7 @@ jobs:
       - name: Deploy was-2
         shell: bash
         run: |
+          bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
           deploy_node \
@@ -222,6 +253,8 @@ jobs:
     needs:
       - deploy-was-2
 
+    timeout-minutes: 20
+
     runs-on:
       - self-hosted
       - Linux
@@ -232,6 +265,7 @@ jobs:
       - name: Deploy web-1
         shell: bash
         run: |
+          bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
           deploy_node \
@@ -246,6 +280,8 @@ jobs:
     needs:
       - deploy-web-1
 
+    timeout-minutes: 20
+
     runs-on:
       - self-hosted
       - Linux
@@ -256,6 +292,7 @@ jobs:
       - name: Deploy web-2
         shell: bash
         run: |
+          bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
           deploy_node \
