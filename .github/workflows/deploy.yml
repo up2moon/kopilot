@@ -31,25 +31,89 @@ env:
       local target_no="$3"
       local node_name="$4"
 
+      local command_output
+
       for i in {1..20}; do
-        if ncloud vloadbalancer "$action" \
-          --regionCode "$REGION_CODE" \
-          --targetGroupNo "$target_group_no" \
-          --targetNoList "$target_no" \
-          >/dev/null 2>&1; then
+        if command_output="$(
+          ncloud vloadbalancer "$action" \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$target_group_no" \
+            --targetNoList "$target_no" \
+            2>&1
+        )"; then
 
           echo "$node_name: $action 성공"
           return 0
         fi
 
+        echo "$node_name: $action 응답:"
+        echo "$command_output"
+
         if [ "$i" -eq 20 ]; then
-          echo "$node_name: $action 실패"
+          echo "$node_name: $action 최종 실패"
           return 1
         fi
 
-        echo "$node_name: LB 처리 중, 3초 후 재시도 ($i/20)"
+        echo "$node_name: LB 변경 처리 중, 3초 후 재시도 ($i/20)"
         sleep 3
       done
+    }
+
+    wait_for_lb_up() {
+      local target_group_no="$1"
+      local target_no="$2"
+      local node_name="$3"
+
+      local response
+      local status
+
+      echo "$node_name: LB 헬스체크 정상 상태 대기"
+
+      for i in {1..24}; do
+        response="$(
+          ncloud vloadbalancer getTargetList \
+            --regionCode "$REGION_CODE" \
+            --targetGroupNo "$target_group_no" \
+            --output json \
+            2>&1 || true
+        )"
+
+        status="$(
+          printf '%s\n' "$response" |
+            grep -A 15 "\"targetNo\": \"$target_no\"" |
+            grep -m1 '"code"' |
+            cut -d'"' -f4 ||
+            true
+        )"
+
+        echo "$node_name: LB 상태=${status:-조회안됨} ($i/24)"
+
+        case "$status" in
+          UP)
+            echo "$node_name: LB 헬스체크 정상"
+            return 0
+            ;;
+
+          DOWN)
+            echo "$node_name: LB 헬스체크 DOWN"
+            ;;
+
+          UNUSED)
+            echo "$node_name: LB 반영 중"
+            ;;
+
+          *)
+            echo "$node_name: LB 타깃 또는 상태 반영 대기 중"
+            ;;
+        esac
+
+        if [ "$i" -lt 24 ]; then
+          sleep 5
+        fi
+      done
+
+      echo "$node_name: LB 헬스체크 시간 초과"
+      return 1
     }
 
     show_logs() {
@@ -167,7 +231,7 @@ env:
         "$health_url"; then
 
         echo
-        echo "$node_name: 헬스체크 실패"
+        echo "$node_name: 로컬 헬스체크 실패"
 
         show_logs "$service_name"
 
@@ -189,8 +253,17 @@ env:
         "$target_no" \
         "$node_name"
 
-      echo "LB 헬스체크 반영 대기"
-      sleep 75
+      echo "===== LB 헬스체크 확인 ====="
+
+      if ! wait_for_lb_up \
+        "$target_group_no" \
+        "$target_no" \
+        "$node_name"; then
+
+        echo "$node_name: LB 헬스체크 실패"
+        echo "다음 서버 배포를 중단합니다."
+        return 1
+      fi
 
       echo "===== $node_name 배포 완료 ====="
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
