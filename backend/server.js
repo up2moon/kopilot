@@ -34,6 +34,13 @@ app.use((req, res) => {
   });
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Backend listening on 0.0.0.0:${port}`);
-});
+app.listen(
+  {
+    port,
+    host: "::",
+    ipv6Only: false,
+  },
+  () => {
+    console.log(`Backend listening on [::]:${port}`);
+  },
+);
