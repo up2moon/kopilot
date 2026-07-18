@@ -2,7 +2,8 @@ name: Rolling Deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -11,158 +12,129 @@ concurrency:
 
 env:
   REGION_CODE: ${{ secrets.REGION_CODE }}
-  TARGET_GROUP_NO: ${{ secrets.TARGET_GROUP_NO }}
-  APP_1_TARGET_NO: ${{ secrets.APP_1_TARGET_NO }}
-  APP_2_TARGET_NO: ${{ secrets.APP_2_TARGET_NO }}
+
+  WEB_TARGET_GROUP_NO: ${{ secrets.WEB_TARGET_GROUP_NO }}
+  WAS_TARGET_GROUP_NO: ${{ secrets.WAS_TARGET_GROUP_NO }}
+
+  WEB_1_TARGET_NO: ${{ secrets.WEB_1_TARGET_NO }}
+  WEB_2_TARGET_NO: ${{ secrets.WEB_2_TARGET_NO }}
+  WAS_1_TARGET_NO: ${{ secrets.WAS_1_TARGET_NO }}
+  WAS_2_TARGET_NO: ${{ secrets.WAS_2_TARGET_NO }}
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"
     PROJECT_DIR="/opt/kopilot"
 
-    FRONTEND_SERVICE="frontend"
-    BACKEND_SERVICE="backend"
-
     retry_lb_command() {
       local action="$1"
-      local target_no="$2"
-      local app_name="$3"
+      local target_group_no="$2"
+      local target_no="$3"
+      local node_name="$4"
 
       for i in {1..20}; do
         if ncloud vloadbalancer "$action" \
           --regionCode "$REGION_CODE" \
-          --targetGroupNo "$TARGET_GROUP_NO" \
+          --targetGroupNo "$target_group_no" \
           --targetNoList "$target_no" \
           >/dev/null 2>&1; then
 
-          echo "$app_name: ${action} 성공"
+          echo "$node_name: $action 성공"
           return 0
         fi
 
         if [ "$i" -eq 20 ]; then
-          echo "$app_name: ${action} 실패"
+          echo "$node_name: $action 실패"
           return 1
         fi
 
-        echo "$app_name: LB 변경 처리 중, 3초 후 재시도 ($i/20)"
+        echo "$node_name: LB 처리 중, 3초 후 재시도 ($i/20)"
         sleep 3
       done
     }
 
-    show_service_health() {
+    show_logs() {
       local service_name="$1"
+
+      cd "$PROJECT_DIR"
+
+      echo "===== Container status ====="
+      docker compose -f "$COMPOSE_FILE" ps || true
+
+      echo "===== $service_name logs ====="
+      docker compose -f "$COMPOSE_FILE" \
+        logs --tail=200 "$service_name" || true
+
+      local container_id
 
       container_id="$(
         docker compose -f "$COMPOSE_FILE" \
           ps -q "$service_name"
       )"
 
-      if [ -z "$container_id" ]; then
-        echo "$service_name 컨테이너를 찾을 수 없음"
-        return 0
+      if [ -n "$container_id" ]; then
+        echo "===== $service_name health ====="
+        docker inspect \
+          --format='{{json .State.Health}}' \
+          "$container_id" || true
       fi
-
-      echo "===== $service_name health ====="
-
-      docker inspect \
-        --format='{{json .State.Health}}' \
-        "$container_id" || true
     }
 
-    show_logs() {
-      cd "$PROJECT_DIR"
-
-      echo "===== Container status ====="
-      docker compose -f "$COMPOSE_FILE" ps || true
-
-      echo "===== Frontend logs ====="
-      docker compose -f "$COMPOSE_FILE" \
-        logs --tail=200 "$FRONTEND_SERVICE" || true
-
-      echo "===== Backend logs ====="
-      docker compose -f "$COMPOSE_FILE" \
-        logs --tail=200 "$BACKEND_SERVICE" || true
-
-      show_service_health "$FRONTEND_SERVICE"
-      show_service_health "$BACKEND_SERVICE"
-    }
-
-    deploy_app() {
-      local target_no="$1"
-      local app_name="$2"
-      local removed_from_lb=false
+    deploy_node() {
+      local target_group_no="$1"
+      local target_no="$2"
+      local node_name="$3"
+      local service_name="$4"
+      local health_url="$5"
 
       set -euo pipefail
 
-      echo "===== $app_name 배포 시작 ====="
+      echo "===== $node_name 배포 시작 ====="
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
-      hostname
+      echo "호스트: $(hostname)"
+      echo "서비스: $service_name"
+      echo "커밋: $GITHUB_SHA"
 
-      retry_lb_command removeTarget \
+      echo "===== LB에서 타깃 제거 ====="
+
+      retry_lb_command \
+        removeTarget \
+        "$target_group_no" \
         "$target_no" \
-        "$app_name"
-
-      removed_from_lb=true
+        "$node_name"
 
       echo "기존 연결 정리 대기"
       sleep 15
 
       cd "$PROJECT_DIR"
 
+      echo "===== 소스 업데이트 ====="
+
       git fetch --prune origin main
       git reset --hard "$GITHUB_SHA"
 
-      echo "Compose 서비스 확인:"
+      echo "===== Compose 서비스 확인 ====="
       docker compose -f "$COMPOSE_FILE" config --services
 
-      if ! docker compose -f "$COMPOSE_FILE" up \
+      echo "===== $service_name 배포 ====="
+
+      if ! docker compose -f "$COMPOSE_FILE" \
+        up \
         -d \
         --build \
         --force-recreate \
-        --remove-orphans \
+        --no-deps \
         --wait \
-        --wait-timeout 120; then
+        --wait-timeout 120 \
+        "$service_name"; then
 
-        echo "$app_name 컨테이너 배포 실패"
-        show_logs
+        echo "$node_name: 컨테이너 배포 실패"
+        show_logs "$service_name"
 
-        if [ "$removed_from_lb" = true ]; then
-          echo "$app_name LB 복구 시도"
-          retry_lb_command addTarget \
-            "$target_no" \
-            "$app_name" || true
-        fi
-
+        echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
         return 1
       fi
 
-      echo "Nginx document root:"
-      docker compose -f "$COMPOSE_FILE" \
-        exec -T "$FRONTEND_SERVICE" \
-        ls -la /usr/share/nginx/html
-
-      echo "프론트엔드 헬스체크:"
-      if ! curl \
-        --fail \
-        --silent \
-        --show-error \
-        --retry 10 \
-        --retry-delay 2 \
-        http://localhost/; then
-
-        echo "$app_name 프론트엔드 헬스체크 실패"
-        show_logs
-
-        if [ "$removed_from_lb" = true ]; then
-          retry_lb_command addTarget \
-            "$target_no" \
-            "$app_name" || true
-        fi
-
-        return 1
-      fi
-
-      echo
-      echo "백엔드 헬스체크:"
+      echo "===== 로컬 헬스체크 ====="
 
       if ! curl \
         --fail \
@@ -170,59 +142,125 @@ env:
         --show-error \
         --retry 10 \
         --retry-delay 2 \
-        http://localhost/api/health; then
+        --retry-connrefused \
+        "$health_url"; then
 
-        echo "$app_name 백엔드 헬스체크 실패"
-        show_logs
+        echo
+        echo "$node_name: 헬스체크 실패"
+        show_logs "$service_name"
 
-        if [ "$removed_from_lb" = true ]; then
-          retry_lb_command addTarget \
-            "$target_no" \
-            "$app_name" || true
-        fi
-
+        echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
         return 1
       fi
 
       echo
-      echo "컨테이너 상태:"
-      docker compose -f "$COMPOSE_FILE" ps
+      docker compose -f "$COMPOSE_FILE" ps "$service_name"
 
-      retry_lb_command addTarget \
+      echo "===== LB에 타깃 재등록 ====="
+
+      retry_lb_command \
+        addTarget \
+        "$target_group_no" \
         "$target_no" \
-        "$app_name"
-
-      removed_from_lb=false
+        "$node_name"
 
       echo "LB 헬스체크 반영 대기"
-      sleep 15
+      sleep 75
 
-      echo "===== $app_name 배포 완료 ====="
+      echo "===== $node_name 배포 완료 ====="
       echo "시각: $(date '+%Y-%m-%d %H:%M:%S')"
-    }
 
 jobs:
-  deploy-app-1:
-    runs-on: [self-hosted, linux, app-1]
+  deploy-was-1:
+    name: Deploy WAS 1
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - was1
 
     steps:
-      - name: Deploy app-1
+      - name: Deploy was-1
         shell: bash
-        env:
-          GITHUB_SHA: ${{ github.sha }}
         run: |
           eval "$DEPLOY_SCRIPT"
-          deploy_app "$APP_1_TARGET_NO" "app-1"
 
-  deploy-app-2:
-    needs: deploy-app-1
-    runs-on: [self-hosted, linux, app-2]
+          deploy_node \
+            "$WAS_TARGET_GROUP_NO" \
+            "$WAS_1_TARGET_NO" \
+            "was-1" \
+            "backend" \
+            "http://localhost:3000/health"
+
+  deploy-was-2:
+    name: Deploy WAS 2
+    needs:
+      - deploy-was-1
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - was2
 
     steps:
-      - name: Deploy app-2
+      - name: Deploy was-2
         shell: bash
-        env:
-          GITHUB_SHA: ${{ github.sha }}
         run: |
           eval "$DEPLOY_SCRIPT"
-          deploy_app "$APP_2_TARGET_NO" "app-2"
+
+          deploy_node \
+            "$WAS_TARGET_GROUP_NO" \
+            "$WAS_2_TARGET_NO" \
+            "was-2" \
+            "backend" \
+            "http://localhost:3000/health"
+
+  deploy-web-1:
+    name: Deploy Web 1
+    needs:
+      - deploy-was-2
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - web1
+
+    steps:
+      - name: Deploy web-1
+        shell: bash
+        run: |
+          eval "$DEPLOY_SCRIPT"
+
+          deploy_node \
+            "$WEB_TARGET_GROUP_NO" \
+            "$WEB_1_TARGET_NO" \
+            "web-1" \
+            "frontend" \
+            "http://localhost/"
+
+  deploy-web-2:
+    name: Deploy Web 2
+    needs:
+      - deploy-web-1
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - web2
+
+    steps:
+      - name: Deploy web-2
+        shell: bash
+        run: |
+          eval "$DEPLOY_SCRIPT"
+
+          deploy_node \
+            "$WEB_TARGET_GROUP_NO" \
+            "$WEB_2_TARGET_NO" \
+            "web-2" \
+            "frontend" \
+            "http://localhost/"

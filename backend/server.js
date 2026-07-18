@@ -7,7 +7,13 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 
-app.use(cors());
+app.set("trust proxy", 1);
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || false,
+  }),
+);
 app.use(express.json());
 
 app.get("/health", (req, res) => {
@@ -17,7 +23,7 @@ app.get("/health", (req, res) => {
 });
 
 app.get("/api/hello", (req, res) => {
-  res.json({
+  res.status(200).json({
     message: "Hello from KoPilot backend",
   });
 });
@@ -28,6 +34,6 @@ app.use((req, res) => {
   });
 });
 
-app.listen(port, "::", () => {
-  console.log(`Backend listening on port ${port}`);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Backend listening on 0.0.0.0:${port}`);
 });
