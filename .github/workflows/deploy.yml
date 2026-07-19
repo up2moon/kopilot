@@ -256,7 +256,7 @@ jobs:
             "$WAS_1_TARGET_NO" \
             "was-1" \
             "backend" \
-            "http://localhost:3000/health"
+            "http://localhost:3000/api/health"
 
   deploy-was-2:
     name: Deploy WAS 2
@@ -285,7 +285,7 @@ jobs:
             "$WAS_2_TARGET_NO" \
             "was-2" \
             "backend" \
-            "http://localhost:3000/health"
+            "http://localhost:3000/api/health"
 
   deploy-web-1:
     name: Deploy Web 1

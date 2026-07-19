@@ -16,9 +16,14 @@ app.use(
 );
 app.use(express.json());
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
+app.get("/api/health", (req, res) => {
+  res.json({
+    message: "OK",
+    server: process.env.HOSTNAME ?? "unknown",
+    time: new Date().toISOString(),
+    ip: req.ip,
+    forwardedFor: req.headers["x-forwarded-for"] ?? null,
+    host: req.headers.host,
   });
 });
 
