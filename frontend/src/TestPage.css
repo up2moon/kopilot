@@ -1,0 +1,105 @@
+.test-page {
+  min-height: 100vh;
+  padding: 48px 20px;
+  background: #f7f8fc;
+}
+
+.test-card {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.test-header {
+  margin-bottom: 28px;
+}
+
+.test-header h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.test-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.test-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.test-button {
+  flex: 1 1 160px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.test-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.test-button:active {
+  transform: translateY(0);
+}
+
+.test-result {
+  min-height: 160px;
+  margin: 0;
+  padding: 20px;
+  overflow-x: auto;
+  border-radius: 14px;
+  background: #111827;
+  color: #e5e7eb;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .test-page {
+    padding: 24px 16px;
+  }
+
+  .test-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .test-header h1 {
+    font-size: 24px;
+  }
+
+  .test-button {
+    flex-basis: 100%;
+  }
+}

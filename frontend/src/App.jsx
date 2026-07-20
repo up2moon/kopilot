@@ -1,13 +1,25 @@
 import { useEffect, useState } from 'react'
+import TestPage from './TestPage'
 import './App.css'
 
 const routes = {
   login: '/login',
   signup: '/signup',
+  test: '/test',
 }
 
 function getInitialRoute() {
-  return window.location.pathname === routes.signup ? routes.signup : routes.login
+  const pathname = window.location.pathname
+
+  if (pathname === routes.signup) {
+    return routes.signup
+  }
+
+  if (pathname === routes.test) {
+    return routes.test
+  }
+
+  return routes.login
 }
 
 function App() {
@@ -29,6 +41,10 @@ function App() {
     window.history.pushState({}, '', nextRoute)
     setRoute(nextRoute)
     window.scrollTo({ top: 0 })
+  }
+
+  if (route === routes.test) {
+    return <TestPage />
   }
 
   return (
