@@ -15,7 +15,4 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
-    CMD wget -qO- http://localhost/health || exit 1
-
 CMD ["nginx", "-g", "daemon off;"]
