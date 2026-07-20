@@ -3,15 +3,24 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+
     container_name: kopilot-frontend
+
     ports:
       - "80:80"
+
     restart: unless-stopped
+
+    environment:
+      BACKEND_ALB_HOST: ${BACKEND_ALB_HOST}
+      NGINX_ENVSUBST_FILTER: BACKEND_ALB_HOST
+
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
       interval: 10s
       timeout: 3s
       retries: 5
+
     profiles:
       - web
 
@@ -19,9 +28,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     container_name: kopilot-backend
+
     ports:
       - "3000:3000"
+
     restart: unless-stopped
 
     environment:

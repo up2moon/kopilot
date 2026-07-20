@@ -1,0 +1,49 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+    # 컨테이너/로드밸런서 헬스체크
+    location = /health {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "OK";
+    }
+
+    # IP로 직접 접근하면 차단
+    location / {
+        return 444;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name kopilot.p-e.kr;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location = /health {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "OK";
+    }
+
+    location /api/ {
+        proxy_pass http://${BACKEND_ALB_HOST};
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
