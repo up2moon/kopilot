@@ -314,7 +314,7 @@ jobs:
             "$WEB_1_TARGET_NO" \
             "web-1" \
             "frontend" \
-            "http://localhost/"
+            "http://localhost/health"
 
   deploy-web-2:
     name: Deploy Web 2
@@ -343,4 +343,4 @@ jobs:
             "$WEB_2_TARGET_NO" \
             "web-2" \
             "frontend" \
-            "http://localhost/"
+            "http://localhost/health"
