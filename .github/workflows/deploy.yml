@@ -20,6 +20,7 @@ env:
   WEB_2_TARGET_NO: ${{ secrets.WEB_2_TARGET_NO }}
   WAS_1_TARGET_NO: ${{ secrets.WAS_1_TARGET_NO }}
   WAS_2_TARGET_NO: ${{ secrets.WAS_2_TARGET_NO }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"
