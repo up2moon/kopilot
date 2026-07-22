@@ -29,7 +29,7 @@ export const User = sequelize.define(
     is_first_login: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: false,
     },
   },
   {

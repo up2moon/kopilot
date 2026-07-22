@@ -31,6 +31,8 @@
 
 액세스 토큰은 `JWT_SECRET` 기반 HS256 서명 토큰이며 기본 만료 시간은 15분입니다. 리프레시 토큰은 Redis에 `refresh:{tokenId}` 키로 SHA-256 해시만 저장하며 기본 TTL은 14일입니다. 여러 WAS 인스턴스는 동일한 `JWT_SECRET`, MySQL, Redis를 공유해야 합니다.
 
+첫 로그인 온보딩 분기가 구현되기 전까지 신규 가입자의 `is_first_login`은 `false`로 생성하고, 로그인 과정에서는 이 값을 변경하지 않습니다.
+
 ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: true })`를 실행해 `docs/Kopilot.png` 기준 테이블을 최신 모델에 맞춥니다. 환경변수 `DB_SYNC_SCHEMA=false`로 동기화를 끌 수 있고, `DB_SYNC_ALTER=false`로 alter 없이 존재하지 않는 테이블 생성만 수행할 수 있습니다.
 
 ## 구현 기준

@@ -65,6 +65,7 @@ router.post("/signup", async (req, res) => {
       email,
       password: await hashPassword(password),
       nickname,
+      is_first_login: false,
     });
     const tokens = await issueTokenPair(user);
 
