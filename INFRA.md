@@ -249,6 +249,8 @@ Web 서버, Public Load Balancer, Bastion Host, 외부 사용자는 MySQL에 직
 - 대규모 migration은 서비스 영향도를 검토한 후 진행한다.
 - 운영 데이터 삭제 쿼리는 명시적 승인 없이 실행하지 않는다.
 
+현재 MVP 인증 구현은 배포본 실행 시 최신 테이블로 맞추기 위해 Sequelize `sync({ alter: true })`를 사용할 수 있다. 이 동작은 `DB_SYNC_SCHEMA=false` 또는 `DB_SYNC_ALTER=false`로 제어하며, 운영 안정화 단계에서는 migration 기반 관리로 전환한다.
+
 권장 환경변수:
 
 ```bash

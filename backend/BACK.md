@@ -21,6 +21,19 @@
 
 - `GET /api/health`: 서버 상태, 호스트, 요청 IP, 전달 헤더 정보를 확인합니다.
 - `GET /api/hello`: 기본 백엔드 연결 확인용 메시지를 반환합니다.
+- `POST /api/auth/signup`: 이름, 이메일, 비밀번호, 비밀번호 확인값으로 사용자를 생성하고 access token, refresh token, 사용자 정보를 반환합니다.
+- `POST /api/auth/login`: 이메일, 비밀번호를 검증하고 access token, refresh token, 사용자 정보를 반환합니다.
+- `POST /api/auth/refresh`: Redis에 저장된 refresh token을 검증 및 회전하고 새 토큰 쌍을 반환합니다.
+- `POST /api/auth/logout`: 전달된 refresh token을 Redis에서 폐기합니다.
+- `GET /api/auth/me`: `Authorization: Bearer <accessToken>`으로 현재 사용자 정보를 반환합니다.
+
+## 인증 및 DB 스키마 관리
+
+액세스 토큰은 `JWT_SECRET` 기반 HS256 서명 토큰이며 기본 만료 시간은 15분입니다. 리프레시 토큰은 Redis에 `refresh:{tokenId}` 키로 SHA-256 해시만 저장하며 기본 TTL은 14일입니다. 여러 WAS 인스턴스는 동일한 `JWT_SECRET`, MySQL, Redis를 공유해야 합니다.
+
+첫 로그인 온보딩 분기가 구현되기 전까지 신규 가입자의 `is_first_login`은 `false`로 생성하고, 로그인 과정에서는 이 값을 변경하지 않습니다.
+
+ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: true })`를 실행해 `docs/Kopilot.png` 기준 테이블을 최신 모델에 맞춥니다. 환경변수 `DB_SYNC_SCHEMA=false`로 동기화를 끌 수 있고, `DB_SYNC_ALTER=false`로 alter 없이 존재하지 않는 테이블 생성만 수행할 수 있습니다.
 
 ## 구현 기준
 현재 백엔드는 Express 5 기반 JavaScript ES 모듈입니다. 진입점은 `backend/server.js`이며, 런타임 설정은 `PORT`, `CORS_ORIGIN` 같은 환경 변수를 사용합니다. API 변경 후에는 `GET /api/health`와 변경된 엔드포인트를 직접 호출해 응답 상태와 JSON 구조를 확인합니다.
