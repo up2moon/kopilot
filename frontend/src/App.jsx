@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react'
 import TestPage from './TestPage'
+import {
+  clearAuth,
+  getStoredAuth,
+  login,
+  logout,
+  saveAuth,
+  signup,
+} from './services/auth'
 import './App.css'
 
 const routes = {
   login: '/login',
   signup: '/signup',
+  dashboard: '/dashboard',
   test: '/test',
 }
 
@@ -19,11 +28,16 @@ function getInitialRoute() {
     return routes.test
   }
 
+  if (pathname === routes.dashboard) {
+    return routes.dashboard
+  }
+
   return routes.login
 }
 
 function App() {
   const [route, setRoute] = useState(getInitialRoute)
+  const [auth, setAuth] = useState(getStoredAuth)
 
   useEffect(() => {
     const handlePopState = () => {
@@ -43,17 +57,59 @@ function App() {
     window.scrollTo({ top: 0 })
   }
 
+  useEffect(() => {
+    if (route === routes.dashboard && !auth) {
+      navigate(routes.login)
+    }
+  }, [route, auth])
+
+  const handleAuthSuccess = (nextAuth) => {
+    saveAuth(nextAuth)
+    setAuth(nextAuth)
+    navigate(routes.dashboard)
+  }
+
+  const handleLogout = async () => {
+    const refreshToken = auth?.refreshToken
+
+    clearAuth()
+    setAuth(null)
+    navigate(routes.login)
+
+    if (refreshToken) {
+      try {
+        await logout(refreshToken)
+      } catch {
+        // Local logout should not be blocked by a stale refresh token.
+      }
+    }
+  }
+
   if (route === routes.test) {
     return <TestPage />
+  }
+
+  if (route === routes.dashboard) {
+    if (!auth) {
+      return null
+    }
+
+    return (
+      <main className="app-shell">
+        <section className="phone-frame" aria-label="Kopilot dashboard">
+          <DashboardScreen auth={auth} onLogout={handleLogout} />
+        </section>
+      </main>
+    )
   }
 
   return (
     <main className="app-shell">
       <section className="phone-frame" aria-label="Kopilot authentication">
         {route === routes.signup ? (
-          <SignupScreen onNavigate={navigate} />
+          <SignupScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
         ) : (
-          <LoginScreen onNavigate={navigate} />
+          <LoginScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
         )}
       </section>
     </main>
@@ -75,9 +131,29 @@ function BrandHeader({ chip }) {
   )
 }
 
-function LoginScreen({ onNavigate }) {
-  const handleSubmit = (event) => {
+function LoginScreen({ onNavigate, onAuthSuccess }) {
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setErrorMessage('')
+    setIsSubmitting(true)
+
+    const formData = new FormData(event.currentTarget)
+
+    try {
+      const authResult = await login({
+        email: formData.get('email'),
+        password: formData.get('password'),
+      })
+
+      onAuthSuccess(authResult)
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -115,7 +191,13 @@ function LoginScreen({ onNavigate }) {
 
         <label className="field-label">
           <span className="sr-only">이메일</span>
-          <input type="email" name="email" placeholder="이메일" autoComplete="email" />
+          <input
+            type="email"
+            name="email"
+            placeholder="이메일"
+            autoComplete="email"
+            required
+          />
         </label>
 
         <label className="field-label">
@@ -125,11 +207,14 @@ function LoginScreen({ onNavigate }) {
             name="password"
             placeholder="비밀번호"
             autoComplete="current-password"
+            required
           />
         </label>
 
-        <button className="primary-button" type="submit">
-          로그인
+        {errorMessage ? <p className="form-message">{errorMessage}</p> : null}
+
+        <button className="primary-button" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? '로그인 중' : '로그인'}
         </button>
       </form>
 
@@ -143,10 +228,36 @@ function LoginScreen({ onNavigate }) {
   )
 }
 
-function SignupScreen({ onNavigate }) {
-  const handleSubmit = (event) => {
+function SignupScreen({ onNavigate, onAuthSuccess }) {
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onNavigate(routes.login)
+    setErrorMessage('')
+
+    const formData = new FormData(event.currentTarget)
+
+    if (!formData.get('agreement')) {
+      setErrorMessage('필수 약관에 동의해주세요.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const authResult = await signup({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+      })
+
+      onAuthSuccess(authResult)
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -171,12 +282,24 @@ function SignupScreen({ onNavigate }) {
 
         <label className="field-label">
           <span className="sr-only">이름</span>
-          <input type="text" name="name" placeholder="이름" autoComplete="name" />
+          <input
+            type="text"
+            name="name"
+            placeholder="이름"
+            autoComplete="name"
+            required
+          />
         </label>
 
         <label className="field-label">
           <span className="sr-only">이메일</span>
-          <input type="email" name="email" placeholder="이메일" autoComplete="email" />
+          <input
+            type="email"
+            name="email"
+            placeholder="이메일"
+            autoComplete="email"
+            required
+          />
         </label>
 
         <label className="field-label">
@@ -186,13 +309,17 @@ function SignupScreen({ onNavigate }) {
             name="password"
             placeholder="비밀번호"
             autoComplete="new-password"
+            minLength={8}
+            required
           />
         </label>
 
         <label className="agreement-row">
-          <input type="checkbox" defaultChecked />
+          <input type="checkbox" name="agreement" defaultChecked />
           <span>필수 약관에 동의해요</span>
         </label>
+
+        {errorMessage ? <p className="form-message">{errorMessage}</p> : null}
 
         <p className="auth-switch signup-switch">
           이미 계정이 있나요?
@@ -201,10 +328,53 @@ function SignupScreen({ onNavigate }) {
           </button>
         </p>
 
-        <button className="primary-button signup-button" type="submit">
-          가입하고 분석 시작
+        <button className="primary-button signup-button" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? '가입 중' : '가입하고 분석 시작'}
         </button>
       </form>
+    </div>
+  )
+}
+
+function DashboardScreen({ auth, onLogout }) {
+  const user = auth.user
+
+  return (
+    <div className="dashboard-screen">
+      <BrandHeader chip="로그인 완료" />
+
+      <section className="dashboard-hero">
+        <p className="eyebrow">WELCOME BACK</p>
+        <h1>
+          {user.nickname}님,
+          <br />
+          Kopilot에 오신 걸 환영해요
+        </h1>
+        <p>마이데이터와 소비 카테고리 연결은 다음 단계에서 이어서 붙일 예정입니다.</p>
+      </section>
+
+      <section className="session-card" aria-label="인증 세션">
+        <div>
+          <span>계정</span>
+          <strong>{user.email}</strong>
+        </div>
+        <div>
+          <span>첫 로그인 설정</span>
+          <strong>{user.firstLoginCompleted ? '완료' : '대기 중'}</strong>
+        </div>
+        <div>
+          <span>액세스 토큰</span>
+          <strong>{auth.accessTokenExpiresInSeconds / 60}분</strong>
+        </div>
+        <div>
+          <span>리프레시 토큰</span>
+          <strong>{auth.refreshTokenExpiresInSeconds / 86400}일</strong>
+        </div>
+      </section>
+
+      <button className="secondary-button" type="button" onClick={onLogout}>
+        로그아웃
+      </button>
     </div>
   )
 }

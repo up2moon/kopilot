@@ -43,6 +43,9 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: ${REDIS_HOST}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      DB_SYNC_SCHEMA: ${DB_SYNC_SCHEMA:-true}
+      DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
 
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

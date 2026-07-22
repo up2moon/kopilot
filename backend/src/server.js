@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import { db, connectMySQL } from "./db.js";
+import { db, connectMySQL, syncDatabase } from "./db.js";
+import { seedDefaultCategories } from "./models/index.js";
 import { redisClient, connectRedis } from "./redis.js";
+import authRouter from "./routes/auth.js";
 
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -93,6 +97,8 @@ app.use((req, res) => {
 
 async function startServer() {
   await connectMySQL();
+  await syncDatabase();
+  await seedDefaultCategories();
   await connectRedis();
 
   app.listen(
