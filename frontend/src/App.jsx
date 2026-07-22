@@ -35,15 +35,25 @@ function getInitialRoute() {
   return routes.login
 }
 
+function normalizeDefaultRoute() {
+  const knownRoutes = Object.values(routes)
+
+  if (!knownRoutes.includes(window.location.pathname)) {
+    window.history.replaceState({}, '', routes.login)
+  }
+}
+
 function App() {
   const [route, setRoute] = useState(getInitialRoute)
   const [auth, setAuth] = useState(getStoredAuth)
 
   useEffect(() => {
     const handlePopState = () => {
+      normalizeDefaultRoute()
       setRoute(getInitialRoute())
     }
 
+    normalizeDefaultRoute()
     window.addEventListener('popstate', handlePopState)
 
     return () => {
@@ -237,9 +247,16 @@ function SignupScreen({ onNavigate, onAuthSuccess }) {
     setErrorMessage('')
 
     const formData = new FormData(event.currentTarget)
+    const password = formData.get('password')
+    const passwordConfirm = formData.get('passwordConfirm')
 
     if (!formData.get('agreement')) {
       setErrorMessage('필수 약관에 동의해주세요.')
+      return
+    }
+
+    if (password !== passwordConfirm) {
+      setErrorMessage('비밀번호가 일치하지 않습니다.')
       return
     }
 
@@ -249,7 +266,8 @@ function SignupScreen({ onNavigate, onAuthSuccess }) {
       const authResult = await signup({
         name: formData.get('name'),
         email: formData.get('email'),
-        password: formData.get('password'),
+        password,
+        confirmPassword: passwordConfirm,
       })
 
       onAuthSuccess(authResult)
@@ -308,6 +326,18 @@ function SignupScreen({ onNavigate, onAuthSuccess }) {
             type="password"
             name="password"
             placeholder="비밀번호"
+            autoComplete="new-password"
+            minLength={8}
+            required
+          />
+        </label>
+
+        <label className="field-label">
+          <span className="sr-only">비밀번호 확인</span>
+          <input
+            type="password"
+            name="passwordConfirm"
+            placeholder="비밀번호 확인"
             autoComplete="new-password"
             minLength={8}
             required

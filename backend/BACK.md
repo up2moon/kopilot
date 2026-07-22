@@ -21,7 +21,7 @@
 
 - `GET /api/health`: 서버 상태, 호스트, 요청 IP, 전달 헤더 정보를 확인합니다.
 - `GET /api/hello`: 기본 백엔드 연결 확인용 메시지를 반환합니다.
-- `POST /api/auth/signup`: 이름, 이메일, 비밀번호로 사용자를 생성하고 access token, refresh token, 사용자 정보를 반환합니다.
+- `POST /api/auth/signup`: 이름, 이메일, 비밀번호, 비밀번호 확인값으로 사용자를 생성하고 access token, refresh token, 사용자 정보를 반환합니다.
 - `POST /api/auth/login`: 이메일, 비밀번호를 검증하고 access token, refresh token, 사용자 정보를 반환합니다.
 - `POST /api/auth/refresh`: Redis에 저장된 refresh token을 검증 및 회전하고 새 토큰 쌍을 반환합니다.
 - `POST /api/auth/logout`: 전달된 refresh token을 Redis에서 폐기합니다.

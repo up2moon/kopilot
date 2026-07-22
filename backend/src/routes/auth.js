@@ -39,6 +39,7 @@ router.post("/signup", async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email);
     const password = req.body.password;
+    const confirmPassword = req.body.confirmPassword ?? req.body.passwordConfirm;
     const nickname = String(req.body.nickname || req.body.name || "").trim();
 
     if (!nickname) {
@@ -54,6 +55,10 @@ router.post("/signup", async (req, res) => {
         res,
         "비밀번호는 8자 이상으로 입력해주세요.",
       );
+    }
+
+    if (password !== confirmPassword) {
+      return sendValidationError(res, "비밀번호가 일치하지 않습니다.");
     }
 
     const user = await User.create({
