@@ -21,6 +21,8 @@ env:
   WAS_1_TARGET_NO: ${{ secrets.WAS_1_TARGET_NO }}
   WAS_2_TARGET_NO: ${{ secrets.WAS_2_TARGET_NO }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
+  OPENAI_MODEL: gpt-4.1-mini
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"
