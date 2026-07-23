@@ -140,17 +140,6 @@ env:
         return 1
       fi
 
-      echo "===== LB에서 타깃 제거 ====="
-
-      retry_lb_command \
-        removeTarget \
-        "$target_group_no" \
-        "$target_no" \
-        "$node_name"
-
-      echo "기존 연결 정리 대기"
-      sleep 15
-
       cd "$PROJECT_DIR"
 
       echo "===== 소스 업데이트 ====="
@@ -176,6 +165,21 @@ env:
         -f "$COMPOSE_FILE" \
         config --services
 
+      echo "===== LB에서 타깃 제거 ====="
+
+      if ! retry_lb_command \
+        removeTarget \
+        "$target_group_no" \
+        "$target_no" \
+        "$node_name"; then
+
+        echo "$node_name: 타깃 제거 실패"
+        echo "$node_name: 이미 LB에서 제외된 상태일 수 있어 배포를 계속합니다."
+      fi
+
+      echo "기존 연결 정리 대기"
+      sleep 15
+
       echo "===== $service_name 배포 ====="
 
       if ! docker compose \
@@ -193,7 +197,14 @@ env:
 
         show_logs "$service_name"
 
-        echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
+        echo "$node_name: LB 타깃 재등록을 시도합니다."
+
+        retry_lb_command \
+          addTarget \
+          "$target_group_no" \
+          "$target_no" \
+          "$node_name" || true
+
         return 1
       fi
 
@@ -213,7 +224,14 @@ env:
 
         show_logs "$service_name"
 
-        echo "$node_name은 LB에서 제외된 상태로 유지됩니다."
+        echo "$node_name: LB 타깃 재등록을 시도합니다."
+
+        retry_lb_command \
+          addTarget \
+          "$target_group_no" \
+          "$target_no" \
+          "$node_name" || true
+
         return 1
       fi
 
