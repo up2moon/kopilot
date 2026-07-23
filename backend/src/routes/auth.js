@@ -22,6 +22,8 @@ function toAuthUser(user) {
     email: user.email,
     nickname: user.nickname,
     firstLoginCompleted: !user.is_first_login,
+    myDataConnected: user.mydata_connected,
+    budgetSetupCompleted: user.budget_setup_completed,
   };
 }
 
@@ -65,7 +67,9 @@ router.post("/signup", async (req, res) => {
       email,
       password: await hashPassword(password),
       nickname,
-      is_first_login: false,
+      is_first_login: true,
+      mydata_connected: false,
+      budget_setup_completed: false,
     });
     const tokens = await issueTokenPair(user);
 

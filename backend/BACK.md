@@ -26,12 +26,21 @@
 - `POST /api/auth/refresh`: Redis에 저장된 refresh token을 검증 및 회전하고 새 토큰 쌍을 반환합니다.
 - `POST /api/auth/logout`: 전달된 refresh token을 Redis에서 폐기합니다.
 - `GET /api/auth/me`: `Authorization: Bearer <accessToken>`으로 현재 사용자 정보를 반환합니다.
+- `GET /api/users/me/onboarding-status`: 현재 사용자의 첫 로그인 초기 설정, 마이데이터, 예산 설정 상태와 저장된 거래/예산 개수를 반환합니다.
+- `POST /api/users/me/mydata/connect`: 실제 마이데이터 연동 대신 `OPEN_AI_KEY` 기반 OpenAI Responses API로 최근 1개월 합성 `transaction_history`를 생성하고 `myDataConnected=true`로 저장합니다. 키 누락이나 OpenAI 생성 실패 시 `502`를 반환하며 로컬 mock 데이터로 대체하지 않습니다.
+- `GET /api/budget/categories`: 선택 가능한 소비 예산 카테고리 목록을 반환합니다.
+- `POST /api/users/me/budgets`: 사용자의 카테고리별 월 예산 목표를 `user_expense_category.cost`에 저장하고 `firstLoginCompleted=true`, `budgetSetupCompleted=true` 상태로 전환합니다.
+- `POST /api/users/me/onboarding/skip-goals`: 소비 목표 설정을 건너뛰고 `firstLoginCompleted=true`, `budgetSetupCompleted=false` 상태로 온보딩을 완료합니다.
+- `GET /api/users/me/transactions`: OpenAI 기반 마이데이터 임시 생성으로 저장된 결제내역을 최신순으로 반환합니다.
+- `GET /api/users/me/budgets/status?month=YYYY-MM`: 저장된 예산 목표, 현재 사용 금액, 남은 금액, 진행률을 반환합니다.
 
 ## 인증 및 DB 스키마 관리
 
 액세스 토큰은 `JWT_SECRET` 기반 HS256 서명 토큰이며 기본 만료 시간은 15분입니다. 리프레시 토큰은 Redis에 `refresh:{tokenId}` 키로 SHA-256 해시만 저장하며 기본 TTL은 14일입니다. 여러 WAS 인스턴스는 동일한 `JWT_SECRET`, MySQL, Redis를 공유해야 합니다.
 
-첫 로그인 온보딩 분기가 구현되기 전까지 신규 가입자의 `is_first_login`은 `false`로 생성하고, 로그인 과정에서는 이 값을 변경하지 않습니다.
+신규 가입자의 `is_first_login`은 `true`로 생성합니다. 첫 로그인 초기 설정에서 예산 저장까지 완료되면 `is_first_login=false`, `budget_setup_completed=true`로 변경합니다. `mydata_connected`는 연동하기 경로에서 `true`, 건너뛰기 경로에서는 `false`로 유지합니다.
+
+OpenAI 기반 합성 거래내역 생성은 환경 변수 `OPEN_AI_KEY`를 사용합니다. 모델은 기본 `gpt-4.1-mini`이며 `OPENAI_MODEL`로 변경할 수 있습니다. Docker Compose 실행 시에도 `OPEN_AI_KEY`가 백엔드 컨테이너 환경변수로 전달되어야 합니다.
 
 ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: true })`를 실행해 `docs/Kopilot.png` 기준 테이블을 최신 모델에 맞춥니다. 환경변수 `DB_SYNC_SCHEMA=false`로 동기화를 끌 수 있고, `DB_SYNC_ALTER=false`로 alter 없이 존재하지 않는 테이블 생성만 수행할 수 있습니다.
 

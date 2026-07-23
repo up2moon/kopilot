@@ -29,6 +29,16 @@ export const User = sequelize.define(
     is_first_login: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
+      defaultValue: true,
+    },
+    mydata_connected: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    budget_setup_completed: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
       defaultValue: false,
     },
   },

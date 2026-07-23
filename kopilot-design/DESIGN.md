@@ -12,6 +12,7 @@
 - 모바일 내 소비 상세 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=66-6&m=dev
 - 모바일 AI 절약 챗봇: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=74-6&m=dev
 - 모바일 첫 로그인 초기 설정 와이어프레임: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=149-2&m=dev
+- 모바일 첫 로그인 마이데이터 연동 완료 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/KoPilot?node-id=268-36&m=dev
 
 ## 디자인 톤
 

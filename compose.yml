@@ -44,6 +44,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: ${REDIS_HOST}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      OPEN_AI_KEY: ${OPEN_AI_KEY:?OPEN_AI_KEY is required}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
       DB_SYNC_SCHEMA: ${DB_SYNC_SCHEMA:-true}
       DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
 

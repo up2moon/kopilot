@@ -33,6 +33,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-kopilot-local-compose-secret}
+      OPEN_AI_KEY: ${OPEN_AI_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
       DB_SYNC_SCHEMA: ${DB_SYNC_SCHEMA:-true}
       DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
     command: npm run dev

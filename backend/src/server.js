@@ -1,13 +1,13 @@
+import "./config/env.js";
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import { db, connectMySQL, syncDatabase } from "./db.js";
 import { seedDefaultCategories } from "./models/index.js";
 import { redisClient, connectRedis } from "./redis.js";
 import authRouter from "./routes/auth.js";
-
-dotenv.config();
+import usersRouter, { categoriesHandler } from "./routes/users.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -23,6 +23,8 @@ app.use(
 app.use(express.json());
 
 app.use("/api/auth", authRouter);
+app.use("/api/users", usersRouter);
+app.get("/api/budget/categories", categoriesHandler);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
