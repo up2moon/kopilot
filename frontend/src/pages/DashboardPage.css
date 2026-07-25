@@ -1,0 +1,262 @@
+.dashboard-page {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 24px;
+  background: #f7f9fc;
+  box-sizing: border-box;
+  color: #191f28;
+}
+
+.dash-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 12px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #3182f6;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.brand-name {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #191f28;
+  letter-spacing: -0.5px;
+}
+
+.user-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 4px 5px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.user-profile-pill:hover {
+  background: #f2f4f6;
+}
+
+.user-avatar-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e8f2ff;
+  color: #3182f6;
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #191f28;
+}
+
+.dash-greeting-section {
+  padding: 16px 24px 20px;
+  text-align: left;
+}
+
+.greeting-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #191f28;
+  letter-spacing: -0.5px;
+}
+
+.greeting-subtitle {
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: #6b7684;
+  line-height: 1.4;
+}
+
+.dash-cards-container {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Card 1: 이번 달 소비 */
+.dash-white-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  border: 1px solid #e5e8eb;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  text-align: left;
+}
+
+.card-subhead {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7684;
+}
+
+.spending-main-amount {
+  font-size: 34px;
+  font-weight: 800;
+  color: #191f28;
+  letter-spacing: -0.5px;
+  margin: 8px 0 16px;
+}
+
+.spending-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.change-rate-pill {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f06d00;
+  background: #fff5eb;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+.payment-count-col {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.count-label {
+  font-size: 13px;
+  color: #8b95a1;
+}
+
+.count-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #191f28;
+}
+
+.dash-blue-btn {
+  width: 100%;
+  height: 54px;
+  border-radius: 14px;
+  background: #3182f6;
+  color: #ffffff;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(49, 130, 246, 0.25);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.dash-blue-btn:hover {
+  background: #1b64da;
+}
+
+.dash-blue-btn:active {
+  transform: scale(0.98);
+}
+
+/* Card 2: AI 절약 코치 */
+.dash-blue-card {
+  background: #3182f6;
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  color: #ffffff;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(49, 130, 246, 0.3);
+}
+
+.ai-coach-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.ai-coach-advice {
+  margin: 12px 0 20px;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  white-space: pre-line;
+}
+
+.dash-white-btn {
+  width: 100%;
+  height: 54px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #3182f6;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.dash-white-btn:hover {
+  background: #f7f9fc;
+}
+
+.dash-white-btn:active {
+  transform: scale(0.98);
+}
+
+.ai-coach-footer-note {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.btn-arrow {
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.dashboard-loading,
+.dashboard-error {
+  padding: 60px 24px;
+  text-align: center;
+  color: #6b7684;
+}
