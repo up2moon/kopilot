@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import TestPage from './TestPage'
+import BottomNav from './components/BottomNav'
+import FloatingChatbot from './components/FloatingChatbot'
+import DashboardPage from './pages/DashboardPage'
+import SpendingDetailPage from './pages/SpendingDetailPage'
 import {
   clearAuth,
   getStoredAuth,
@@ -23,6 +27,12 @@ const routes = {
   firstLogin: '/first-login',
   firstLoginMyDataConnect: '/first-login/mydata-connect',
   dashboard: '/dashboard',
+  spending: '/spending',
+  coach: '/coach',
+  ranking: '/ranking',
+  challenge: '/challenge',
+  investmentEffect: '/investment-effect',
+  my: '/my',
   test: '/test',
 }
 
@@ -30,25 +40,10 @@ const defaultSelectedCategories = ['식비', '카페·간식', '쇼핑']
 
 function getInitialRoute() {
   const pathname = window.location.pathname
+  const knownRoutes = Object.values(routes)
 
-  if (pathname === routes.signup) {
-    return routes.signup
-  }
-
-  if (pathname === routes.firstLogin) {
-    return routes.firstLogin
-  }
-
-  if (pathname === routes.firstLoginMyDataConnect) {
-    return routes.firstLoginMyDataConnect
-  }
-
-  if (pathname === routes.test) {
-    return routes.test
-  }
-
-  if (pathname === routes.dashboard) {
-    return routes.dashboard
+  if (knownRoutes.includes(pathname)) {
+    return pathname
   }
 
   return routes.login
@@ -87,31 +82,35 @@ function App() {
   }
 
   useEffect(() => {
-    if (
-      (route === routes.dashboard ||
-        route === routes.firstLogin ||
-        route === routes.firstLoginMyDataConnect) &&
-      !auth
-    ) {
+    const isPublicRoute = route === routes.login || route === routes.signup || route === routes.test
+
+    if (!isPublicRoute && !auth) {
       navigate(routes.login)
+      return
     }
 
-    if (route === routes.dashboard && auth && !auth.user.firstLoginCompleted) {
-      navigate(routes.firstLogin)
-    }
-
-    if (
-      (route === routes.firstLogin || route === routes.firstLoginMyDataConnect) &&
-      auth?.user.firstLoginCompleted
-    ) {
-      navigate(routes.dashboard)
+    if (auth && !isPublicRoute) {
+      // If MyData is not connected, redirect to MyData connection screen first
+      if (!auth.user.myDataConnected && route !== routes.firstLoginMyDataConnect && route !== routes.firstLogin) {
+        navigate(routes.firstLoginMyDataConnect)
+      } else if (!auth.user.firstLoginCompleted && route !== routes.firstLogin && route !== routes.firstLoginMyDataConnect) {
+        navigate(routes.firstLogin)
+      } else if (auth.user.myDataConnected && auth.user.firstLoginCompleted && (route === routes.firstLogin || route === routes.firstLoginMyDataConnect)) {
+        navigate(routes.dashboard)
+      }
     }
   }, [route, auth])
 
   const handleAuthSuccess = (nextAuth) => {
     saveAuth(nextAuth)
     setAuth(nextAuth)
-    navigate(nextAuth.user.firstLoginCompleted ? routes.dashboard : routes.firstLogin)
+    if (!nextAuth.user.myDataConnected) {
+      navigate(routes.firstLoginMyDataConnect)
+    } else if (!nextAuth.user.firstLoginCompleted) {
+      navigate(routes.firstLogin)
+    } else {
+      navigate(routes.dashboard)
+    }
   }
 
   const handleUserUpdate = (user) => {
@@ -144,52 +143,148 @@ function App() {
     return <TestPage />
   }
 
-  if (route === routes.dashboard) {
-    if (!auth) {
-      return null
-    }
+  const mainTabRoutes = [routes.dashboard, routes.ranking, routes.challenge, routes.investmentEffect, routes.my]
+  const showNavAndChatbot = mainTabRoutes.includes(route)
 
-    return (
-      <main className="app-shell">
-        <section className="phone-frame" aria-label="Kopilot dashboard">
-          <DashboardScreen auth={auth} onLogout={handleLogout} />
-        </section>
-      </main>
+  let screenContent = null
+
+  if (route === routes.login) {
+    screenContent = <LoginScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
+  } else if (route === routes.signup) {
+    screenContent = <SignupScreen onNavigate={navigate} />
+  } else if (route === routes.firstLogin || route === routes.firstLoginMyDataConnect) {
+    if (!auth) return null
+    screenContent = (
+      <FirstLoginScreen
+        auth={auth}
+        currentRoute={route}
+        onNavigate={navigate}
+        onLogout={handleLogout}
+        onUserUpdate={handleUserUpdate}
+      />
     )
-  }
-
-  if (route === routes.firstLogin || route === routes.firstLoginMyDataConnect) {
-    if (!auth) {
-      return null
-    }
-
-    return (
-      <main className="app-shell">
-        <section className="phone-frame" aria-label="Kopilot first login setup">
-          <FirstLoginScreen
-            auth={auth}
-            currentRoute={route}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            onUserUpdate={handleUserUpdate}
-          />
-        </section>
-      </main>
+  } else if (route === routes.dashboard) {
+    if (!auth) return null
+    screenContent = <DashboardPage auth={auth} onNavigate={navigate} onLogout={handleLogout} />
+  } else if (route === routes.spending) {
+    if (!auth) return null
+    screenContent = (
+      <SpendingDetailPage
+        auth={auth}
+        onBack={() => navigate(routes.dashboard)}
+      />
     )
+  } else if (route === routes.coach) {
+    if (!auth) return null
+    screenContent = (
+      <SubPageScreen
+        title="AI 절약 챗봇"
+        description="마이데이터 기반 절약 코칭과 대화를 나눠보세요."
+        onBack={() => navigate(routes.dashboard)}
+      />
+    )
+  } else if (route === routes.ranking) {
+    if (!auth) return null
+    screenContent = (
+      <SubPageScreen
+        title="익명 랭킹"
+        description="이번 달 절약 순위를 확인해보세요."
+        onBack={() => navigate(routes.dashboard)}
+      />
+    )
+  } else if (route === routes.challenge) {
+    if (!auth) return null
+    screenContent = (
+      <SubPageScreen
+        title="일일 챌린지"
+        description="AI가 배정한 오늘의 절약 미션을 수행하세요."
+        onBack={() => navigate(routes.dashboard)}
+      />
+    )
+  } else if (route === routes.investmentEffect) {
+    if (!auth) return null
+    screenContent = (
+      <SubPageScreen
+        title="투자효과 시뮬레이션"
+        description="아낀 돈의 기회비용과 미래 가치를 시뮬레이션합니다."
+        onBack={() => navigate(routes.dashboard)}
+      />
+    )
+  } else if (route === routes.my) {
+    if (!auth) return null
+    screenContent = (
+      <SubPageScreen
+        title="마이 페이지"
+        description="계정 정보와 마이데이터 연동 설정을 관리합니다."
+        onBack={() => navigate(routes.dashboard)}
+        onLogout={handleLogout}
+        user={auth.user}
+      />
+    )
+  } else {
+    screenContent = <LoginScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
   }
 
   return (
     <main className="app-shell">
-        <section className="phone-frame" aria-label="Kopilot authentication">
-        {route === routes.signup ? (
-          <SignupScreen onNavigate={navigate} />
-        ) : (
-          <LoginScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
+      <section className="phone-frame" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          {screenContent}
+        </div>
+        {showNavAndChatbot && (
+          <>
+            <FloatingChatbot onNavigate={navigate} />
+            <BottomNav currentPath={route} onNavigate={navigate} />
+          </>
         )}
       </section>
     </main>
   )
 }
+
+function SubPageScreen({ title, description, onBack, onLogout, user, token }) {
+  return (
+    <div className="sub-page-screen" style={{ padding: '24px 20px', minHeight: '100%', boxSizing: 'border-box' }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+        {onBack && (
+          <button
+            type="button"
+            className="back-button"
+            onClick={onBack}
+            aria-label="뒤로가기"
+            style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}
+          >
+            &lt;
+          </button>
+        )}
+        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>{title}</h1>
+      </header>
+      <section className="setup-card" style={{ background: '#fff', padding: '20px', borderRadius: '16px' }}>
+        <p style={{ color: '#4e5968', fontSize: '15px', lineHeight: '1.5' }}>{description}</p>
+        {user && (
+          <div style={{ marginTop: '16px', fontSize: '14px', color: '#191f28' }}>
+            <p><strong>사용자:</strong> {user.nickname || user.name}</p>
+            <p><strong>마이데이터 연동:</strong> {user.myDataConnected ? '연동됨' : '미연동'}</p>
+          </div>
+        )}
+      </section>
+
+      {token && <TransactionHistoryPanel token={token} />}
+
+      {onLogout && (
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={onLogout}
+          style={{ marginTop: '24px', width: '100%' }}
+        >
+          로그아웃
+        </button>
+      )}
+    </div>
+  )
+}
+
 
 function BrandHeader({ chip }) {
   return (

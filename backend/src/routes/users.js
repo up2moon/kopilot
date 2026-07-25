@@ -385,6 +385,259 @@ router.get("/me/budgets/status", requireAuth, async (req, res) => {
   return res.status(200).json(await getBudgetStatus(req.user.id, req.query.month));
 });
 
+router.get("/me/spending/summary", requireAuth, async (req, res) => {
+  try {
+    const month = req.query.month || getCurrentMonth();
+    const period = req.query.period || "month";
+
+    const { start, end } = getMonthRange(month);
+
+    let periodStart = start;
+    if (period === "3months") {
+      periodStart = new Date(start);
+      periodStart.setUTCMonth(periodStart.getUTCMonth() - 2);
+    } else if (period === "6months") {
+      periodStart = new Date(start);
+      periodStart.setUTCMonth(periodStart.getUTCMonth() - 5);
+    }
+
+    const durationMs = end.getTime() - periodStart.getTime();
+    const prevStart = new Date(periodStart.getTime() - durationMs);
+    const prevEnd = new Date(periodStart.getTime());
+
+    const transactions = await TransactionHistory.findAll({
+      where: {
+        user_id: req.user.id,
+        trans_dtime: {
+          [Op.gte]: periodStart,
+          [Op.lt]: end,
+        },
+      },
+      include: [
+        {
+          model: ExpenseCategory,
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["trans_dtime", "DESC"]],
+    });
+
+    const prevTransactions = await TransactionHistory.findAll({
+      where: {
+        user_id: req.user.id,
+        trans_dtime: {
+          [Op.gte]: prevStart,
+          [Op.lt]: prevEnd,
+        },
+      },
+    });
+
+    const totalSpendingAmount = transactions.reduce(
+      (sum, t) => sum + Number(t.trans_amt),
+      0,
+    );
+    const prevTotalSpendingAmount = prevTransactions.reduce(
+      (sum, t) => sum + Number(t.trans_amt),
+      0,
+    );
+
+    let monthlyChangeRate = 0;
+    if (prevTotalSpendingAmount > 0) {
+      monthlyChangeRate =
+        Math.round(
+          ((totalSpendingAmount - prevTotalSpendingAmount) /
+            prevTotalSpendingAmount) *
+            1000,
+        ) / 10;
+    }
+
+    const paymentCount = transactions.length;
+    const averagePaymentAmount =
+      paymentCount > 0 ? Math.round(totalSpendingAmount / paymentCount) : 0;
+
+    const categoryMap = new Map();
+    for (const t of transactions) {
+      const catName = t.ExpenseCategory?.name || "기타";
+      const amt = Number(t.trans_amt);
+      if (!categoryMap.has(catName)) {
+        categoryMap.set(catName, { amount: 0, count: 0 });
+      }
+      const item = categoryMap.get(catName);
+      item.amount += amt;
+      item.count += 1;
+    }
+
+    const categoriesList = Array.from(categoryMap.entries())
+      .map(([name, data]) => ({
+        category: name,
+        icon: categoryMeta[name]?.icon || "•",
+        amount: data.amount,
+        percentage:
+          totalSpendingAmount > 0
+            ? Math.round((data.amount / totalSpendingAmount) * 1000) / 10
+            : 0,
+        count: data.count,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const merchantMap = new Map();
+    for (const t of transactions) {
+      const merchant = t.merchant_name || "기타 가맹점";
+      const catName = t.ExpenseCategory?.name || "기타";
+      const amt = Number(t.trans_amt);
+      if (!merchantMap.has(merchant)) {
+        merchantMap.set(merchant, {
+          merchantName: merchant,
+          category: catName,
+          icon: categoryMeta[catName]?.icon || "🏢",
+          count: 0,
+          totalAmount: 0,
+        });
+      }
+      const m = merchantMap.get(merchant);
+      m.count += 1;
+      m.totalAmount += amt;
+    }
+
+    const frequentMerchants = Array.from(merchantMap.values())
+      .sort((a, b) => b.count - a.count || b.totalAmount - a.totalAmount)
+      .slice(0, 5);
+
+    const trendMap = new Map();
+    const chronTransactions = [...transactions].sort(
+      (a, b) => new Date(a.trans_dtime) - new Date(b.trans_dtime),
+    );
+    for (const t of chronTransactions) {
+      const d = new Date(t.trans_dtime);
+      const dateStr = `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+      trendMap.set(dateStr, (trendMap.get(dateStr) || 0) + Number(t.trans_amt));
+    }
+
+    const trend = Array.from(trendMap.entries()).map(([date, amount]) => ({
+      date,
+      amount,
+    }));
+
+    const insights = [];
+    if (categoriesList.length > 0) {
+      const topCat = categoriesList[0];
+      insights.push({
+        id: 1,
+        title: "최대 지출 항목",
+        description: `이번 달에는 ${topCat.category}에 가장 많은 돈(${topCat.amount.toLocaleString("ko-KR")}원)을 사용했어요.`,
+        type: "top_category",
+      });
+    }
+
+    if (prevTotalSpendingAmount > 0) {
+      const direction = monthlyChangeRate >= 0 ? "증가" : "감소";
+      const absRate = Math.abs(monthlyChangeRate);
+      insights.push({
+        id: 2,
+        title: "소비 변화",
+        description: `지난달 대비 소비가 ${absRate}% ${direction}했어요.`,
+        type: "comparison",
+      });
+    } else {
+      insights.push({
+        id: 2,
+        title: "소비 패턴 분석",
+        description: "마이데이터 연동 기반으로 작성된 소비 현황을 확인해보세요.",
+        type: "info",
+      });
+    }
+
+    let weekendAmount = 0;
+    for (const t of transactions) {
+      const day = new Date(t.trans_dtime).getUTCDay();
+      if (day === 0 || day === 6) {
+        weekendAmount += Number(t.trans_amt);
+      }
+    }
+
+    if (totalSpendingAmount > 0) {
+      const weekendRatio = Math.round((weekendAmount / totalSpendingAmount) * 100);
+      if (weekendRatio > 35) {
+        insights.push({
+          id: 3,
+          title: "주말 소비 패턴",
+          description: `전체 소비의 ${weekendRatio}%가 주말에 발생했어요. 주말 소비 조절을 시도해보세요!`,
+          type: "weekend",
+        });
+      } else {
+        insights.push({
+          id: 3,
+          title: "주중 소비 중심",
+          description: "평일 소비 중심의 비교적 균형 잡힌 지출 패턴을 보이고 있어요.",
+          type: "weekday",
+        });
+      }
+    }
+
+    const categoryTerms = {
+      "카페·간식": "커피값",
+      카페: "커피값",
+      식비: "식비",
+      배달: "배달비",
+      쇼핑: "쇼핑 지출",
+      교통: "교통비",
+      구독: "구독료",
+      문화: "문화 생활비",
+      통신: "통신비",
+    };
+
+    const candidates = categoriesList.filter((cat) => Number(cat.amount) >= 5000);
+    let savingCoachPreview;
+
+    if (candidates.length === 0) {
+      savingCoachPreview = {
+        category: "카페·간식",
+        term: "커피값",
+        percentage: 20,
+        potentialSavings: 60000,
+        message: "커피값 20% 줄이면\n이번 달 60,000원을 아낄 수 있어요.",
+      };
+    } else {
+      const targetCat = candidates[Math.floor(Math.random() * candidates.length)];
+      const term = categoryTerms[targetCat.category] || `${targetCat.category} 지출`;
+      const percentageOptions = [15, 20, 25, 30];
+      const percent = percentageOptions[Math.floor(Math.random() * percentageOptions.length)];
+      const rawSavings = Number(targetCat.amount) * (percent / 100);
+      const potentialSavings = Math.max(1000, Math.round(rawSavings / 1000) * 1000);
+
+      savingCoachPreview = {
+        category: targetCat.category,
+        term,
+        percentage: percent,
+        potentialSavings,
+        message: `${term} ${percent}% 줄이면\n이번 달 ${potentialSavings.toLocaleString("ko-KR")}원을 아낄 수 있어요.`,
+      };
+    }
+
+    return res.status(200).json({
+      user: toAuthUser(req.user),
+      month,
+      period,
+      summary: {
+        totalSpendingAmount,
+        monthlyChangeRate,
+        paymentCount,
+        averagePaymentAmount,
+      },
+      savingCoachPreview,
+      categories: categoriesList,
+      frequentMerchants,
+      trend,
+      insights,
+      recentTransactions: transactions.slice(0, 5).map(toTransactionResponse),
+    });
+  } catch (error) {
+    console.error("Dashboard summary failed:", error);
+    return res.status(500).json({ message: "대시보드 데이터 조회 실패" });
+  }
+});
+
+
 export async function categoriesHandler(req, res) {
   const categories = await ExpenseCategory.findAll({
     order: [["id", "ASC"]],
