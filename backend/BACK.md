@@ -93,7 +93,10 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
 
 3. **미션 검증 및 랭킹 포인트 반영 (`POST /api/users/me/challenges/verify`)**
    - 사용자가 '수행 인증하기'를 클릭하거나 마이데이터 업데이트 시 백엔드가 검증을 실행합니다.
-   - 성공 판정 시 미션 상태를 `COMPLETED`로 변경하고 획득 포인트를 사용자 계정 및 익명 랭킹 점수에 즉시 누적 반영합니다.
+   - **DB 갱신 및 랭킹 연동 규칙**:
+     1. 검증 성공 시 `AiChallenge.status`를 `"SUCCESS"`로 업데이트하고 `start_date`를 당월 날짜로 기록합니다.
+     2. 미션 난이도 획득 포인트(`point`)를 `User.total_points` 컬럼에 누적 합산(`user.total_points += earnedPoints`)합니다.
+     3. 랭킹 시스템(`ranking.js`)은 당월 1일 이후 `AiChallenge` 중 `status = 'SUCCESS'`인 개수를 조회하여 랭킹 카드에 `미션 N회 성공`으로 즉시 자동 반영합니다.
 
 ## 투자효과 및 코스콤 CHECK API 연동 설계
 
