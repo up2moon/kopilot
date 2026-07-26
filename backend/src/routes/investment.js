@@ -14,6 +14,7 @@ import {
   getLatestStoredPrice,
   getStoredPrice,
   refreshInvestmentAssetPrice,
+  syncKoscomBasePrices,
   searchInvestmentAssets,
   syncKoscomClosingPrices,
   syncKoscomInvestmentData,
@@ -436,10 +437,13 @@ router.post("/sync", requireAuth, async (req, res) => {
   try {
     const mode = String(req.query.mode || req.body?.mode || "all").toLowerCase();
     const limit = req.query.limit || req.body?.limit;
+    const months = req.query.months || req.body?.months || req.query.month || req.body?.month;
     const result =
       mode === "prices"
         ? await syncKoscomClosingPrices({ limit })
-        : await syncKoscomInvestmentData();
+        : mode === "base-prices"
+          ? await syncKoscomBasePrices({ months, limit })
+          : await syncKoscomInvestmentData();
 
     return res.status(200).json({
       status: "OK",

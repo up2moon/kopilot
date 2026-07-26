@@ -46,6 +46,55 @@ function getKstDate() {
   return formatter.format(new Date());
 }
 
+function getKstMonth() {
+  return getKstDate().slice(0, 7);
+}
+
+function normalizeMonth(month) {
+  return /^\d{4}-\d{2}$/.test(month) ? month : getKstMonth();
+}
+
+function getFirstTradingDate(month) {
+  const date = new Date(`${normalizeMonth(month)}-01T00:00:00.000Z`);
+
+  while (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
+    date.setUTCDate(date.getUTCDate() + 1);
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function getRecentMonths(count) {
+  const maxCount = Math.min(Math.max(Number(count) || 1, 1), 24);
+  const currentMonth = normalizeMonth(getKstMonth());
+  const [year, month] = currentMonth.split("-").map(Number);
+  const baseDate = new Date(Date.UTC(year, month - 1, 1));
+
+  return Array.from({ length: maxCount }, (_, index) => {
+    const date = new Date(baseDate);
+    date.setUTCMonth(date.getUTCMonth() - index);
+
+    return date.toISOString().slice(0, 7);
+  });
+}
+
+function normalizeMonths(months) {
+  if (Array.isArray(months)) {
+    return Array.from(new Set(months.map(normalizeMonth)));
+  }
+
+  const rawMonths = String(months || "")
+    .split(",")
+    .map((month) => month.trim())
+    .filter(Boolean);
+
+  if (rawMonths.length) {
+    return Array.from(new Set(rawMonths.map(normalizeMonth)));
+  }
+
+  return getRecentMonths(process.env.KOSCOM_BASE_PRICE_BACKFILL_MONTHS || 3);
+}
+
 function getKstParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Seoul",
@@ -321,20 +370,37 @@ export async function refreshInvestmentAssetPrice(assetCode, tradeDate = null) {
   return upsertPrice(asset, tradeDate);
 }
 
+async function getPriceSyncAssets(limit) {
+  const maxItems = Math.min(Math.max(Number(limit) || 200, 1), 1000);
+  const defaultAssets = await InvestmentAsset.findAll({
+    where: {
+      asset_code: defaultBenchmarkCodes,
+    },
+    order: [["asset_code", "ASC"]],
+  });
+  const remainingLimit = Math.max(maxItems - defaultAssets.length, 0);
+  const extraAssets = remainingLimit
+    ? await InvestmentAsset.findAll({
+        where: {
+          price_sync_enabled: true,
+          asset_code: {
+            [Op.notIn]: defaultBenchmarkCodes,
+          },
+        },
+        order: [["last_synced_at", "ASC"]],
+        limit: remainingLimit,
+      })
+    : [];
+
+  return [...defaultAssets, ...extraAssets];
+}
+
 export async function syncKoscomClosingPrices({ limit } = {}) {
   getKoscomCredentials();
 
-  const maxItems = Math.min(
-    Math.max(Number(limit) || Number(process.env.KOSCOM_PRICE_SYNC_LIMIT) || 200, 1),
-    1000,
+  const assets = await getPriceSyncAssets(
+    limit || process.env.KOSCOM_PRICE_SYNC_LIMIT || 200,
   );
-  const assets = await InvestmentAsset.findAll({
-    where: {
-      price_sync_enabled: true,
-    },
-    order: [["last_synced_at", "ASC"]],
-    limit: maxItems,
-  });
   const tradeDate = getKstDate();
   const results = [];
 
@@ -358,6 +424,54 @@ export async function syncKoscomClosingPrices({ limit } = {}) {
   };
 }
 
+export async function syncKoscomBasePrices({ months, limit } = {}) {
+  getKoscomCredentials();
+  await ensureDefaultBenchmarkAssets();
+  await enablePriceSync(defaultBenchmarkCodes);
+
+  const targetMonths = normalizeMonths(months);
+  const tradeDates = Array.from(new Set(targetMonths.map(getFirstTradingDate)));
+  const assets = await getPriceSyncAssets(
+    limit || process.env.KOSCOM_BASE_PRICE_SYNC_LIMIT || 50,
+  );
+  const results = [];
+  const failures = [];
+
+  for (const asset of assets) {
+    for (const tradeDate of tradeDates) {
+      try {
+        results.push(await upsertPrice(asset, tradeDate));
+      } catch (error) {
+        const failure = {
+          assetCode: asset.asset_code,
+          tradeDate,
+          code: error.code || "KOSCOM_BASE_PRICE_SYNC_FAILED",
+          message: error.message,
+          meta: error.meta || null,
+        };
+
+        failures.push(failure);
+        console.error(
+          `Koscom base price sync failed for ${asset.asset_code} ${tradeDate}:`,
+          error.message,
+          error.meta || {},
+        );
+      }
+    }
+  }
+
+  return {
+    months: targetMonths,
+    tradeDates,
+    requestedAssetCount: assets.length,
+    requestedPriceCount: assets.length * tradeDates.length,
+    successCount: results.length,
+    failureCount: failures.length,
+    results,
+    failures,
+  };
+}
+
 export async function syncKoscomInvestmentData() {
   await ensureDefaultBenchmarkAssets();
   await enablePriceSync(defaultBenchmarkCodes);
@@ -378,10 +492,12 @@ export async function syncKoscomInvestmentData() {
   }
 
   const prices = await syncKoscomClosingPrices();
+  const basePrices = await syncKoscomBasePrices();
 
   return {
     masters,
     prices,
+    basePrices,
   };
 }
 
