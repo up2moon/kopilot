@@ -274,6 +274,10 @@ jobs:
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
+          export KOSCOM_SYNC_DISABLED=false
+          export KOSCOM_LIVE_REFRESH_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=false
+
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
             "$WAS_1_TARGET_NO" \
@@ -302,6 +306,10 @@ jobs:
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
+
+          export KOSCOM_SYNC_DISABLED=true
+          export KOSCOM_LIVE_REFRESH_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=false
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \

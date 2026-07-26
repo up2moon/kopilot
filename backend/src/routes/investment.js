@@ -227,31 +227,41 @@ function isKoscomPriceFetchError(error) {
   ].includes(error?.code);
 }
 
+function shouldRefreshKoscomPriceOnRead() {
+  if (process.env.KOSCOM_LIVE_REFRESH_ON_READ !== undefined) {
+    return process.env.KOSCOM_LIVE_REFRESH_ON_READ === "true";
+  }
+
+  return process.env.NODE_ENV !== "production";
+}
+
 async function getLatestPrice(asset, assumedBuyDate) {
   let latestPrice = await getLatestStoredPrice(asset.assetCode);
 
-  try {
-    await refreshInvestmentAssetPrice(asset.assetCode);
-    const refreshedPrice = await getLatestStoredPrice(asset.assetCode);
+  if (shouldRefreshKoscomPriceOnRead()) {
+    try {
+      await refreshInvestmentAssetPrice(asset.assetCode);
+      const refreshedPrice = await getLatestStoredPrice(asset.assetCode);
 
-    if (refreshedPrice) {
-      latestPrice = refreshedPrice;
-    }
-  } catch (error) {
-    if (!isKoscomPriceFetchError(error)) {
-      throw error;
-    }
+      if (refreshedPrice) {
+        latestPrice = refreshedPrice;
+      }
+    } catch (error) {
+      if (!isKoscomPriceFetchError(error)) {
+        throw error;
+      }
 
-    if (!latestPrice || latestPrice.trade_date <= assumedBuyDate) {
-      throw createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice);
-    }
+      if (!latestPrice || latestPrice.trade_date <= assumedBuyDate) {
+        throw createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice);
+      }
 
-    console.warn("Koscom current price refresh failed; using stored latest price", {
-      assetCode: asset.assetCode,
-      latestTradeDate: latestPrice.trade_date,
-      code: error.code,
-      meta: error.meta,
-    });
+      console.warn("Koscom current price refresh failed; using stored latest price", {
+        assetCode: asset.assetCode,
+        latestTradeDate: latestPrice.trade_date,
+        code: error.code,
+        meta: error.meta,
+      });
+    }
   }
 
   if (!latestPrice) {
@@ -269,7 +279,7 @@ async function calculateMarketSimulation(asset, investmentAmount, month) {
   const assumedBuyDate = getFirstTradingDate(month);
   let basePrice = await getStoredPrice(asset.assetCode, assumedBuyDate);
 
-  if (!basePrice) {
+  if (!basePrice && shouldRefreshKoscomPriceOnRead()) {
     try {
       await refreshInvestmentAssetPrice(asset.assetCode, assumedBuyDate);
     } catch (error) {
@@ -391,7 +401,7 @@ router.get("/quotes", requireAuth, async (req, res) => {
         const asset = await resolveAsset(assetCode);
         let latestPrice = await getLatestStoredPrice(assetCode);
 
-        if (!latestPrice) {
+        if (!latestPrice && shouldRefreshKoscomPriceOnRead()) {
           await refreshInvestmentAssetPrice(assetCode);
           latestPrice = await getLatestStoredPrice(assetCode);
         }

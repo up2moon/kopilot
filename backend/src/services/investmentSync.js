@@ -183,6 +183,14 @@ export async function syncKoscomAssetMasters() {
   };
 }
 
+function shouldSyncMastersOnRead() {
+  if (process.env.KOSCOM_MASTER_SYNC_ON_READ !== undefined) {
+    return process.env.KOSCOM_MASTER_SYNC_ON_READ === "true";
+  }
+
+  return process.env.NODE_ENV !== "production";
+}
+
 export async function ensureAssetMasters() {
   const count = await InvestmentAsset.count();
 
@@ -190,6 +198,16 @@ export async function ensureAssetMasters() {
     return {
       skipped: true,
       count,
+    };
+  }
+
+  await ensureDefaultBenchmarkAssets();
+
+  if (!shouldSyncMastersOnRead()) {
+    return {
+      skipped: true,
+      reason: "REMOTE_MASTER_SYNC_DISABLED_ON_READ",
+      count: await InvestmentAsset.count(),
     };
   }
 
@@ -341,9 +359,24 @@ export async function syncKoscomClosingPrices({ limit } = {}) {
 }
 
 export async function syncKoscomInvestmentData() {
-  const masters = await syncKoscomAssetMasters();
   await ensureDefaultBenchmarkAssets();
   await enablePriceSync(defaultBenchmarkCodes);
+
+  let masters;
+
+  try {
+    masters = await syncKoscomAssetMasters();
+  } catch (error) {
+    console.error("Koscom master sync failed:", error.message, error.meta || {});
+    masters = {
+      stockCount: 0,
+      etfCount: 0,
+      failed: true,
+      code: error.code || "KOSCOM_MASTER_SYNC_FAILED",
+      message: error.message,
+    };
+  }
+
   const prices = await syncKoscomClosingPrices();
 
   return {

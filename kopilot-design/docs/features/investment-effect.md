@@ -552,6 +552,8 @@ MVP 기본값:
 - 기본 가격 동기화 대상: `S&P500 ETF(360750)`, `KOSPI 200 ETF(069500)`, 사용자가 검색 후 선택한 종목
 - 매일 스케줄: 백엔드 프로세스가 `KOSCOM_SYNC_TIME` 기준 KST 매일 1회 코스콤 CHECK API를 호출해 종가를 갱신한다. 기본값은 `17:10`이다.
 - 배포 직후 초기 적재: 서버 시작 5초 후 `investment_price`가 0건이면 자동으로 코스콤 마스터와 기본 가격을 적재한다. 강제로 매 시작 시 동기화하려면 `KOSCOM_SYNC_ON_START=true`를 사용하고, 수동 실행은 `POST /api/investment/sync`를 사용한다.
+- 운영 다중 WAS 환경에서는 코스콤 CHECK API의 조회 IP 제한을 피하기 위해 한 개 WAS만 스케줄러를 실행한다. 사용자 요청 경로에서는 코스콤을 직접 호출하지 않고 DB에 저장된 값만 읽는다.
+- 로컬 개발에서는 즉시 검증을 위해 요청 시 live refresh를 허용할 수 있지만, 운영에서 live refresh를 켜면 ALB 라우팅 또는 WAS별 공인 IP 차이로 `직전 API 조회 IP와 현재 IP가 다릅니다` 오류가 발생할 수 있다.
 
 관련 환경 변수:
 
@@ -559,6 +561,8 @@ MVP 기본값:
 KOSCOM_SYNC_TIME=17:10
 KOSCOM_SYNC_ON_START=false
 KOSCOM_SYNC_DISABLED=false
+KOSCOM_LIVE_REFRESH_ON_READ=false
+KOSCOM_MASTER_SYNC_ON_READ=false
 KOSCOM_PRICE_SYNC_LIMIT=200
 KOSCOM_REQUEST_INTERVAL_MS=1100
 KOSCOM_BASE_URL=https://checkapi.koscom.co.kr

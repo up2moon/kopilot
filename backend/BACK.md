@@ -121,6 +121,8 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
    - 화면의 현재가는 `investment_price.close_price`의 최신 거래일 값을 `currentPrice`로 내려주고, 기준가는 선택 월 첫 거래일 값을 `basePrice`로 내려줍니다. 조회/동기화 시각은 `synced_at`을 `quotedAt`으로 사용합니다.
    - 백엔드는 `KOSCOM_SYNC_TIME` 환경 변수 기준 KST 매일 1회 코스콤 CHECK API를 호출합니다. 기본값은 `17:10`입니다.
    - 서버 시작 5초 후 `investment_price`가 0건이면 즉시 초기 동기화를 실행합니다. `KOSCOM_SYNC_ON_START=true`이면 가격 테이블 보유 여부와 관계없이 서버 시작 시 한 번 동기화합니다. `KOSCOM_SYNC_DISABLED=true`이면 스케줄러와 초기 동기화를 모두 끕니다.
+   - 운영 배포에서는 코스콤 CHECK API의 IP 제한을 피하기 위해 WAS 1만 스케줄러를 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 사용자 요청에서는 `KOSCOM_LIVE_REFRESH_ON_READ=false`, `KOSCOM_MASTER_SYNC_ON_READ=false`로 DB에 저장된 시세와 마스터만 읽습니다.
+   - 로컬 개발에서는 `KOSCOM_LIVE_REFRESH_ON_READ=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 즉시 insert 검증을 허용할 수 있습니다. 운영에서 이 값을 켜면 ALB 라우팅 또는 다중 WAS 공인 IP 차이로 `직전 API 조회 IP와 현재 IP가 다릅니다` 오류가 발생할 수 있습니다.
    - 코스콤 CHECK API 호출은 `KOSCOM_REQUEST_INTERVAL_MS` 기준으로 직렬화합니다. 기본값은 `1100ms`이며, API 호출 제한을 피하기 위해 최소 `1000ms`로 보정합니다.
    - 코스콤 계약 명세의 URL/경로가 다를 수 있으므로 `KOSCOM_BASE_URL`, `KOSCOM_STOCK_MASTER_PATH`, `KOSCOM_ETF_MASTER_PATH`, `KOSCOM_BASIC_QUOTE_PATH` 환경 변수로 실제 계약 경로를 재정의할 수 있습니다.
    - 가격 동기화 대상은 기본 지수 ETF와 사용자가 검색 후 선택한 종목(`price_sync_enabled=true`)입니다.
