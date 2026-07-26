@@ -218,6 +218,8 @@ export default function InvestmentEffectPage({ token }) {
                 ? '기준일 종가가 아직 없어요'
                 : errorCode === 'CURRENT_PRICE_MISSING'
                   ? '현재 시세가 아직 없어요'
+                  : errorCode.startsWith('KOSCOM_')
+                    ? '코스콤 시세 응답을 확인해주세요'
                   : '시세를 불러오지 못했어요'}
           </strong>
           <p>{errorMessage}</p>

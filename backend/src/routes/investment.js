@@ -202,28 +202,64 @@ function createPriceHistoryMissingError(asset, tradeDate) {
   return error;
 }
 
-async function getLatestPrice(asset, assumedBuyDate) {
-  await refreshInvestmentAssetPrice(asset.assetCode);
+function createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice = null) {
+  const error = new Error(
+    `${asset.label}의 현재 시세가 없어 투자효과를 계산할 수 없습니다.`,
+  );
+  error.statusCode = 409;
+  error.code = "CURRENT_PRICE_MISSING";
+  error.meta = {
+    assetCode: asset.assetCode,
+    label: asset.label,
+    assumedBuyDate,
+    latestTradeDate: latestPrice?.trade_date || null,
+  };
 
-  const latestPrice = await getLatestStoredPrice(asset.assetCode);
+  return error;
+}
+
+function isKoscomPriceFetchError(error) {
+  return [
+    "KOSCOM_QUOTE_SHAPE_UNSUPPORTED",
+    "KOSCOM_REQUEST_FAILED",
+    "KOSCOM_HTML_RESPONSE",
+    "KOSCOM_BUSINESS_ERROR",
+  ].includes(error?.code);
+}
+
+async function getLatestPrice(asset, assumedBuyDate) {
+  let latestPrice = await getLatestStoredPrice(asset.assetCode);
+
+  try {
+    await refreshInvestmentAssetPrice(asset.assetCode);
+    const refreshedPrice = await getLatestStoredPrice(asset.assetCode);
+
+    if (refreshedPrice) {
+      latestPrice = refreshedPrice;
+    }
+  } catch (error) {
+    if (!isKoscomPriceFetchError(error)) {
+      throw error;
+    }
+
+    if (!latestPrice || latestPrice.trade_date <= assumedBuyDate) {
+      throw createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice);
+    }
+
+    console.warn("Koscom current price refresh failed; using stored latest price", {
+      assetCode: asset.assetCode,
+      latestTradeDate: latestPrice.trade_date,
+      code: error.code,
+      meta: error.meta,
+    });
+  }
 
   if (!latestPrice) {
     return null;
   }
 
   if (latestPrice.trade_date <= assumedBuyDate) {
-    const error = new Error(
-      `${asset.label}의 현재 시세가 없어 투자효과를 계산할 수 없습니다.`,
-    );
-    error.statusCode = 409;
-    error.code = "CURRENT_PRICE_MISSING";
-    error.meta = {
-      assetCode: asset.assetCode,
-      label: asset.label,
-      assumedBuyDate,
-      latestTradeDate: latestPrice.trade_date,
-    };
-    throw error;
+    throw createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice);
   }
 
   return latestPrice;
@@ -234,7 +270,22 @@ async function calculateMarketSimulation(asset, investmentAmount, month) {
   let basePrice = await getStoredPrice(asset.assetCode, assumedBuyDate);
 
   if (!basePrice) {
-    await refreshInvestmentAssetPrice(asset.assetCode, assumedBuyDate);
+    try {
+      await refreshInvestmentAssetPrice(asset.assetCode, assumedBuyDate);
+    } catch (error) {
+      if (!isKoscomPriceFetchError(error)) {
+        throw error;
+      }
+
+      console.warn("Koscom base price refresh failed", {
+        assetCode: asset.assetCode,
+        tradeDate: assumedBuyDate,
+        code: error.code,
+        meta: error.meta,
+      });
+      throw createPriceHistoryMissingError(asset, assumedBuyDate);
+    }
+
     basePrice = await getStoredPrice(asset.assetCode, assumedBuyDate);
   }
 
@@ -489,6 +540,16 @@ function handleInvestmentError(res, error, fallbackMessage) {
     return res.status(404).json({
       code: error.code,
       message: error.message,
+      meta: error.meta,
+    });
+  }
+
+  if (String(error.code || "").startsWith("KOSCOM_")) {
+    console.error(fallbackMessage, error.message, error.meta || {});
+
+    return res.status(error.statusCode || 502).json({
+      code: error.code,
+      message: error.message || "코스콤 CHECK API 시세 응답을 처리하지 못했습니다.",
       meta: error.meta,
     });
   }
