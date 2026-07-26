@@ -352,10 +352,10 @@ AUTH_KEY=발급받은_CHECK_API_인증_KEY
 
 | 이름 | 권장 저장 위치 | 사용 위치 |
 | --- | --- | --- |
-| `CUST_ID` | Actions variable 또는 secret | 백엔드 컨테이너 환경 변수 |
+| `CUST_ID` | Actions secret 권장 | 백엔드 컨테이너 환경 변수 |
 | `AUTH_KEY` | Actions secret 권장 | 백엔드 컨테이너 환경 변수 |
 
-`AUTH_KEY`는 인증 키이므로 일반 variable보다 secret으로 관리하는 것을 권장한다. 배포 워크플로우는 이 값을 백엔드 런타임 환경 변수로 전달해야 하며, 로그에 원문이 출력되면 안 된다.
+`CUST_ID`와 `AUTH_KEY`는 코스콤 CHECK API 인증에 함께 사용되므로 일반 variable보다 secret으로 관리하는 것을 권장한다. 배포 워크플로우는 secret을 우선 사용하고, 아직 Actions variable에만 등록된 경우를 위해 variable fallback을 허용한다. 이 값은 백엔드 런타임 환경 변수로 전달해야 하며, 로그에 원문이 출력되면 안 된다.
 
 ---
 
