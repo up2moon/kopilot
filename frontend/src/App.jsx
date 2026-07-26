@@ -4,6 +4,7 @@ import BottomNav from './components/BottomNav'
 import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/DashboardPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
+import AnonymousRankingPage from './pages/AnonymousRankingPage'
 import {
   clearAuth,
   getStoredAuth,
@@ -186,10 +187,9 @@ function App() {
   } else if (route === routes.ranking) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="익명 랭킹"
-        description="이번 달 절약 순위를 확인해보세요."
-        onBack={() => navigate(routes.dashboard)}
+      <AnonymousRankingPage
+        token={auth.accessToken}
+        onNavigate={navigate}
       />
     )
   } else if (route === routes.challenge) {
