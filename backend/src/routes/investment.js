@@ -18,6 +18,7 @@ import {
   searchInvestmentAssets,
   syncKoscomClosingPrices,
   syncKoscomInvestmentData,
+  syncMissingKoscomBasePrices,
   upsertInvestmentAsset,
 } from "../services/investmentSync.js";
 
@@ -443,6 +444,8 @@ router.post("/sync", requireAuth, async (req, res) => {
     const result =
       mode === "prices"
         ? await syncKoscomClosingPrices({ limit, assetCodes, allAssets })
+        : mode === "missing-base-prices"
+          ? await syncMissingKoscomBasePrices({ months, assetCodes, limit })
         : mode === "base-prices"
           ? await syncKoscomBasePrices({ months, limit, assetCodes, allAssets })
           : await syncKoscomInvestmentData();

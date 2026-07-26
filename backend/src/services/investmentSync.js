@@ -523,6 +523,119 @@ export async function syncKoscomBasePrices({
   };
 }
 
+export async function syncMissingKoscomBasePrices({
+  months,
+  assetCodes,
+  limit = process.env.KOSCOM_MISSING_BASE_PRICE_SYNC_LIMIT ||
+    process.env.KOSCOM_BASE_PRICE_SYNC_LIMIT ||
+    60,
+} = {}) {
+  getKoscomCredentials();
+  await ensureDefaultBenchmarkAssets();
+
+  const targetMonths = normalizeMonths(months);
+  const tradeDates = Array.from(new Set(targetMonths.map(getFirstTradingDate)));
+  const maxMissingPrices = Math.min(Math.max(Number(limit) || 60, 1), 1000);
+  const requestedAssetCodes = normalizeAssetCodes(assetCodes);
+
+  if (requestedAssetCodes.length) {
+    await enablePriceSync(requestedAssetCodes);
+  }
+
+  const assets = await InvestmentAsset.findAll({
+    where: requestedAssetCodes.length
+      ? {
+          asset_code: requestedAssetCodes,
+        }
+      : {
+          price_sync_enabled: true,
+        },
+    order: [
+      ["last_synced_at", "ASC"],
+      ["asset_code", "ASC"],
+    ],
+    limit: 5000,
+  });
+  const syncedAssetCodes = assets.map((asset) => asset.asset_code);
+
+  if (!syncedAssetCodes.length) {
+    return {
+      months: targetMonths,
+      tradeDates,
+      requestedPriceCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      skipped: true,
+      reason: "NO_PRICE_SYNC_ENABLED_ASSETS",
+      results: [],
+      failures: [],
+    };
+  }
+
+  const existingPrices = await InvestmentPrice.findAll({
+    attributes: ["asset_code", "trade_date"],
+    where: {
+      asset_code: syncedAssetCodes,
+      trade_date: tradeDates,
+    },
+  });
+  const existingPriceKeys = new Set(
+    existingPrices.map((price) => `${price.asset_code}:${price.trade_date}`),
+  );
+  const allMissingRequests = [];
+
+  for (const asset of assets) {
+    for (const tradeDate of tradeDates) {
+      if (!existingPriceKeys.has(`${asset.asset_code}:${tradeDate}`)) {
+        allMissingRequests.push({
+          asset,
+          tradeDate,
+        });
+      }
+    }
+  }
+
+  const missingRequests = allMissingRequests.slice(0, maxMissingPrices);
+  const results = [];
+  const failures = [];
+
+  for (const request of missingRequests) {
+    try {
+      results.push(await upsertPrice(request.asset, request.tradeDate));
+    } catch (error) {
+      const failure = {
+        assetCode: request.asset.asset_code,
+        tradeDate: request.tradeDate,
+        code: error.code || "KOSCOM_MISSING_BASE_PRICE_SYNC_FAILED",
+        message: error.message,
+        meta: error.meta || null,
+      };
+
+      failures.push(failure);
+      console.error(
+        `Koscom missing base price sync failed for ${request.asset.asset_code} ${request.tradeDate}:`,
+        error.message,
+        error.meta || {},
+      );
+    }
+  }
+
+  return {
+    months: targetMonths,
+    tradeDates,
+    totalMissingPriceCount: allMissingRequests.length,
+    requestedPriceCount: missingRequests.length,
+    successCount: results.length,
+    failureCount: failures.length,
+    remainingMissingPriceCount: Math.max(
+      allMissingRequests.length - missingRequests.length,
+      0,
+    ),
+    results,
+    failures,
+  };
+}
+
 export async function syncKoscomInvestmentData() {
   await ensureDefaultBenchmarkAssets();
   await enablePriceSync(defaultBenchmarkCodes);
@@ -579,6 +692,12 @@ export function startKoscomSyncScheduler() {
   }
 
   const scheduleTime = process.env.KOSCOM_SYNC_TIME || "17:10";
+  const basePriceRepairIntervalMs = Math.max(
+    Number(process.env.KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS) ||
+      60 * 60 * 1000,
+    60 * 1000,
+  );
+  let missingBasePriceSyncRunning = false;
   const run = async () => {
     try {
       console.log(`Koscom investment sync started (${new Date().toISOString()})`);
@@ -612,7 +731,32 @@ export function startKoscomSyncScheduler() {
     }
   }, 5000);
 
+  const runMissingBasePriceSync = async () => {
+    if (missingBasePriceSyncRunning) {
+      return;
+    }
+
+    missingBasePriceSyncRunning = true;
+
+    try {
+      const result = await syncMissingKoscomBasePrices();
+      console.log("Koscom missing base price sync completed", result);
+    } catch (error) {
+      console.error("Koscom missing base price sync failed:", error.message);
+    } finally {
+      missingBasePriceSyncRunning = false;
+    }
+  };
+
+  setTimeout(runMissingBasePriceSync, 60 * 1000);
+  setInterval(runMissingBasePriceSync, basePriceRepairIntervalMs);
+
   console.log(`Koscom investment sync scheduled daily at ${scheduleTime} Asia/Seoul`);
+  console.log(
+    `Koscom missing base price sync scheduled every ${Math.round(
+      basePriceRepairIntervalMs / 60000,
+    )} minutes`,
+  );
 }
 
 export async function getAssetByCode(assetCode) {
