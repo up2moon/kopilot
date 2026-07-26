@@ -23,6 +23,7 @@ env:
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
   OPENAI_MODEL: gpt-4.1-mini
+  OPENAI_SAVING_VECTOR_STORE_ID: ${{ secrets.OPENAI_SAVING_VECTOR_STORE_ID }}
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"

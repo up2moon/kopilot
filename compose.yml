@@ -46,6 +46,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       OPEN_AI_KEY: ${OPEN_AI_KEY:?OPEN_AI_KEY is required}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      OPENAI_SAVING_VECTOR_STORE_ID: ${OPENAI_SAVING_VECTOR_STORE_ID:?OPENAI_SAVING_VECTOR_STORE_ID is required}
+      SAVING_BOT_TRANSACTION_JSON_PATH: /app/data/payment_transactions_dummy_30.json
       DB_SYNC_SCHEMA: ${DB_SYNC_SCHEMA:-true}
       DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
 
