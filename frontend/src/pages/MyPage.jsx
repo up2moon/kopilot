@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import './MyPage.css'
 
+// 알림 설정은 백엔드 영향이 없는 UI 전용 토글이라(BACK.md 방침) 값을 localStorage에만 저장한다.
+const notificationsStorageKey = 'kopilot.notificationsEnabled'
+
+function getStoredNotifications() {
+  try {
+    return window.localStorage.getItem(notificationsStorageKey) !== 'false'
+  } catch {
+    return true
+  }
+}
+
 export default function MyPage({
   auth,
   onLogout,
@@ -15,6 +26,21 @@ export default function MyPage({
   const isConnected = Boolean(user?.myDataConnected)
 
   const [pendingDisconnect, setPendingDisconnect] = useState(false)
+  const [notificationsOn, setNotificationsOn] = useState(getStoredNotifications)
+
+  const toggleNotifications = () => {
+    setNotificationsOn((prev) => {
+      const next = !prev
+
+      try {
+        window.localStorage.setItem(notificationsStorageKey, String(next))
+      } catch {
+        // 저장 실패해도 화면 토글은 유지한다.
+      }
+
+      return next
+    })
+  }
 
   const handleMyDataClick = () => {
     if (mydataBusy) return
@@ -41,10 +67,11 @@ export default function MyPage({
       ? '연동됨'
       : '연동 안 됨'
 
-  // 로그아웃만 기존 로그아웃 흐름에 연결되어 있고, 알림 설정은 아직 UI 단계입니다.
+  // 로그아웃/마이데이터는 동작 행(action), 알림 설정은 UI 전용 토글 행(toggle)이다.
   const settingItems = [
     {
       id: 'mydata',
+      type: 'action',
       icon: '🔒',
       label: '마이데이터 연결 관리',
       status: myDataStatus,
@@ -54,12 +81,15 @@ export default function MyPage({
     },
     {
       id: 'notification',
+      type: 'toggle',
       icon: '🔔',
       label: '알림 설정',
-      onClick: undefined,
+      checked: notificationsOn,
+      onClick: toggleNotifications,
     },
     {
       id: 'logout',
+      type: 'action',
       icon: '🚪',
       label: '로그아웃',
       onClick: onLogout,
@@ -87,28 +117,46 @@ export default function MyPage({
         <h2 className="mypage-section-title">설정</h2>
 
         <div className="mypage-setting-list">
-          {settingItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className="mypage-setting-row"
-              onClick={item.onClick}
-              disabled={item.disabled}
-            >
-              <span className="mypage-setting-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="mypage-setting-label">{item.label}</span>
-              {item.status && (
-                <span className={`mypage-setting-status is-${item.statusTone}`}>
-                  {item.status}
+          {settingItems.map((item) => {
+            const isToggle = item.type === 'toggle'
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className="mypage-setting-row"
+                onClick={item.onClick}
+                disabled={item.disabled}
+                role={isToggle ? 'switch' : undefined}
+                aria-checked={isToggle ? item.checked : undefined}
+              >
+                <span className="mypage-setting-icon" aria-hidden="true">
+                  {item.icon}
                 </span>
-              )}
-              <span className="mypage-setting-chevron" aria-hidden="true">
-                &gt;
-              </span>
-            </button>
-          ))}
+                <span className="mypage-setting-label">{item.label}</span>
+
+                {isToggle ? (
+                  <span
+                    className={`mypage-switch${item.checked ? ' is-on' : ''}`}
+                    aria-hidden="true"
+                  >
+                    <span className="mypage-switch-knob" />
+                  </span>
+                ) : (
+                  <>
+                    {item.status && (
+                      <span className={`mypage-setting-status is-${item.statusTone}`}>
+                        {item.status}
+                      </span>
+                    )}
+                    <span className="mypage-setting-chevron" aria-hidden="true">
+                      &gt;
+                    </span>
+                  </>
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {mydataError && <p className="mypage-error">{mydataError}</p>}
