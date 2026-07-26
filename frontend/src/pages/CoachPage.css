@@ -1,0 +1,380 @@
+.coach-page {
+  width: min(100%, 390px);
+  height: 844px;
+  min-height: 844px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: 24px 24px 5px;
+  background: #f7f9fc;
+  box-sizing: border-box;
+  color: #191f28;
+  overflow: hidden;
+}
+
+.coach-header {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 38px;
+}
+
+.coach-back-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #e5e8eb;
+  border-radius: 14px;
+  background: #fff;
+  color: #191f28;
+  cursor: pointer;
+  font: inherit;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 36px;
+  text-align: center;
+}
+
+.coach-back-button:focus-visible,
+.coach-suggestion:focus-visible,
+.coach-suggestion-close:focus-visible,
+.coach-input-form input:focus-visible,
+.coach-input-form button:focus-visible {
+  outline: 3px solid rgba(49, 130, 246, 0.22);
+  outline-offset: 2px;
+}
+
+.coach-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 26px;
+  text-align: left;
+}
+
+.coach-status {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.coach-status-completed {
+  color: #00a661;
+}
+
+.coach-status-loading,
+.coach-status-insufficient {
+  color: #6b7684;
+}
+
+.coach-status-error {
+  color: #e5484d;
+}
+
+.coach-insight-card {
+  display: grid;
+  align-content: center;
+  min-height: 120px;
+  margin-top: 24px;
+  padding: 17px 24px 18px;
+  border-radius: 22px;
+  background: #3182f6;
+  box-shadow: 0 8px 24px rgba(26, 31, 41, 0.12);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.coach-insight-card span {
+  color: #dcebff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 17px;
+}
+
+.coach-insight-card strong {
+  display: block;
+  margin-top: 9px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 27px;
+  white-space: pre-line;
+}
+
+.coach-insight-card button {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #dcebff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.coach-conversation {
+  flex: 0 0 405px;
+  height: 405px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.coach-conversation.is-expanded {
+  flex: 1 1 405px;
+  height: auto;
+}
+
+.coach-date {
+  flex: 0 0 auto;
+  margin: 16px 0 20px;
+  color: #8b95a1;
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+}
+
+.coach-message-list {
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 22px;
+  padding: 0 2px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #d8dee8 transparent;
+}
+
+.coach-message-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.coach-message-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d8dee8;
+}
+
+.coach-message-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.coach-message {
+  width: fit-content;
+  max-width: 300px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  text-align: left;
+  word-break: keep-all;
+}
+
+.coach-message-assistant {
+  align-self: flex-start;
+  background: #fff;
+  color: #191f28;
+}
+
+.coach-message-user {
+  align-self: flex-end;
+  background: #3182f6;
+  color: #fff;
+}
+
+.coach-message-loading {
+  color: #8b95a1;
+}
+
+.coach-suggestions {
+  flex: 0 0 auto;
+  margin-bottom: 17px;
+  text-align: left;
+}
+
+.coach-suggestion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.coach-suggestions h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 19px;
+}
+
+.coach-suggestion-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8b95a1;
+  cursor: pointer;
+  font: inherit;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 28px;
+  text-align: center;
+}
+
+.coach-suggestion-close:hover {
+  background: #eef1f5;
+  color: #4e5968;
+}
+
+.coach-suggestion-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.coach-suggestion {
+  height: 32px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 32px;
+}
+
+.coach-suggestion:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.coach-suggestion-blue {
+  background: #e8f2ff;
+  color: #3182f6;
+}
+
+.coach-suggestion-green {
+  background: #e7f8ef;
+  color: #00a661;
+}
+
+.coach-suggestion-neutral {
+  background: #fff;
+  color: #6b7684;
+}
+
+.coach-input-form {
+  position: relative;
+  flex: 0 0 auto;
+  height: 58px;
+  margin-top: auto;
+}
+
+.coach-error {
+  flex: 0 0 auto;
+  margin: 0 0 6px;
+  color: #e5484d;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: left;
+}
+
+.coach-input-form input {
+  width: 100%;
+  height: 58px;
+  padding: 0 66px 0 21px;
+  border: 1px solid #e5e8eb;
+  border-radius: 18px;
+  background: #fff;
+  box-sizing: border-box;
+  color: #191f28;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  outline: 0;
+}
+
+.coach-input-form input::placeholder {
+  color: #8b95a1;
+}
+
+.coach-input-form button {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #3182f6;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 36px;
+  transform: translateY(-50%);
+}
+
+.coach-input-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.coach-disclaimer {
+  flex: 0 0 auto;
+  margin: 4px 0 0;
+  color: #8b95a1;
+  font-size: 11px;
+  line-height: 13px;
+  text-align: left;
+}
+
+@media (max-width: 360px) {
+  .coach-page {
+    padding-inline: 18px;
+  }
+
+  .coach-header {
+    gap: 10px;
+  }
+
+  .coach-header h1 {
+    font-size: 20px;
+  }
+
+  .coach-message {
+    max-width: calc(100% - 32px);
+  }
+
+  .coach-suggestion {
+    padding-inline: 17px;
+  }
+}
+
+@media (max-width: 440px) {
+  .coach-page {
+    height: 100svh;
+    min-height: 0;
+  }
+
+  .coach-conversation {
+    flex: 1 1 300px;
+    height: auto;
+  }
+}
