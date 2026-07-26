@@ -438,11 +438,13 @@ router.post("/sync", requireAuth, async (req, res) => {
     const mode = String(req.query.mode || req.body?.mode || "all").toLowerCase();
     const limit = req.query.limit || req.body?.limit;
     const months = req.query.months || req.body?.months || req.query.month || req.body?.month;
+    const assetCodes = req.query.assetCodes || req.body?.assetCodes;
+    const allAssets = req.query.allAssets || req.body?.allAssets;
     const result =
       mode === "prices"
-        ? await syncKoscomClosingPrices({ limit })
+        ? await syncKoscomClosingPrices({ limit, assetCodes, allAssets })
         : mode === "base-prices"
-          ? await syncKoscomBasePrices({ months, limit })
+          ? await syncKoscomBasePrices({ months, limit, assetCodes, allAssets })
           : await syncKoscomInvestmentData();
 
     return res.status(200).json({

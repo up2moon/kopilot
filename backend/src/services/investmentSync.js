@@ -95,6 +95,27 @@ function normalizeMonths(months) {
   return getRecentMonths(process.env.KOSCOM_BASE_PRICE_BACKFILL_MONTHS || 3);
 }
 
+function normalizeAssetCodes(assetCodes) {
+  if (Array.isArray(assetCodes)) {
+    return Array.from(
+      new Set(assetCodes.map((code) => String(code).trim()).filter(Boolean)),
+    );
+  }
+
+  return Array.from(
+    new Set(
+      String(assetCodes || "")
+        .split(",")
+        .map((code) => code.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
+function isEnabled(value) {
+  return value === true || String(value).toLowerCase() === "true";
+}
+
 function getKstParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Seoul",
@@ -370,23 +391,33 @@ export async function refreshInvestmentAssetPrice(assetCode, tradeDate = null) {
   return upsertPrice(asset, tradeDate);
 }
 
-async function getPriceSyncAssets(limit) {
-  const maxItems = Math.min(Math.max(Number(limit) || 200, 1), 1000);
+async function getPriceSyncAssets(limit, assetCodes = [], { allAssets = false } = {}) {
+  const maxItems = Math.min(Math.max(Number(limit) || 200, 1), 5000);
+  const requestedAssetCodes = normalizeAssetCodes(assetCodes);
+  const priorityAssetCodes = Array.from(
+    new Set([...defaultBenchmarkCodes, ...requestedAssetCodes]),
+  );
   const defaultAssets = await InvestmentAsset.findAll({
     where: {
-      asset_code: defaultBenchmarkCodes,
+      asset_code: priorityAssetCodes,
     },
     order: [["asset_code", "ASC"]],
   });
   const remainingLimit = Math.max(maxItems - defaultAssets.length, 0);
   const extraAssets = remainingLimit
     ? await InvestmentAsset.findAll({
-        where: {
-          price_sync_enabled: true,
-          asset_code: {
-            [Op.notIn]: defaultBenchmarkCodes,
-          },
-        },
+        where: allAssets
+          ? {
+              asset_code: {
+                [Op.notIn]: priorityAssetCodes,
+              },
+            }
+          : {
+              price_sync_enabled: true,
+              asset_code: {
+                [Op.notIn]: priorityAssetCodes,
+              },
+            },
         order: [["last_synced_at", "ASC"]],
         limit: remainingLimit,
       })
@@ -395,11 +426,16 @@ async function getPriceSyncAssets(limit) {
   return [...defaultAssets, ...extraAssets];
 }
 
-export async function syncKoscomClosingPrices({ limit } = {}) {
+export async function syncKoscomClosingPrices({ limit, assetCodes, allAssets = false } = {}) {
   getKoscomCredentials();
+  await enablePriceSync(normalizeAssetCodes(assetCodes));
 
   const assets = await getPriceSyncAssets(
     limit || process.env.KOSCOM_PRICE_SYNC_LIMIT || 200,
+    assetCodes,
+    {
+      allAssets: isEnabled(allAssets),
+    },
   );
   const tradeDate = getKstDate();
   const results = [];
@@ -424,15 +460,25 @@ export async function syncKoscomClosingPrices({ limit } = {}) {
   };
 }
 
-export async function syncKoscomBasePrices({ months, limit } = {}) {
+export async function syncKoscomBasePrices({
+  months,
+  limit,
+  assetCodes,
+  allAssets = process.env.KOSCOM_BASE_PRICE_SYNC_ALL_ASSETS,
+} = {}) {
   getKoscomCredentials();
   await ensureDefaultBenchmarkAssets();
-  await enablePriceSync(defaultBenchmarkCodes);
+  await enablePriceSync([...defaultBenchmarkCodes, ...normalizeAssetCodes(assetCodes)]);
 
   const targetMonths = normalizeMonths(months);
   const tradeDates = Array.from(new Set(targetMonths.map(getFirstTradingDate)));
+  const syncAllAssets = isEnabled(allAssets);
   const assets = await getPriceSyncAssets(
     limit || process.env.KOSCOM_BASE_PRICE_SYNC_LIMIT || 50,
+    assetCodes,
+    {
+      allAssets: syncAllAssets,
+    },
   );
   const results = [];
   const failures = [];
@@ -463,6 +509,7 @@ export async function syncKoscomBasePrices({ months, limit } = {}) {
   return {
     months: targetMonths,
     tradeDates,
+    allAssets: syncAllAssets,
     requestedAssetCount: assets.length,
     requestedPriceCount: assets.length * tradeDates.length,
     successCount: results.length,

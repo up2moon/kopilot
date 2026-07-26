@@ -46,7 +46,7 @@
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
-- `POST /api/investment/sync?mode=all|prices|base-prices&limit=200&months=2026-07`: 코스콤 CHECK API 종목 마스터, 최신 종가, 선택 월 첫 거래일 기준가를 수동 동기화합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
+- `POST /api/investment/sync?mode=all|prices|base-prices&limit=200&months=2026-07&assetCodes=005930&allAssets=true`: 코스콤 CHECK API 종목 마스터, 최신 종가, 선택 월 첫 거래일 기준가를 수동 동기화합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
 
 ## AI 절약 챗봇 연동 및 Guardrail/RAG 설계
 
@@ -124,6 +124,7 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
    - 운영 배포에서는 코스콤 CHECK API의 IP 제한을 피하기 위해 WAS 1만 스케줄러를 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 사용자 요청에서는 `KOSCOM_LIVE_REFRESH_ON_READ=false`, `KOSCOM_MASTER_SYNC_ON_READ=false`로 DB에 저장된 시세와 마스터만 읽습니다.
    - 로컬 개발에서는 `KOSCOM_LIVE_REFRESH_ON_READ=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 즉시 insert 검증을 허용할 수 있습니다. 운영에서 이 값을 켜면 ALB 라우팅 또는 다중 WAS 공인 IP 차이로 `직전 API 조회 IP와 현재 IP가 다릅니다` 오류가 발생할 수 있습니다.
    - 스케줄러는 최신 종가와 함께 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 기준가도 적재합니다. 기본값은 3개월이며, `KOSCOM_BASE_PRICE_SYNC_LIMIT`로 기준가 백필 대상 자산 수를 제한합니다.
+   - 모든 종목의 월초 기준가를 미리 적재하려면 `KOSCOM_BASE_PRICE_SYNC_ALL_ASSETS=true` 또는 수동 동기화의 `allAssets=true`를 사용합니다. 종목 수와 월 수만큼 코스콤 호출이 발생하므로 운영에서는 WAS 1에서만 배치로 실행하고 `limit`를 조절합니다.
    - 코스콤 CHECK API 호출은 `KOSCOM_REQUEST_INTERVAL_MS` 기준으로 직렬화합니다. 기본값은 `1100ms`이며, API 호출 제한을 피하기 위해 최소 `1000ms`로 보정합니다.
    - 코스콤 계약 명세의 URL/경로가 다를 수 있으므로 `KOSCOM_BASE_URL`, `KOSCOM_STOCK_MASTER_PATH`, `KOSCOM_ETF_MASTER_PATH`, `KOSCOM_BASIC_QUOTE_PATH` 환경 변수로 실제 계약 경로를 재정의할 수 있습니다.
    - 가격 동기화 대상은 기본 지수 ETF와 사용자가 검색 후 선택한 종목(`price_sync_enabled=true`)입니다.

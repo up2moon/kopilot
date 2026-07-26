@@ -281,6 +281,8 @@
 | `mode` | query/body | 선택 | `all`이면 종목 마스터, 최신 가격, 기준가를 모두 동기화한다. `prices`이면 최신 가격만, `base-prices`이면 선택 월 첫 거래일 기준가만 동기화한다. 기본값은 `all` |
 | `limit` | query/body | 선택 | 가격 동기화 대상 최대 개수. 기본값은 `KOSCOM_PRICE_SYNC_LIMIT` 또는 `200` |
 | `months` | query/body | 선택 | `mode=base-prices`에서 기준가를 백필할 월 목록. 예: `2026-07` 또는 `2026-07,2026-06` |
+| `assetCodes` | query/body | 선택 | 특정 종목만 우선 백필할 때 사용하는 종목 코드 목록. 예: `005930` 또는 `005930,000660` |
+| `allAssets` | query/body | 선택 | `true`이면 `price_sync_enabled` 여부와 관계없이 전체 종목을 기준가 백필 대상으로 조회한다. 호출량이 크므로 운영에서는 배치 크기를 제한한다. |
 
 ---
 
@@ -553,7 +555,7 @@ MVP 기본값:
 - 기본 가격 동기화 대상: `S&P500 ETF(360750)`, `KOSPI 200 ETF(069500)`, 사용자가 검색 후 선택한 종목
 - 매일 스케줄: 백엔드 프로세스가 `KOSCOM_SYNC_TIME` 기준 KST 매일 1회 코스콤 CHECK API를 호출해 종가를 갱신한다. 기본값은 `17:10`이다.
 - 배포 직후 초기 적재: 서버 시작 5초 후 `investment_price`가 0건이면 자동으로 코스콤 마스터, 최신 가격, 최근 월 첫 거래일 기준가를 적재한다. 강제로 매 시작 시 동기화하려면 `KOSCOM_SYNC_ON_START=true`를 사용하고, 수동 실행은 `POST /api/investment/sync`를 사용한다.
-- 기준가 백필: 스케줄러는 최신 종가뿐 아니라 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 종가도 함께 적재한다. 특정 월만 수동 백필하려면 `POST /api/investment/sync?mode=base-prices&months=2026-07`을 사용한다.
+- 기준가 백필: 스케줄러는 최신 종가뿐 아니라 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 종가도 함께 적재한다. 특정 월과 종목만 수동 백필하려면 `POST /api/investment/sync?mode=base-prices&months=2026-07&assetCodes=005930`을 사용한다. 전체 종목 기준가를 백필하려면 `allAssets=true`를 추가한다.
 - 운영 다중 WAS 환경에서는 코스콤 CHECK API의 조회 IP 제한을 피하기 위해 한 개 WAS만 스케줄러를 실행한다. 사용자 요청 경로에서는 코스콤을 직접 호출하지 않고 DB에 저장된 값만 읽는다.
 - 로컬 개발에서는 즉시 검증을 위해 요청 시 live refresh를 허용할 수 있지만, 운영에서 live refresh를 켜면 ALB 라우팅 또는 WAS별 공인 IP 차이로 `직전 API 조회 IP와 현재 IP가 다릅니다` 오류가 발생할 수 있다.
 
@@ -567,6 +569,7 @@ KOSCOM_LIVE_REFRESH_ON_READ=false
 KOSCOM_MASTER_SYNC_ON_READ=false
 KOSCOM_BASE_PRICE_BACKFILL_MONTHS=3
 KOSCOM_BASE_PRICE_SYNC_LIMIT=50
+KOSCOM_BASE_PRICE_SYNC_ALL_ASSETS=false
 KOSCOM_PRICE_SYNC_LIMIT=200
 KOSCOM_REQUEST_INTERVAL_MS=1100
 KOSCOM_BASE_URL=https://checkapi.koscom.co.kr
