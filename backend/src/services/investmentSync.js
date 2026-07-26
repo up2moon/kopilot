@@ -426,7 +426,11 @@ async function getPriceSyncAssets(limit, assetCodes = [], { allAssets = false } 
   return [...defaultAssets, ...extraAssets];
 }
 
-export async function syncKoscomClosingPrices({ limit, assetCodes, allAssets = false } = {}) {
+export async function syncKoscomClosingPrices({
+  limit,
+  assetCodes,
+  allAssets = process.env.KOSCOM_PRICE_SYNC_ALL_ASSETS,
+} = {}) {
   getKoscomCredentials();
   await enablePriceSync(normalizeAssetCodes(assetCodes));
 
