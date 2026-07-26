@@ -117,9 +117,97 @@
   color: #191f28;
 }
 
+.mypage-setting-status {
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.mypage-setting-status.is-on {
+  color: #00a661;
+}
+
+.mypage-setting-status.is-off {
+  color: #8b95a1;
+}
+
 .mypage-setting-chevron {
   font-size: 16px;
   font-weight: 600;
   color: #b0b8c1;
   flex-shrink: 0;
+}
+
+.mypage-setting-row:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 인앱 확인 모달 (화면 중앙, window.confirm 대체) */
+.mypage-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.mypage-modal {
+  width: 100%;
+  max-width: 320px;
+  padding: 24px 22px 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(17, 24, 39, 0.28);
+  text-align: center;
+}
+
+.mypage-modal-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #191f28;
+}
+
+.mypage-modal-text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #4e5968;
+  word-break: keep-all;
+}
+
+.mypage-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mypage-modal-actions button {
+  flex: 1;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mypage-modal-cancel {
+  background: #f2f4f6;
+  color: #4e5968;
+}
+
+.mypage-modal-danger {
+  background: #f04452;
+  color: #ffffff;
+}
+
+.mypage-error {
+  margin: 12px 4px 0;
+  font-size: 13px;
+  color: #f04452;
+  line-height: 1.4;
 }

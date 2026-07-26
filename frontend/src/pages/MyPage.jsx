@@ -1,18 +1,56 @@
+import { useState } from 'react'
 import './MyPage.css'
 
-export default function MyPage({ auth, onLogout }) {
+export default function MyPage({
+  auth,
+  onLogout,
+  mydataBusy = false,
+  mydataError = '',
+  onMydataConnect,
+  onMydataDisconnect,
+}) {
   const user = auth?.user
   const nickname = user?.nickname || user?.name || '진원'
   const secondaryText = user?.email || (user?.myDataConnected ? '마이데이터 연동됨' : '마이데이터 미연동')
+  const isConnected = Boolean(user?.myDataConnected)
 
-  // 각 설정 행은 아직 백엔드와 연동하지 않은 UI 단계입니다.
-  // 로그아웃만 기존 `POST /api/auth/logout` 흐름(onLogout)에 연결되어 있습니다.
+  const [pendingDisconnect, setPendingDisconnect] = useState(false)
+
+  const handleMyDataClick = () => {
+    if (mydataBusy) return
+
+    // 연동 해제는 소비 내역을 삭제하는 동작이라 인앱 확인 모달을 거친다.
+    // (window.confirm은 일부 브라우저/웹뷰에서 차단되므로 사용하지 않는다.)
+    if (isConnected) {
+      setPendingDisconnect(true)
+    } else {
+      onMydataConnect?.()
+    }
+  }
+
+  const confirmDisconnect = () => {
+    setPendingDisconnect(false)
+    onMydataDisconnect?.()
+  }
+
+  const myDataStatus = mydataBusy
+    ? isConnected
+      ? '해제 중…'
+      : '연동 중…'
+    : isConnected
+      ? '연동됨'
+      : '연동 안 됨'
+
+  // 로그아웃만 기존 로그아웃 흐름에 연결되어 있고, 알림 설정은 아직 UI 단계입니다.
   const settingItems = [
     {
       id: 'mydata',
       icon: '🔒',
       label: '마이데이터 연결 관리',
-      onClick: undefined,
+      status: myDataStatus,
+      statusTone: isConnected ? 'on' : 'off',
+      onClick: handleMyDataClick,
+      disabled: mydataBusy,
     },
     {
       id: 'notification',
@@ -55,18 +93,61 @@ export default function MyPage({ auth, onLogout }) {
               type="button"
               className="mypage-setting-row"
               onClick={item.onClick}
+              disabled={item.disabled}
             >
               <span className="mypage-setting-icon" aria-hidden="true">
                 {item.icon}
               </span>
               <span className="mypage-setting-label">{item.label}</span>
+              {item.status && (
+                <span className={`mypage-setting-status is-${item.statusTone}`}>
+                  {item.status}
+                </span>
+              )}
               <span className="mypage-setting-chevron" aria-hidden="true">
                 &gt;
               </span>
             </button>
           ))}
         </div>
+
+        {mydataError && <p className="mypage-error">{mydataError}</p>}
       </section>
+
+      {pendingDisconnect && (
+        <div
+          className="mypage-modal-backdrop"
+          onClick={() => setPendingDisconnect(false)}
+        >
+          <div
+            className="mypage-modal"
+            role="alertdialog"
+            aria-label="마이데이터 연동 해제 확인"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="mypage-modal-title">마이데이터 연동 해제</h3>
+            <p className="mypage-modal-text">
+              연동을 해제하면 불러온 소비 내역이 삭제돼요. 해제할까요?
+            </p>
+            <div className="mypage-modal-actions">
+              <button
+                type="button"
+                className="mypage-modal-cancel"
+                onClick={() => setPendingDisconnect(false)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="mypage-modal-danger"
+                onClick={confirmDisconnect}
+              >
+                연동 해제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

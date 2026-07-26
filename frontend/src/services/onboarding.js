@@ -35,6 +35,13 @@ export function connectMyData(token) {
   })
 }
 
+export function disconnectMyData(token) {
+  return requestJson('/api/users/me/mydata/disconnect', {
+    method: 'POST',
+    token,
+  })
+}
+
 export function skipBudgetGoals(token) {
   return requestJson('/api/users/me/onboarding/skip-goals', {
     method: 'POST',

@@ -28,7 +28,7 @@
 - `GET /api/auth/me`: `Authorization: Bearer <accessToken>`으로 현재 사용자 정보를 반환합니다.
 - `GET /api/users/me/onboarding-status`: 현재 사용자의 첫 로그인 초기 설정, 마이데이터, 예산 설정 상태와 저장된 거래/예산 개수를 반환합니다.
 - `POST /api/users/me/mydata/connect`: 실제 마이데이터 연동 대신 `OPEN_AI_KEY` 기반 OpenAI Responses API로 최근 1개월 합성 `transaction_history`를 생성하고 `myDataConnected=true`로 저장합니다. 키 누락이나 OpenAI 생성 실패 시 `502`를 반환하며 로컬 mock 데이터로 대체하지 않습니다.
-- `POST /api/users/me/mydata/disconnect`: 현재 사용자의 마이데이터 연동을 해제하여 `myDataConnected=false`로 전환합니다.
+- `POST /api/users/me/mydata/disconnect`: 현재 사용자의 마이데이터 연동을 해제하여 `myDataConnected=false`로 전환하고, 해당 사용자의 `transaction_history`를 모두 삭제합니다(재연동 시 `connect`로 재생성). 갱신된 사용자 정보와 `transactionCount: 0`을 반환합니다. 마이 페이지의 "마이데이터 연결 관리" 행이 이 API와 `connect`를 상태에 따라 토글 호출합니다.
 - `GET /api/budget/categories`: 선택 가능한 소비 예산 카테고리 목록을 반환합니다.
 - `POST /api/users/me/budgets`: 사용자의 카테고리별 월 예산 목표를 `user_expense_category.cost`에 저장하고 `firstLoginCompleted=true`, `budgetSetupCompleted=true` 상태로 전환합니다.
 - `POST /api/users/me/onboarding/skip-goals`: 소비 목표 설정을 건너뛰고 `firstLoginCompleted=true`, `budgetSetupCompleted=false` 상태로 온보딩을 완료합니다.
