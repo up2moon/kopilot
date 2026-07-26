@@ -5,6 +5,7 @@ import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/DashboardPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
+import MyPage from './pages/MyPage'
 import {
   clearAuth,
   getStoredAuth,
@@ -212,15 +213,7 @@ function App() {
     )
   } else if (route === routes.my) {
     if (!auth) return null
-    screenContent = (
-      <SubPageScreen
-        title="마이 페이지"
-        description="계정 정보와 마이데이터 연동 설정을 관리합니다."
-        onBack={() => navigate(routes.dashboard)}
-        onLogout={handleLogout}
-        user={auth.user}
-      />
-    )
+    screenContent = <MyPage auth={auth} onNavigate={navigate} onLogout={handleLogout} />
   } else {
     screenContent = <LoginScreen onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
   }
