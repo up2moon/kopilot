@@ -41,6 +41,11 @@ export const User = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+    total_points: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     tableName: "user",
