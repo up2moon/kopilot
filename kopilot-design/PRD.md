@@ -262,8 +262,10 @@ AI 절약 챗봇은 소비 패턴을 바탕으로 사용자가 바로 실행할 
 - 제목: `투자효과`
 - 설명: `아낀 돈의 기회비용을 참고용 시뮬레이션으로 확인해요.`
 - 절약액 카드: 예시 `이번 달 커피 절약액 60,000원`
-- 비교 문구: `이 돈을 스타벅스에 투자했다면 현재 약 68,400원이 되었어요.`
-- 비교 기준: 스타벅스, S&P500 ETF, 정기예금
+- 월 선택: 선택한 월의 소비/절약액을 기준으로 같은 월 첫 거래일에 샀다고 가정. 예: `6월 소비는 6월에 샀다면`, `7월 소비는 7월에 샀다면`
+- 기본 비교 문구: `이 돈을 S&P500 ETF에 투자했다면 현재 약 65,100원이 되었어요.`
+- 기본 비교 기준: S&P500 ETF, KOSPI 200 ETF, 정기예금 또는 CMA
+- 종목 검색: 사용자가 주식 또는 ETF를 검색해 선택하면 `해당 종목을 샀다면 현재 얼마가 되었는지`를 별도 카드로 표시
 - 모든 화면에 투자 권유가 아닌 참고용 시뮬레이션이라는 고지를 포함
 
 ### 7.9 마이
@@ -379,17 +381,23 @@ AI 절약 챗봇은 소비 패턴을 바탕으로 사용자가 바로 실행할 
 
 ```json
 {
+  "month": "2026-07",
   "savedAmount": 60000,
-  "comparisons": [
-    {
-      "label": "스타벅스",
-      "estimatedValue": 68400,
-      "estimatedGain": 8400
-    },
+  "assumedBuyDate": "2026-07-01",
+  "benchmarks": [
     {
       "label": "S&P500 ETF",
+      "basePrice": 60100,
+      "currentPrice": 65200,
       "estimatedValue": 65100,
       "estimatedGain": 5100
+    },
+    {
+      "label": "KOSPI 200 ETF",
+      "basePrice": 39570,
+      "currentPrice": 42100,
+      "estimatedValue": 63840,
+      "estimatedGain": 3840
     },
     {
       "label": "정기예금",
@@ -397,6 +405,13 @@ AI 절약 챗봇은 소비 패턴을 바탕으로 사용자가 바로 실행할 
       "estimatedGain": 720
     }
   ],
+  "selectedAsset": {
+    "label": "사용자가 검색한 종목",
+    "basePrice": 75100,
+    "currentPrice": 79000,
+    "estimatedValue": 63120,
+    "estimatedGain": 3120
+  },
   "disclaimer": "투자 권유가 아닌 참고용 시뮬레이션입니다."
 }
 ```
@@ -420,7 +435,9 @@ MVP에서 실제 API가 없으면 mock data를 사용해 동일한 응답 형태
 | `GET` | `/api/challenges/today` | 오늘의 챌린지 조회 |
 | `POST` | `/api/challenges/{challengeId}/verify` | 챌린지 수행 인증 |
 | `GET` | `/api/rankings/monthly` | 월간 익명 랭킹 조회 |
-| `GET` | `/api/investment-effect?month=YYYY-MM` | 투자효과 시뮬레이션 조회 |
+| `GET` | `/api/users/me/investment-effect/simulation?month=YYYY-MM&category=coffee` | 지수 ETF 기본 비교군과 선택 종목 투자효과 시뮬레이션 조회 |
+| `GET` | `/api/investment/assets/search?keyword=검색어` | 사용자가 선택할 주식 또는 ETF 검색 |
+| `GET` | `/api/investment/quotes` | 코스콤 CHECK API 기반 선택 자산 시세 조회 |
 
 ## 10. 상태와 예외 처리
 

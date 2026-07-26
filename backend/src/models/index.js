@@ -198,6 +198,114 @@ export const AiChallenge = sequelize.define(
   },
 );
 
+export const InvestmentAsset = sequelize.define(
+  "InvestmentAsset",
+  {
+    asset_code: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      primaryKey: true,
+    },
+    label: {
+      type: DataTypes.STRING(120),
+      allowNull: false,
+    },
+    asset_type: {
+      type: DataTypes.ENUM("STOCK", "ETF"),
+      allowNull: false,
+    },
+    market: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: "KOSPI",
+    },
+    description: {
+      type: DataTypes.STRING(160),
+      allowNull: true,
+    },
+    icon: {
+      type: DataTypes.STRING(8),
+      allowNull: false,
+      defaultValue: "📌",
+    },
+    price_sync_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    last_synced_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  },
+  {
+    tableName: "investment_asset",
+    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    indexes: [
+      {
+        fields: ["label"],
+      },
+      {
+        fields: ["asset_type"],
+      },
+      {
+        fields: ["price_sync_enabled"],
+      },
+    ],
+  },
+);
+
+export const InvestmentPrice = sequelize.define(
+  "InvestmentPrice",
+  {
+    asset_code: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      primaryKey: true,
+    },
+    trade_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      primaryKey: true,
+    },
+    close_price: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    diff_rate: {
+      type: DataTypes.DECIMAL(12, 6),
+      allowNull: true,
+    },
+    raw_response: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    source: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+      defaultValue: "KOSCOM_CHECK",
+    },
+    synced_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "investment_price",
+    underscored: true,
+    timestamps: false,
+    indexes: [
+      {
+        fields: ["trade_date"],
+      },
+    ],
+  },
+);
+
 User.hasMany(UserExpenseCategory, {
   foreignKey: "user_id",
 });
@@ -229,6 +337,15 @@ User.hasMany(AiChallenge, {
 });
 AiChallenge.belongsTo(User, {
   foreignKey: "user_id",
+});
+
+InvestmentAsset.hasMany(InvestmentPrice, {
+  foreignKey: "asset_code",
+  sourceKey: "asset_code",
+});
+InvestmentPrice.belongsTo(InvestmentAsset, {
+  foreignKey: "asset_code",
+  targetKey: "asset_code",
 });
 
 const defaultCategories = [

@@ -5,6 +5,7 @@ import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/DashboardPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
+import InvestmentEffectPage from './pages/InvestmentEffectPage'
 import {
   clearAuth,
   getStoredAuth,
@@ -204,10 +205,8 @@ function App() {
   } else if (route === routes.investmentEffect) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="투자효과 시뮬레이션"
-        description="아낀 돈의 기회비용과 미래 가치를 시뮬레이션합니다."
-        onBack={() => navigate(routes.dashboard)}
+      <InvestmentEffectPage
+        token={auth.accessToken}
       />
     )
   } else if (route === routes.my) {
