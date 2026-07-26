@@ -46,6 +46,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       OPEN_AI_KEY: ${OPEN_AI_KEY:?OPEN_AI_KEY is required}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      CUST_ID: ${CUST_ID:?CUST_ID is required}
+      AUTH_KEY: ${AUTH_KEY:?AUTH_KEY is required}
       DB_SYNC_SCHEMA: ${DB_SYNC_SCHEMA:-true}
       DB_SYNC_ALTER: ${DB_SYNC_ALTER:-true}
 

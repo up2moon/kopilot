@@ -12,6 +12,7 @@ import {
   generateTransactionsWithOpenAI,
 } from "../services/transactionGenerator.js";
 import { getTopRankings, getUserRankingData } from "../services/ranking.js";
+import { simulationHandler } from "./investment.js";
 
 const router = express.Router();
 
@@ -637,6 +638,8 @@ router.get("/me/spending/summary", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "대시보드 데이터 조회 실패" });
   }
 });
+
+router.get("/me/investment-effect/simulation", requireAuth, simulationHandler);
 
 router.get("/me/ranking", requireAuth, async (req, res) => {
   try {

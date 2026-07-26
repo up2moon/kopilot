@@ -43,8 +43,10 @@
 - `GET /api/users/me/challenges/today`: AI/마이데이터 기반으로 배정된 오늘의 미션 정보(제목, 설명, 예상 절약액, 난이도 포인트, 검증 방식, 진행 상태)를 반환합니다.
 - `GET /api/users/me/challenges/weekly`: 이번 주(월~일)의 일별 미션 목록 및 수행 판정 결과(`COMPLETED`, `IN_PROGRESS`, `FAILED`, `PENDING`)를 반환합니다.
 - `POST /api/users/me/challenges/verify`: 미션 수행 인증을 처리합니다. 백엔드에서 미션 타입별 조건(무지출 0건, 교통비 4천원 이하 한도, 수동 체크인)을 판단하여 성공 시 난이도 포인트 및 절약액 비례 포인트를 수령 처리하고 익명 랭킹 점수에 합산 반영합니다.
-- `GET /api/users/me/investment-effect/simulation?category=coffee`: 사용자의 아낀 돈(절약액)을 기반으로 코스콤 CHECK API 주요 종목/지수 및 정기예금 시뮬레이션 평가액 결과를 반환합니다.
-- `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(스타벅스, S&P500 ETF, 정기예금 등)의 최신 시세 및 수익률 데이터를 조회/반환합니다.
+- `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
+- `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
+- `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
+- `POST /api/investment/sync?mode=all|prices&limit=200`: 코스콤 CHECK API 종목 마스터 및 종가 데이터를 수동 동기화합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
 
 ## AI 절약 챗봇 연동 및 Guardrail/RAG 설계
 
@@ -103,18 +105,35 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
 투자효과 기능은 `docs/features/investment-effect.md` 명세에 따라 다음과 같이 시뮬레이션 및 CHECK API 연동을 구현합니다.
 
 1. **선별된 코스콤 CHECK API 목록**
-   - **`GET https://checkapi.koscom.co.kr/stock/m001code`**: 주식 종목 코드/종목명 마스터 데이터 조회
-   - **`GET https://checkapi.koscom.co.kr/stock/m001codeetf`**: ETF 코드/종목명 마스터 데이터 조회
-   - **`GET https://checkapi.koscom.co.kr/stock/m001basic`**: 선택된 종목의 현재가(`nowPrc`), 등락률(`diffRate`) 기본 시세 데이터 조회
+   - **`POST https://checkapi.koscom.co.kr/stock/m001/code_info`**: 주식 종목 코드/종목명 마스터 데이터 조회
+   - **`POST https://checkapi.koscom.co.kr/stock/m001/code_etf_info`**: ETF 코드/종목명 마스터 데이터 조회
+   - **`POST https://checkapi.koscom.co.kr/stock/m001/basic_info`**: 선택된 종목의 현재가(`F15001`), 등락률(`F15004`) 기본 시세 데이터 조회
+   - **`POST https://checkapi.koscom.co.kr/stock/m001/hist_info`**: 선택 종목의 일별 가격(`F12506`, `F15001`) 데이터 조회
 
-2. **주가 손실 시 UX 보완 정책 (사용자 선택형 비교 + 안전자산 믹스)**
+2. **기본 지수 ETF 비교 + 사용자 검색형 종목 선택 + 안전자산 믹스**
    - 주가 하락 시 절약 동기부여 저하를 방지하기 위해 **원금 보장/이자 수익을 주는 정기예금/CMA(+항상 플러스)**를 기본 비교군에 포함.
-   - 사용자가 원하는 비교 종목(스타벅스, S&P500 ETF, 정기예금 등)을 직접 선택하여 기회비용 시뮬레이션을 확인할 수 있는 사용자 선택형(User Selection) 구조 적용.
+   - 기본 비교군은 특정 개별 주식이 아니라 **S&P500 ETF, KOSPI 200 ETF, 정기예금/CMA** 중심으로 구성합니다.
+   - 개별 주식은 추천처럼 보이지 않도록 기본 노출하지 않고, 사용자가 직접 검색해 선택한 경우에만 `해당 주식을 샀다면 현재 얼마가 되었는지`를 사용자 선택형(User Selection) 카드로 계산합니다.
 
-3. **기회비용 시뮬레이션 산출 계산식**
-   - `평가 금액 = 절약 금액 × (1 + 수익률)`
-   - `손익 금액 = 평가 금액 - 절약 금액` (예: `+8,400원`)
-   - 백엔드는 코스콤 CHECK API 시세를 5분~1시간 단위 캐싱하여 효율적으로 결과를 제공합니다.
+3. **DB 적재 및 종가 스케줄링**
+   - `investment_asset`: 코스콤 주식/ETF 마스터를 저장합니다. 종목 검색은 이 테이블 기준으로 수행합니다.
+   - `investment_price`: `(asset_code, trade_date)` 복합 키로 거래일별 종가를 저장합니다.
+   - 화면의 현재가는 `investment_price.close_price`의 최신 거래일 값을 `currentPrice`로 내려주고, 기준가는 선택 월 첫 거래일 값을 `basePrice`로 내려줍니다. 조회/동기화 시각은 `synced_at`을 `quotedAt`으로 사용합니다.
+   - 백엔드는 `KOSCOM_SYNC_TIME` 환경 변수 기준 KST 매일 1회 코스콤 CHECK API를 호출합니다. 기본값은 `17:10`입니다.
+   - 서버 시작 5초 후 `investment_price`가 0건이면 즉시 초기 동기화를 실행합니다. `KOSCOM_SYNC_ON_START=true`이면 가격 테이블 보유 여부와 관계없이 서버 시작 시 한 번 동기화합니다. `KOSCOM_SYNC_DISABLED=true`이면 스케줄러와 초기 동기화를 모두 끕니다.
+   - 코스콤 CHECK API 호출은 `KOSCOM_REQUEST_INTERVAL_MS` 기준으로 직렬화합니다. 기본값은 `1100ms`이며, API 호출 제한을 피하기 위해 최소 `1000ms`로 보정합니다.
+   - 코스콤 계약 명세의 URL/경로가 다를 수 있으므로 `KOSCOM_BASE_URL`, `KOSCOM_STOCK_MASTER_PATH`, `KOSCOM_ETF_MASTER_PATH`, `KOSCOM_BASIC_QUOTE_PATH` 환경 변수로 실제 계약 경로를 재정의할 수 있습니다.
+   - 가격 동기화 대상은 기본 지수 ETF와 사용자가 검색 후 선택한 종목(`price_sync_enabled=true`)입니다.
+   - mock 시세나 mock 기준가는 사용하지 않습니다. 기준일 종가가 없으면 `PRICE_HISTORY_MISSING`으로 응답합니다.
+
+4. **기회비용 시뮬레이션 산출 계산식**
+   - 투자효과는 `month=YYYY-MM` 기준으로 월별 카테고리 소비액과 투자 가정 월을 동일하게 묶습니다. 예를 들어 `month=2026-06`은 `6월 소비액을 6월 첫 거래일에 투자했다면`, `month=2026-07`은 `7월 소비액을 7월 첫 거래일에 투자했다면`으로 계산합니다.
+   - 기준가는 선택 월의 첫 거래일 가격을 사용합니다. 해당 월 1일이 휴장일이면 그 월의 첫 거래 가능일 가격을 사용합니다.
+   - `평가 금액 = 소비 금액 × (1 + 수익률)`
+   - `손익 금액 = 평가 금액 - 소비 금액` (예: `+8,400원`)
+   - `수익률 = (현재가 - 기준가) / 기준가`
+   - 현재가가 없고 기준일 가격만 DB에 있는 경우 기준일 가격을 현재가로 재사용하지 않고 `CURRENT_PRICE_MISSING`을 반환합니다.
+   - 백엔드는 코스콤 CHECK API 시세를 매일 DB에 적재하고, 시뮬레이션 요청은 저장된 종가를 기준으로 계산합니다.
 
 ## 마이페이지 및 계정/연동 관리 설계
 
