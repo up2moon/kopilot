@@ -7,6 +7,7 @@ import { db, connectMySQL, syncDatabase } from "./db.js";
 import { seedDefaultCategories } from "./models/index.js";
 import { redisClient, connectRedis } from "./redis.js";
 import authRouter from "./routes/auth.js";
+import savingBotRouter from "./routes/savingBot.js";
 import usersRouter, { categoriesHandler } from "./routes/users.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/users", savingBotRouter);
 app.get("/api/budget/categories", categoriesHandler);
 
 app.get("/api/health", (req, res) => {
