@@ -10,7 +10,7 @@
 5. 인프라나 배포 변경이 포함되면 루트 `INFRA.md`
 
 ## 와이어프레임 연계 규칙
-백엔드 작업도 화면 요구사항과 연결되면 `kopilot-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. 일일 챌린지 API는 `docs/features/daily-challenge.md`의 AI 맞춤 미션 1개 생성, 미션 타입별 자동/수동 검증 로직, 난이도 및 절약액 기반 차등 포인트 지급, 주간 미션 이력 관리를 기준으로 응답을 구성합니다. 투자효과 API는 `docs/features/investment-effect.md`의 기회비용 시뮬레이션, 코스콤 CHECK API 시세 연동, 사용자 선택 비교 종목 및 안전자산(예금) 믹스를 기준으로 응답을 구성합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
+백엔드 작업도 화면 요구사항과 연결되면 `kopilot-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. AI 챌린지 API는 `docs/features/ai-challenge.md`의 월요일 사용자별 평일 5개 AI 미션 생성, DB 영속화, 자동 검증 가능한 미션 유형을 기준으로 응답을 구성합니다. 투자효과 API는 `docs/features/investment-effect.md`의 기회비용 시뮬레이션, 코스콤 CHECK API 시세 연동, 사용자 선택 비교 종목 및 안전자산(예금) 믹스를 기준으로 응답을 구성합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
 
 프론트엔드가 와이어프레임에 맞춰 표시해야 하는 문구가 있다면 API 응답 필드 이름과 값이 그 요구사항을 명확히 지원해야 합니다. 실제 외부 API가 없는 범위는 mock 데이터와 명시적인 상태값으로 처리합니다.
 
@@ -40,9 +40,7 @@
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
-- `GET /api/users/me/challenges/today`: AI/마이데이터 기반으로 배정된 오늘의 미션 정보(제목, 설명, 예상 절약액, 난이도 포인트, 검증 방식, 진행 상태)를 반환합니다.
-- `GET /api/users/me/challenges/weekly`: 이번 주(월~일)의 일별 미션 목록 및 수행 판정 결과(`COMPLETED`, `IN_PROGRESS`, `FAILED`, `PENDING`)를 반환합니다.
-- `POST /api/users/me/challenges/verify`: 미션 수행 인증을 처리합니다. 백엔드에서 미션 타입별 조건(무지출 0건, 교통비 4천원 이하 한도, 수동 체크인)을 판단하여 성공 시 난이도 포인트 및 절약액 비례 포인트를 수령 처리하고 익명 랭킹 점수에 합산 반영합니다.
+- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지를 반환합니다. 이번 주 월요일에 아직 생성되지 않았다면, 마이데이터 연동 및 사용자 선택 카테고리·최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 이미 저장된 미션은 재생성하지 않습니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
@@ -80,25 +78,25 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
    - **포인트 합산 방식 적용**: `랭킹 점수 = (예산 준수율 포인트) + (Daily/Weekly 절약 퀘스트 달성 포인트)`.
    - 꾸준히 절약 미션을 수행하고 예산을 잘 준수한 사용자가 정당하게 상위 랭킹에 도달하도록 백엔드 점수 집계 로직 작성.
 
-## 일일 챌린지 생성 및 미션 검증(Verification) 시스템 설계
+## AI 주간 챌린지 생성 시스템
 
-일일 챌린지 기능은 `docs/features/daily-challenge.md` 명세에 따라 다음과 같이 검증 및 배정 로직을 구성합니다.
+챌린지 생성은 `docs/features/ai-challenge.md` 명세에 따라 다음과 같이 동작한다.
 
-1. **AI/마이데이터 기반 하루 1개 미션 배정**
-   - 사용자 마이데이터(자주 가는 가맹점, 커피/배달 비중 등)를 기반으로 매일 자정 사용자 맞춤형 미션을 1개 생성합니다.
-   - 난이도별 기본 포인트 (50pt / 100pt / 150pt) + `예상 절약액의 10%` 가산 포인트를 함께 설정합니다.
+1. **월요일 AI 생성 및 DB 영속화**
+   - KST 매주 월요일 00:10 이후 스케줄러가 마이데이터 연동 사용자 중 소비 카테고리를 선택한 사용자를 대상으로 실행된다.
+   - OpenAI Responses API는 선택 카테고리와 최근 30일 카테고리별 소비 통계를 입력으로 받아 월~금 5개 미션을 JSON Schema 형태로 반환한다.
+   - `(user_id, challenge_date)` 유니크 인덱스로 같은 사용자·날짜 미션의 중복 저장을 막는다. 이미 저장된 주간 미션은 새로고침·재로그인 시에도 그대로 반환하며 AI를 다시 호출하지 않는다.
+   - 서버가 월요일 생성 시점을 놓친 경우에는 그 주 월요일 첫 `GET /api/users/me/challenges` 요청이 생성을 보완한다.
 
-2. **미션 성공 여부 (Verification) 타입별 검증 로직**
-   - **`ZERO_SPEND` (무지출 미션)**: 당일 마이데이터 거래 내역 중 해당 카테고리(`카페`, `배달` 등) 결제 건수가 `0건`일 경우 검증 성공.
-   - **`AMOUNT_LIMIT` (금액 한도 미션 - 예: 택시 대신 지하철)**: 교통 카테고리로 통합 분류되는 특성을 고려해, 당일 교통 결제 금액 1회 또는 총합이 `4,000원 이하` (택시 이용 미발생 추정)일 때 검증 성공.
-   - **`MANUAL_ACTION` (확인/수동 미션 - 예: 구독 서비스 확인하기)**: 마이데이터로 100% 자동 감지가 어려운 미션은 사용자가 `수행 인증하기` 버튼 클릭 및 수동 인증 시 성공 판정.
+2. **생성 가능한 미션 제약**
+   - AI는 사용자가 선택한 카테고리만 사용할 수 있다.
+   - `NO_SPEND`(해당 카테고리 거래 0건), `MAX_SPEND`(해당 카테고리 일 지출 한도 이하)만 생성한다.
+   - 영수증·사진·자기 신고가 필요한 미션은 생성하지 않는다.
+   - AI 응답의 날짜, 카테고리, 금액, 타입을 서버에서 검증하고 형식 오류 시 1회 재요청한다.
 
-3. **미션 검증 및 랭킹 포인트 반영 (`POST /api/users/me/challenges/verify`)**
-   - 사용자가 '수행 인증하기'를 클릭하거나 마이데이터 업데이트 시 백엔드가 검증을 실행합니다.
-   - **DB 갱신 및 랭킹 연동 규칙**:
-     1. 검증 성공 시 `AiChallenge.status`를 `"SUCCESS"`로 업데이트하고 `start_date`를 당월 날짜로 기록합니다.
-     2. 미션 난이도 획득 포인트(`point`)를 `User.total_points` 컬럼에 누적 합산(`user.total_points += earnedPoints`)합니다.
-     3. 랭킹 시스템(`ranking.js`)은 당월 1일 이후 `AiChallenge` 중 `status = 'SUCCESS'`인 개수를 조회하여 랭킹 카드에 `미션 N회 성공`으로 즉시 자동 반영합니다.
+3. **이번 브랜치 범위**
+   - 챌린지 조회·생성 및 화면 표시까지만 포함한다.
+   - 오후 인증, 전일 거래내역 최종 재검증, 성공/실패 판정, 포인트 지급·랭킹 반영은 후속 브랜치에서 구현한다.
 
 ## 투자효과 및 코스콤 CHECK API 연동 설계
 

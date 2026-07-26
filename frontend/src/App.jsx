@@ -7,6 +7,7 @@ import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/InvestmentEffectPage'
 import MyPage from './pages/MyPage'
+import ChallengePage from './pages/ChallengePage'
 import {
   clearAuth,
   getStoredAuth,
@@ -239,13 +240,7 @@ function App() {
     )
   } else if (route === routes.challenge) {
     if (!auth) return null
-    screenContent = (
-      <SubPageScreen
-        title="일일 챌린지"
-        description="AI가 배정한 오늘의 절약 미션을 수행하세요."
-        onBack={() => navigate(routes.dashboard)}
-      />
-    )
+    screenContent = <ChallengePage token={auth.accessToken} />
   } else if (route === routes.investmentEffect) {
     if (!auth) return null
     screenContent = (

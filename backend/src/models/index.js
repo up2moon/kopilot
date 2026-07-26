@@ -167,6 +167,27 @@ export const AiChallenge = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    challenge_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    expense_category_id: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+    },
+    challenge_type: {
+      type: DataTypes.ENUM("NO_SPEND", "MAX_SPEND"),
+      allowNull: true,
+    },
+    target_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+    },
+    estimated_saving_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
     start_date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -195,6 +216,15 @@ export const AiChallenge = sequelize.define(
     tableName: "ai_challenge",
     underscored: true,
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["user_id", "challenge_date"],
+      },
+      {
+        fields: ["user_id", "start_date", "status"],
+      },
+    ],
   },
 );
 
@@ -337,6 +367,12 @@ User.hasMany(AiChallenge, {
 });
 AiChallenge.belongsTo(User, {
   foreignKey: "user_id",
+});
+ExpenseCategory.hasMany(AiChallenge, {
+  foreignKey: "expense_category_id",
+});
+AiChallenge.belongsTo(ExpenseCategory, {
+  foreignKey: "expense_category_id",
 });
 
 InvestmentAsset.hasMany(InvestmentPrice, {
