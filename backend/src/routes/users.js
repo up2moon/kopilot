@@ -289,6 +289,24 @@ router.post("/me/mydata/connect", requireAuth, async (req, res) => {
   }
 });
 
+router.post("/me/mydata/disconnect", requireAuth, async (req, res) => {
+  await TransactionHistory.destroy({
+    where: {
+      user_id: req.user.id,
+    },
+  });
+
+  await req.user.update({
+    mydata_connected: false,
+  });
+
+  return res.status(200).json({
+    user: toAuthUser(req.user),
+    myDataConnected: false,
+    transactionCount: 0,
+  });
+});
+
 router.post("/me/budgets", requireAuth, async (req, res) => {
   const month = req.body.month || getCurrentMonth();
   const budgets = Array.isArray(req.body.budgets) ? req.body.budgets : [];

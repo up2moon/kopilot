@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/InvestmentEffectPage'
+import MyPage from './pages/MyPage'
 import {
   clearAuth,
   getStoredAuth,
@@ -16,6 +17,7 @@ import {
 } from './services/auth'
 import {
   connectMyData,
+  disconnectMyData,
   getBudgetCategories,
   getTransactions,
   saveBudgets,
@@ -62,6 +64,10 @@ function normalizeDefaultRoute() {
 function App() {
   const [route, setRoute] = useState(getInitialRoute)
   const [auth, setAuth] = useState(getStoredAuth)
+  // 마이데이터 연동/해제 진행 상태를 App 레벨에서 관리해 화면 이동에도 유지한다.
+  // (연동은 OpenAI 생성으로 수 초가 걸려, 컴포넌트 로컬 상태면 언마운트 시 사라진다.)
+  const [mydataBusy, setMydataBusy] = useState(false)
+  const [mydataError, setMydataError] = useState('')
 
   useEffect(() => {
     const handlePopState = () => {
@@ -92,12 +98,18 @@ function App() {
     }
 
     if (auth && !isPublicRoute) {
-      // If MyData is not connected, redirect to MyData connection screen first
-      if (!auth.user.myDataConnected && route !== routes.firstLoginMyDataConnect && route !== routes.firstLogin) {
-        navigate(routes.firstLoginMyDataConnect)
-      } else if (!auth.user.firstLoginCompleted && route !== routes.firstLogin && route !== routes.firstLoginMyDataConnect) {
-        navigate(routes.firstLogin)
-      } else if (auth.user.myDataConnected && auth.user.firstLoginCompleted && (route === routes.firstLogin || route === routes.firstLoginMyDataConnect)) {
+      const onOnboardingRoute =
+        route === routes.firstLogin || route === routes.firstLoginMyDataConnect
+
+      if (!auth.user.firstLoginCompleted) {
+        // 온보딩 미완료 사용자만 연동 → 예산 설정 순서로 유도한다.
+        // 온보딩을 마친 사용자는 마이데이터를 해제해도 앱에 머문다(마이페이지에서 재연동).
+        if (!auth.user.myDataConnected && !onOnboardingRoute) {
+          navigate(routes.firstLoginMyDataConnect)
+        } else if (auth.user.myDataConnected && !onOnboardingRoute) {
+          navigate(routes.firstLogin)
+        }
+      } else if (onOnboardingRoute) {
         navigate(routes.dashboard)
       }
     }
@@ -106,12 +118,12 @@ function App() {
   const handleAuthSuccess = (nextAuth) => {
     saveAuth(nextAuth)
     setAuth(nextAuth)
-    if (!nextAuth.user.myDataConnected) {
-      navigate(routes.firstLoginMyDataConnect)
-    } else if (!nextAuth.user.firstLoginCompleted) {
-      navigate(routes.firstLogin)
-    } else {
+    if (nextAuth.user.firstLoginCompleted) {
       navigate(routes.dashboard)
+    } else if (!nextAuth.user.myDataConnected) {
+      navigate(routes.firstLoginMyDataConnect)
+    } else {
+      navigate(routes.firstLogin)
     }
   }
 
@@ -123,6 +135,38 @@ function App() {
 
     saveAuth(nextAuth)
     setAuth(nextAuth)
+  }
+
+  const handleMydataConnect = async () => {
+    if (mydataBusy || !auth) return
+
+    setMydataBusy(true)
+    setMydataError('')
+
+    try {
+      await connectMyData(auth.accessToken)
+      handleUserUpdate({ ...auth.user, myDataConnected: true })
+    } catch (err) {
+      setMydataError(err.message || '연동에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setMydataBusy(false)
+    }
+  }
+
+  const handleMydataDisconnect = async () => {
+    if (mydataBusy || !auth) return
+
+    setMydataBusy(true)
+    setMydataError('')
+
+    try {
+      await disconnectMyData(auth.accessToken)
+      handleUserUpdate({ ...auth.user, myDataConnected: false })
+    } catch (err) {
+      setMydataError(err.message || '연동 해제에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setMydataBusy(false)
+    }
   }
 
   const handleLogout = async () => {
@@ -212,12 +256,14 @@ function App() {
   } else if (route === routes.my) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="마이 페이지"
-        description="계정 정보와 마이데이터 연동 설정을 관리합니다."
-        onBack={() => navigate(routes.dashboard)}
+      <MyPage
+        auth={auth}
+        onNavigate={navigate}
         onLogout={handleLogout}
-        user={auth.user}
+        mydataBusy={mydataBusy}
+        mydataError={mydataError}
+        onMydataConnect={handleMydataConnect}
+        onMydataDisconnect={handleMydataDisconnect}
       />
     )
   } else {
