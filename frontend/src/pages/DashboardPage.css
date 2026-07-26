@@ -21,17 +21,11 @@
 }
 
 .logo-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #3182f6;
-  color: #ffffff;
-  display: grid;
-  place-items: center;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .brand-name {

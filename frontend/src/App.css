@@ -44,15 +44,9 @@
 .logo-mark {
   width: 32px;
   height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #3182f6;
-  color: #fff;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .value-chip {

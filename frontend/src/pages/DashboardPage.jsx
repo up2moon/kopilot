@@ -61,9 +61,12 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
       {/* Top Header Bar */}
       <header className="dash-top-bar">
         <div className="brand-lockup">
-          <div className="logo-mark" aria-hidden="true">
-            K
-          </div>
+          <img
+            className="logo-mark"
+            src="/favicon-256x256.png"
+            alt=""
+            aria-hidden="true"
+          />
           <span className="brand-name">Kopilot</span>
         </div>
 

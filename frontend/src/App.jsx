@@ -335,9 +335,12 @@ function BrandHeader({ chip }) {
   return (
     <header className="brand-header">
       <div className="brand-lockup">
-        <div className="logo-mark" aria-hidden="true">
-          K
-        </div>
+        <img
+          className="logo-mark"
+          src="/favicon-256x256.png"
+          alt=""
+          aria-hidden="true"
+        />
         <span>Kopilot</span>
       </div>
 
@@ -472,9 +475,12 @@ function SetupTopBar({ step, title = '초기 설정', onBack }) {
         </button>
       ) : (
         <div className="setup-brand">
-          <div className="logo-mark" aria-hidden="true">
-            K
-          </div>
+          <img
+            className="logo-mark"
+            src="/favicon-256x256.png"
+            alt=""
+            aria-hidden="true"
+          />
           <span>Kopilot</span>
         </div>
       )}
