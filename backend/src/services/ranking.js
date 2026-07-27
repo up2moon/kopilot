@@ -109,14 +109,11 @@ export async function getUserRankingData(user) {
   }
 
   // 5. 실제 랭킹 점수 계산
-  // - DB user.total_points
-  // - (절약 금액 / 100)
-  // - (당월 성공 챌린지 수 * 100)
+  // 챌린지 보상은 성공 시 user.total_points에 이미 한 번 적립된다.
+  // 성공 개수를 다시 점수화하면 보상이 이중 합산된다.
   const dbPoints = Number(user.total_points || 0);
   const savedPoints = Math.floor(savedAmount / 100);
-  const challengePoints = thisMonthChallengeCount * 100;
-
-  const rankScore = dbPoints + savedPoints + challengePoints;
+  const rankScore = dbPoints + savedPoints;
 
   // 6. 프로필 정보 생성
   const profile = generateAnonymousProfile(userId);

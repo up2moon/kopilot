@@ -12,7 +12,7 @@ import savingBotRouter from "./routes/savingBot.js";
 import usersRouter, { categoriesHandler } from "./routes/users.js";
 import challengesRouter from "./routes/challenges.js";
 import { startKoscomSyncScheduler } from "./services/investmentSync.js";
-import { startChallengeGenerationScheduler } from "./services/challengeService.js";
+import { startChallengeFinalizationScheduler, startChallengeGenerationScheduler } from "./services/challengeService.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -121,6 +121,7 @@ async function startServer() {
       console.log(`Backend listening on [::]:${port}`);
       startKoscomSyncScheduler();
       startChallengeGenerationScheduler();
+      startChallengeFinalizationScheduler();
     },
   );
 }
