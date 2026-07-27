@@ -82,17 +82,6 @@ function roundToUnit(value, unit) {
   return Math.round(value / unit) * unit;
 }
 
-function extractResponseText(data) {
-  if (typeof data.output_text === "string") {
-    return data.output_text;
-  }
-
-  return (data.output || [])
-    .flatMap((output) => output.content || [])
-    .map((content) => content.text || "")
-    .join("");
-}
-
 /**
  * 최근 30일 거래로 카테고리별 소비 통계를 구하고, 일일 챌린지로 의미 있는
  * 카테고리만 추려서 반환한다. (통신·구독 등 월 고정 카테고리 제외)
@@ -229,120 +218,26 @@ function buildChallengePlan(categories, weekDates) {
   return plan;
 }
 
-function buildFallbackText(planItem) {
+/**
+ * 챌린지 문구를 서버에서 결정론적으로 생성한다. 모든 문구를 "~해요" 톤으로 통일하고,
+ * 카테고리 뒤에는 항상 `지출`을 붙여 은/는·을/를 조사 오류가 나지 않게 한다.
+ */
+function buildChallengeText(planItem) {
   const category = planItem.categoryName;
+  const saving = formatWon(planItem.estimatedSavingAmount);
+
   if (planItem.challengeType === "NO_SPEND") {
     return {
-      title: `${category} 지출 없는 하루 보내기`,
-      description: `오늘 하루 ${category} 결제를 하지 않으면 평소 이 카테고리에서 쓰던 약 ${formatWon(planItem.estimatedSavingAmount)}을 아낄 수 있어요.`,
+      title: `오늘은 ${category} 지출 없이 보내요`,
+      description: `${category} 결제를 하루만 쉬면 평소 이만큼 쓰던 약 ${saving}을 아낄 수 있어요.`,
     };
   }
+
+  const target = formatWon(planItem.targetAmount);
   return {
-    title: `${category} 지출 ${formatWon(planItem.targetAmount)} 이하로 쓰기`,
-    description: `평소보다 조금만 줄여 오늘 ${category} 지출을 ${formatWon(planItem.targetAmount)} 이하로 유지하면 약 ${formatWon(planItem.estimatedSavingAmount)}을 아낄 수 있어요.`,
+    title: `오늘 ${category} 지출을 ${target} 이하로 써요`,
+    description: `평소보다 조금만 줄여서 ${category} 지출을 ${target} 이하로 유지하면 약 ${saving}을 아낄 수 있어요.`,
   };
-}
-
-function challengeTextSchema() {
-  return {
-    type: "object",
-    additionalProperties: false,
-    required: ["challenges"],
-    properties: {
-      challenges: {
-        type: "array",
-        minItems: 5,
-        maxItems: 5,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["date", "title", "description"],
-          properties: {
-            date: { type: "string" },
-            title: { type: "string" },
-            description: { type: "string" },
-          },
-        },
-      },
-    },
-  };
-}
-
-/**
- * 챌린지의 카테고리·타입·금액은 서버가 확정하고, AI는 자연스러운 한글 문구만 생성한다.
- * AI 호출이 실패하거나 형식이 어긋나면 템플릿 문구로 폴백한다(챌린지 자체는 유효).
- */
-async function requestChallengeTexts(plan) {
-  const apiKey = process.env.OPEN_AI_KEY;
-  if (!apiKey) return null;
-
-  try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-        input: [
-          {
-            role: "system",
-            content:
-              "You write short, friendly Korean copy for daily saving challenges in a finance app. The category, challenge type, and amounts are already fixed by the server; only write the title and description for each date and never change the numbers. Return JSON only.",
-          },
-          {
-            role: "user",
-            content: JSON.stringify({
-              task: "Write a title and description for each challenge in Korean.",
-              rules: [
-                "각 챌린지의 카테고리·타입·금액은 그대로 반영하고 다른 숫자를 지어내지 마세요.",
-                "NO_SPEND는 해당 카테고리 지출을 하루 쉬는 미션입니다.",
-                "MAX_SPEND는 targetAmount 이하로 지출을 줄이는 미션입니다.",
-                "제목은 40자 이내, 부담 주지 않는 응원 톤으로 작성하세요.",
-              ],
-              challenges: plan.map((item) => ({
-                date: item.date,
-                category: item.categoryName,
-                challengeType: item.challengeType,
-                targetAmount: item.targetAmount,
-                estimatedSavingAmount: item.estimatedSavingAmount,
-              })),
-            }),
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "challenge_texts",
-            strict: true,
-            schema: challengeTextSchema(),
-          },
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI challenge text generation failed: ${response.status}`);
-    }
-
-    const payload = await response.json();
-    const parsed = JSON.parse(extractResponseText(payload));
-    if (!Array.isArray(parsed.challenges)) return null;
-
-    const byDate = new Map();
-    for (const item of parsed.challenges) {
-      if (typeof item?.date !== "string") continue;
-      const title = typeof item.title === "string" ? item.title.trim() : "";
-      const description = typeof item.description === "string" ? item.description.trim() : "";
-      if (!title || !description) continue;
-      byDate.set(item.date, { title: title.slice(0, 100), description });
-    }
-    return byDate;
-  } catch (error) {
-    console.error("AI challenge text generation failed, using fallback copy:", error.message);
-    return null;
-  }
 }
 
 export async function createWeeklyChallenges(userId, weekStart) {
@@ -351,7 +246,6 @@ export async function createWeeklyChallenges(userId, weekStart) {
   if (!context) return { created: false, onboardingRequired: true };
 
   const plan = buildChallengePlan(context.categories, weekDates);
-  const aiTexts = await requestChallengeTexts(plan);
 
   return sequelize.transaction(async (transaction) => {
     await User.findByPk(userId, { transaction, lock: transaction.LOCK.UPDATE });
@@ -365,7 +259,7 @@ export async function createWeeklyChallenges(userId, weekStart) {
     }
 
     await AiChallenge.bulkCreate(plan.map((item) => {
-      const text = aiTexts?.get(item.date) || buildFallbackText(item);
+      const text = buildChallengeText(item);
       return {
         user_id: userId,
         expense_category_id: item.categoryId,
