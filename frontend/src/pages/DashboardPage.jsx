@@ -70,7 +70,7 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
           <span className="brand-name">Kopilot</span>
         </div>
 
-        <button className="user-profile-pill" type="button" onClick={onLogout} title="로그아웃">
+        <button className="user-profile-pill" type="button" onClick={() => onNavigate('/my')} title="마이페이지">
           <div className="user-avatar-circle">{initialChar}</div>
           <span className="user-name">{nickname}님</span>
         </button>
