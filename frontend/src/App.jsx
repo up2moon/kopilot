@@ -3,6 +3,7 @@ import TestPage from './TestPage'
 import BottomNav from './components/BottomNav'
 import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/DashboardPage'
+import CoachPage from './pages/CoachPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/InvestmentEffectPage'
@@ -224,11 +225,7 @@ function App() {
   } else if (route === routes.coach) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="AI 절약 챗봇"
-        description="마이데이터 기반 절약 코칭과 대화를 나눠보세요."
-        onBack={() => navigate(routes.dashboard)}
-      />
+      <CoachPage auth={auth} onBack={() => navigate(routes.dashboard)} />
     )
   } else if (route === routes.ranking) {
     if (!auth) return null

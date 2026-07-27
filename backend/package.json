@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon --legacy-watch --watch src --ext js,json src/server.js"
+    "dev": "nodemon --legacy-watch --watch src --ext js,json src/server.js",
+    "knowledge:create": "node scripts/createSavingKnowledgeStore.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

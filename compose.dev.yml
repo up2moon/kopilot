@@ -24,6 +24,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./backend/data/payment_transactions_dummy_30.json:/app/data/payment_transactions_dummy_30.json:ro
     environment:
       NODE_ENV: development
       DB_HOST: mysql
@@ -33,9 +34,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SAVING_BOT_CHAT_TTL_SECONDS: ${SAVING_BOT_CHAT_TTL_SECONDS:-259200}
+      SAVING_BOT_CHAT_MAX_MESSAGES: ${SAVING_BOT_CHAT_MAX_MESSAGES:-100}
       JWT_SECRET: ${JWT_SECRET:-kopilot-local-compose-secret}
       OPEN_AI_KEY: ${OPEN_AI_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      OPENAI_SAVING_VECTOR_STORE_ID: ${OPENAI_SAVING_VECTOR_STORE_ID:-}
+      SAVING_BOT_TRANSACTION_JSON_PATH: /app/data/payment_transactions_dummy_30.json
       CUST_ID: ${CUST_ID:-}
       AUTH_KEY: ${AUTH_KEY:-}
       KOSCOM_SYNC_DISABLED: ${KOSCOM_SYNC_DISABLED:-false}
@@ -72,7 +77,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"
+          "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent",
         ]
       interval: 5s
       timeout: 5s

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getDashboardSummary } from '../services/dashboard'
+import { getSavingBotCoaching } from '../services/savingBot'
 import './DashboardPage.css'
 
 function formatWon(value) {
@@ -10,35 +11,42 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
   const token = auth?.accessToken
   const user = auth?.user
   const [data, setData] = useState(null)
+  const [coaching, setCoaching] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     let ignore = false
+    const controller = new AbortController()
 
     async function loadData() {
       if (!token) return
       setIsLoading(true)
       setErrorMessage('')
-      try {
-        const result = await getDashboardSummary(token, 'month')
-        if (!ignore) {
-          setData(result)
+      const [dashboardResult, coachingResult] = await Promise.allSettled([
+        getDashboardSummary(token, 'month', controller.signal),
+        getSavingBotCoaching(token, controller.signal),
+      ])
+
+      if (!ignore) {
+        if (dashboardResult.status === 'fulfilled') {
+          setData(dashboardResult.value)
+        } else if (dashboardResult.reason.name !== 'AbortError') {
+          setErrorMessage(dashboardResult.reason.message)
         }
-      } catch (err) {
-        if (!ignore) {
-          setErrorMessage(err.message)
+
+        if (coachingResult.status === 'fulfilled') {
+          setCoaching(coachingResult.value)
         }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false)
-        }
+
+        setIsLoading(false)
       }
     }
 
     loadData()
     return () => {
       ignore = true
+      controller.abort()
     }
   }, [token])
 
@@ -51,10 +59,10 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
     paymentCount: 42,
   }
 
-  const coachPreview = data?.savingCoachPreview || {
-    potentialSavings: 60000,
-    message: '커피값 20% 줄이면\n이번 달 60,000원을 아낄 수 있어요.',
-  }
+  const coachMessage =
+    coaching?.coaching?.message ||
+    data?.savingCoachPreview?.message ||
+    '오늘의 코칭을 불러오지 못했어요.'
 
   return (
     <div className="dashboard-page">
@@ -129,7 +137,7 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
             <span className="ai-coach-label">AI 절약 코치</span>
 
             <h2 className="ai-coach-advice">
-              {coachPreview.message}
+              {coachMessage}
             </h2>
 
             <button

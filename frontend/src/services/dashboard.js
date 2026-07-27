@@ -1,4 +1,4 @@
-export async function getDashboardSummary(token, period = 'month') {
+export async function getDashboardSummary(token, period = 'month', signal) {
   const query = new URLSearchParams({ period }).toString()
   const response = await fetch(`/api/users/me/spending/summary?${query}`, {
     method: 'GET',
@@ -6,6 +6,7 @@ export async function getDashboardSummary(token, period = 'month') {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
+    signal,
   })
 
   const data = await response.json()
