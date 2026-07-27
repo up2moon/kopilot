@@ -242,6 +242,7 @@ function extractResponseText(data) {
   if (typeof data.output_text === "string") {
     return data.output_text;
   }
+}
 
 function roundToUnit(value, unit) {
   return Math.round(value / unit) * unit;
