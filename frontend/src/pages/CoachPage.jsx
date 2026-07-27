@@ -4,6 +4,8 @@ import {
   getSavingBotCoaching,
   sendSavingBotMessage,
 } from "../services/savingBot";
+import arrowDownIcon from "../assets/icons/arrow-down.svg";
+import sendIcon from "../assets/icons/send.svg";
 import "./CoachPage.css";
 
 const suggestionTones = ["blue", "green", "neutral"];
@@ -13,7 +15,7 @@ export default function CoachPage({ auth, onBack }) {
   const [messages, setMessages] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [question, setQuestion] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -158,6 +160,11 @@ export default function CoachPage({ auth, onBack }) {
     sendQuestion(question);
   };
 
+  const handleSuggestionClick = (label) => {
+    setShowSuggestions(false);
+    sendQuestion(label);
+  };
+
   const statusLabel = isLoading
     ? "분석 중"
     : errorMessage && !coaching
@@ -165,7 +172,8 @@ export default function CoachPage({ auth, onBack }) {
       : coaching?.status === "INSUFFICIENT_DATA"
         ? "데이터 부족"
         : "분석 완료";
-  const hasVisibleSuggestions = showSuggestions && suggestions.length > 0;
+  const hasSuggestions = suggestions.length > 0;
+  const hasVisibleSuggestions = showSuggestions && hasSuggestions;
 
   return (
     <div className="coach-page">
@@ -206,6 +214,9 @@ export default function CoachPage({ auth, onBack }) {
             다시 불러오기
           </button>
         ) : null}
+        <p className="coach-insight-disclaimer">
+          AI 코칭은 참고용이며 투자 권유가 아닙니다.
+        </p>
       </section>
 
       <main
@@ -232,36 +243,56 @@ export default function CoachPage({ auth, onBack }) {
         </div>
       </main>
 
-      {hasVisibleSuggestions ? (
+      {hasSuggestions ? (
         <section
-          className="coach-suggestions"
+          className={`coach-suggestions${
+            hasVisibleSuggestions ? " is-open" : " is-collapsed"
+          }`}
           aria-labelledby="suggestion-title"
         >
-          <div className="coach-suggestion-header">
-            <h2 id="suggestion-title">추천 질문</h2>
-            <button
-              className="coach-suggestion-close"
-              type="button"
-              onClick={() => setShowSuggestions(false)}
-              aria-label="추천 질문 닫기"
-            >
-              ×
-            </button>
-          </div>
-          <div className="coach-suggestion-list">
-            {suggestions.map((suggestion, index) => (
-              <button
-                className={`coach-suggestion coach-suggestion-${
-                  suggestionTones[index % suggestionTones.length]
-                }`}
-                type="button"
-                key={suggestion.id || suggestion.label}
-                onClick={() => sendQuestion(suggestion.label)}
-                disabled={isSending}
-              >
-                {suggestion.label}
-              </button>
-            ))}
+          <button
+            className="coach-suggestion-toggle"
+            type="button"
+            onClick={() => setShowSuggestions((current) => !current)}
+            aria-expanded={hasVisibleSuggestions}
+            aria-controls="coach-suggestion-list"
+          >
+            <span className="coach-suggestion-title" id="suggestion-title">
+              <span className="coach-suggestion-spark" aria-hidden="true">
+                ✦
+              </span>
+              추천 질문
+              {!hasVisibleSuggestions ? ` 보기 (${suggestions.length})` : ""}
+            </span>
+            <img
+              className="coach-suggestion-chevron"
+              src={arrowDownIcon}
+              alt=""
+              aria-hidden="true"
+            />
+          </button>
+          <div
+            className={`coach-suggestion-list-shell${
+              hasVisibleSuggestions ? " is-open" : ""
+            }`}
+            aria-hidden={!hasVisibleSuggestions}
+          >
+            <div className="coach-suggestion-list" id="coach-suggestion-list">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  className={`coach-suggestion coach-suggestion-${
+                    suggestionTones[index % suggestionTones.length]
+                  }`}
+                  type="button"
+                  key={suggestion.id || suggestion.label}
+                  onClick={() => handleSuggestionClick(suggestion.label)}
+                  disabled={isSending || !hasVisibleSuggestions}
+                  tabIndex={hasVisibleSuggestions ? 0 : -1}
+                >
+                  {suggestion.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}
@@ -290,13 +321,10 @@ export default function CoachPage({ auth, onBack }) {
           aria-label="질문 보내기"
           disabled={!question.trim() || isLoading || !coaching || isSending}
         >
-          &gt;
+          <img src={sendIcon} alt="" aria-hidden="true" />
         </button>
       </form>
 
-      <p className="coach-disclaimer">
-        AI 코칭은 참고용이며 투자 권유가 아닙니다.
-      </p>
     </div>
   );
 }

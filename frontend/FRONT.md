@@ -35,6 +35,8 @@
 
 주요 앱 화면(`/dashboard`, `/ranking`, `/challenge`, `/investment-effect`, `/my`)에서는 하단 5개 탭 바(`BottomNav`)와 우측 하단 플로팅 챗봇 버튼(`FloatingChatbot`)을 공통 모듈로 노출합니다.
 
+AI 절약 챗봇의 추천 질문은 입력창 위에서 접고 펼칠 수 있는 아코디언으로 표시합니다. 접은 상태에서도 `추천 질문 보기 (개수)` 바를 유지하며, 추천 질문을 선택하면 대화 영역 확보를 위해 자동으로 접습니다.
+
 ## AI 챌린지 연동
 
 - 페이지 컴포넌트: `src/pages/ChallengePage.jsx`
