@@ -23,14 +23,32 @@
   color: #191f28;
 }
 
-.back-button {
-  background: none;
+.back-button-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #3182f6;
+  color: #ffffff;
   border: none;
-  font-size: 20px;
-  font-weight: 700;
-  color: #191f28;
   cursor: pointer;
-  padding: 0 4px;
+  box-shadow: 0 2px 8px rgba(49, 130, 246, 0.25);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.back-button-circle:hover {
+  background-color: #1b64da;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.35);
+}
+
+.back-button-circle:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 1px 4px rgba(49, 130, 246, 0.2);
 }
 
 .detail-period-tabs {

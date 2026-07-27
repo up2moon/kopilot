@@ -20,24 +20,35 @@
   min-height: 38px;
 }
 
-.coach-back-button {
+.back-button-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 38px;
   height: 38px;
-  padding: 0;
-  border: 1px solid #e5e8eb;
-  border-radius: 14px;
-  background: #fff;
-  color: #191f28;
+  border-radius: 50%;
+  background-color: #3182f6;
+  color: #ffffff;
+  border: none;
   cursor: pointer;
-  font: inherit;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 36px;
-  text-align: center;
+  box-shadow: 0 2px 8px rgba(49, 130, 246, 0.25);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.coach-back-button:focus-visible,
+.back-button-circle:hover {
+  background-color: #1b64da;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(49, 130, 246, 0.35);
+}
+
+.back-button-circle:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 1px 4px rgba(49, 130, 246, 0.2);
+}
+
+.back-button-circle:focus-visible,
 .coach-suggestion:focus-visible,
 .coach-suggestion-toggle:focus-visible,
 .coach-input-form input:focus-visible,
