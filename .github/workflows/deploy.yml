@@ -23,6 +23,7 @@ env:
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
   OPENAI_MODEL: gpt-4.1-mini
+  OPENAI_SAVING_VECTOR_STORE_ID: ${{ secrets.OPENAI_SAVING_VECTOR_STORE_ID }}
   CUST_ID: ${{ secrets.CUST_ID || vars.CUST_ID }}
   AUTH_KEY: ${{ secrets.AUTH_KEY || vars.AUTH_KEY }}
 
@@ -278,6 +279,7 @@ jobs:
           export KOSCOM_LIVE_REFRESH_ON_READ=false
           export KOSCOM_MASTER_SYNC_ON_READ=false
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
+          export CHECK_API_ENABLED=true
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
@@ -312,6 +314,7 @@ jobs:
           export KOSCOM_LIVE_REFRESH_ON_READ=false
           export KOSCOM_MASTER_SYNC_ON_READ=false
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
+          export CHECK_API_ENABLED=true
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \

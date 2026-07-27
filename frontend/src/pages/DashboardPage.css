@@ -20,14 +20,6 @@
   gap: 10px;
 }
 
-.logo-mark {
-  width: 32px;
-  height: 32px;
-  display: block;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
 .brand-name {
   font-family: Inter, system-ui, sans-serif;
   font-size: 22px;

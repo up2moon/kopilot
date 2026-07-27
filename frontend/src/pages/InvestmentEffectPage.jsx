@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getInvestmentEffectSimulation, searchInvestmentAssets } from '../services/investment.js'
 import './InvestmentEffectPage.css'
+const isLocalDevelopment = import.meta.env.DEV
 
 function formatWon(value) {
   const number = Number(value) || 0
@@ -95,6 +96,15 @@ export default function InvestmentEffectPage({ token }) {
 
     async function loadSimulation() {
       if (!token || !selectedMonth) return
+
+          if (isLocalDevelopment) {
+      setIsLoading(false)
+      setData(null)
+      setErrorCode('CHECK_API_DISABLED')
+      setErrorMessage('로컬 개발 환경에서는 시세 조회를 실행하지 않습니다.')
+      return
+          }
+      
       setIsLoading(true)
       setErrorMessage('')
       setErrorCode('')

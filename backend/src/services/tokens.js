@@ -2,12 +2,8 @@ import crypto from "crypto";
 
 import { redisClient } from "../redis.js";
 
-const accessTokenExpiresInSeconds = Number(
-  process.env.ACCESS_TOKEN_EXPIRES_IN_SECONDS,
-) || 60 * 15;
-const refreshTokenExpiresInSeconds = Number(
-  process.env.REFRESH_TOKEN_EXPIRES_IN_SECONDS,
-) || 60 * 60 * 24 * 14;
+const accessTokenExpiresInSeconds = Number(process.env.ACCESS_TOKEN_EXPIRES_IN_SECONDS) || 60 * 60 * 48;
+const refreshTokenExpiresInSeconds = Number(process.env.REFRESH_TOKEN_EXPIRES_IN_SECONDS) || 60 * 60 * 24 * 14;
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
@@ -28,10 +24,7 @@ function base64Url(input) {
 }
 
 function sign(payload) {
-  return crypto
-    .createHmac("sha256", getJwtSecret())
-    .update(payload)
-    .digest("base64url");
+  return crypto.createHmac("sha256", getJwtSecret()).update(payload).digest("base64url");
 }
 
 function createAccessToken(user) {
@@ -63,10 +56,7 @@ function isSameValue(first, second) {
   const firstBuffer = Buffer.from(first);
   const secondBuffer = Buffer.from(second);
 
-  return (
-    firstBuffer.length === secondBuffer.length &&
-    crypto.timingSafeEqual(firstBuffer, secondBuffer)
-  );
+  return firstBuffer.length === secondBuffer.length && crypto.timingSafeEqual(firstBuffer, secondBuffer);
 }
 
 function getRefreshKey(tokenId) {
@@ -114,16 +104,11 @@ export function verifyAccessToken(accessToken) {
   const signatureBuffer = Buffer.from(signature);
   const expectedBuffer = Buffer.from(expectedSignature);
 
-  if (
-    signatureBuffer.length !== expectedBuffer.length ||
-    !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)
-  ) {
+  if (signatureBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)) {
     throw new Error("Invalid access token");
   }
 
-  const parsedPayload = JSON.parse(
-    Buffer.from(payload, "base64url").toString("utf8"),
-  );
+  const parsedPayload = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
 
   if (!parsedPayload.exp || parsedPayload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error("Expired access token");
