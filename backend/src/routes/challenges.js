@@ -6,7 +6,7 @@ import { getKoreanToday, getOrCreateWeeklyChallenges } from "../services/challen
 const router = express.Router();
 const weekdayLabels = ["월", "화", "수", "목", "금"];
 
-function toChallengeResponse(challenge) {
+function toChallengeResponse(challenge, currentDate) {
   const date = challenge.challenge_date;
   const day = new Date(`${date}T12:00:00.000Z`).getUTCDay();
   return {
@@ -20,7 +20,9 @@ function toChallengeResponse(challenge) {
     targetAmount: challenge.target_amount === null ? null : Number(challenge.target_amount),
     estimatedSavingAmount: Number(challenge.estimated_saving_amount || 0),
     point: Number(challenge.point || 0),
-    status: challenge.status,
+    // 성공/실패 확정 로직은 후속 기능에서 처리한다. 생성 기능 단계에서는
+    // 오늘보다 이전인 미션만 화면에 미완료로 보이도록 상태를 투영한다.
+    status: challenge.status === "IN_PROGRESS" && date < currentDate ? "FAIL" : challenge.status,
   };
 }
 
@@ -32,7 +34,9 @@ router.get("/me/challenges", requireAuth, async (req, res) => {
 
   try {
     const result = await getOrCreateWeeklyChallenges(req.user.id, referenceDate);
-    const weeklyChallenges = result.challenges.map(toChallengeResponse);
+    const weeklyChallenges = result.challenges.map((challenge) =>
+      toChallengeResponse(challenge, result.currentDate),
+    );
     const todayChallenge = weeklyChallenges.find((challenge) => challenge.date === result.currentDate) || null;
 
     return res.status(200).json({

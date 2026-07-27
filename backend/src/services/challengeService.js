@@ -68,9 +68,12 @@ async function getGenerationContext(userId, transaction) {
     transaction,
   });
 
-  if (!selectedCategories.length) {
-    return null;
-  }
+  const candidateCategories = selectedCategories.length
+    ? selectedCategories.map((selection) => selection.ExpenseCategory)
+    : await ExpenseCategory.findAll({
+      attributes: ["id", "name"],
+      transaction,
+    });
 
   const since = new Date();
   since.setDate(since.getDate() - 30);
@@ -88,9 +91,9 @@ async function getGenerationContext(userId, transaction) {
   }
 
   const statsByName = new Map(
-    selectedCategories.map((selection) => [selection.ExpenseCategory.name, {
-      categoryId: Number(selection.ExpenseCategory.id),
-      categoryName: selection.ExpenseCategory.name,
+    candidateCategories.map((category) => [category.name, {
+      categoryId: Number(category.id),
+      categoryName: category.name,
       totalAmount: 0,
       transactionCount: 0,
       averageAmount: 0,
@@ -116,7 +119,7 @@ async function getGenerationContext(userId, transaction) {
     return null;
   }
 
-  return { categories, selectedCategoryNames: categories.map((category) => category.categoryName) };
+  return { categories };
 }
 
 function challengeSchema() {
@@ -158,7 +161,31 @@ function challengeSchema() {
   };
 }
 
-function validateChallenges(challenges, weekDates, categoryMap) {
+function selectRandomCategoryPlan(categories, weekDates) {
+  const available = [...categories];
+  if (!available.length) {
+    throw new Error("No expense categories are available for challenge generation");
+  }
+  const plan = [];
+
+  while (plan.length < weekDates.length) {
+    const shuffled = [...available];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+
+    for (const category of shuffled) {
+      if (plan.length === weekDates.length) break;
+      if (plan.at(-1)?.categoryName === category.categoryName && shuffled.length > 1) continue;
+      plan.push(category);
+    }
+  }
+
+  return weekDates.map((date, index) => ({ date, categoryName: plan[index].categoryName }));
+}
+
+function validateChallenges(challenges, weekDates, categoryMap, categoryPlan) {
   if (!Array.isArray(challenges) || challenges.length !== 5) return null;
   const expectedDates = new Set(weekDates);
   const seenDates = new Set();
@@ -166,7 +193,12 @@ function validateChallenges(challenges, weekDates, categoryMap) {
 
   for (const item of challenges) {
     if (!expectedDates.has(item.date) || seenDates.has(item.date)) return null;
-    if (!categoryMap.has(item.expenseCategoryName) || !CHALLENGE_TYPES.has(item.challengeType)) return null;
+    const assignedCategory = categoryPlan.find((assignment) => assignment.date === item.date);
+    if (
+      !categoryMap.has(item.expenseCategoryName) ||
+      assignedCategory?.categoryName !== item.expenseCategoryName ||
+      !CHALLENGE_TYPES.has(item.challengeType)
+    ) return null;
     if (typeof item.title !== "string" || !item.title.trim() || item.title.length > 100) return null;
     if (typeof item.description !== "string" || !item.description.trim()) return null;
     if (item.challengeType === "NO_SPEND" && item.targetAmount !== null) return null;
@@ -187,7 +219,7 @@ function validateChallenges(challenges, weekDates, categoryMap) {
   return seenDates.size === weekDates.length ? normalized : null;
 }
 
-async function requestWeeklyChallengesFromOpenAI(context, weekDates, retry = false) {
+async function requestWeeklyChallengesFromOpenAI(context, weekDates, categoryPlan, retry = false) {
   const apiKey = process.env.OPEN_AI_KEY;
   if (!apiKey) {
     throw new Error("OPEN_AI_KEY is required for AI challenge generation");
@@ -212,9 +244,10 @@ async function requestWeeklyChallengesFromOpenAI(context, weekDates, retry = fal
           content: JSON.stringify({
             task: "Create exactly one weekday challenge for each requested date.",
             dates: weekDates,
+            categoryAssignments: categoryPlan,
             allowedCategories: context.categories,
             requirements: [
-              "Use only allowed category names.",
+              "Use the exact category assigned to each date.",
               "Use NO_SPEND for zero transactions in the category, with targetAmount null.",
               "Use MAX_SPEND only when targetAmount is a positive integer.",
               "Avoid repeating a category on consecutive dates.",
@@ -242,10 +275,10 @@ async function requestWeeklyChallengesFromOpenAI(context, weekDates, retry = fal
 
   const payload = await response.json();
   const parsed = JSON.parse(extractResponseText(payload));
-  const validated = validateChallenges(parsed.challenges, weekDates, categoryMap);
+  const validated = validateChallenges(parsed.challenges, weekDates, categoryMap, categoryPlan);
   if (validated) return { challenges: validated, categoryMap };
 
-  if (!retry) return requestWeeklyChallengesFromOpenAI(context, weekDates, true);
+  if (!retry) return requestWeeklyChallengesFromOpenAI(context, weekDates, categoryPlan, true);
   throw new Error("OpenAI returned an invalid weekly challenge response");
 }
 
@@ -265,7 +298,12 @@ export async function createWeeklyChallenges(userId, weekStart) {
     const context = await getGenerationContext(userId, transaction);
     if (!context) return { created: false, onboardingRequired: true };
 
-    const { challenges, categoryMap } = await requestWeeklyChallengesFromOpenAI(context, weekDates);
+    const categoryPlan = selectRandomCategoryPlan(context.categories, weekDates);
+    const { challenges, categoryMap } = await requestWeeklyChallengesFromOpenAI(
+      context,
+      weekDates,
+      categoryPlan,
+    );
     await AiChallenge.bulkCreate(challenges.map((challenge) => ({
       user_id: userId,
       expense_category_id: categoryMap.get(challenge.expenseCategoryName).categoryId,
@@ -289,10 +327,9 @@ export async function getOrCreateWeeklyChallenges(userId, referenceDate = getKor
   const currentDate = getKoreanDateParts().date;
   const weekStart = toMonday(referenceDate);
   const isCurrentWeek = weekStart === toMonday(currentDate);
-  const isMonday = getKoreanDateParts().weekday === "Mon";
 
   let onboardingRequired = false;
-  if (isCurrentWeek && isMonday) {
+  if (isCurrentWeek) {
     const result = await createWeeklyChallenges(userId, weekStart);
     onboardingRequired = result.onboardingRequired;
   }
