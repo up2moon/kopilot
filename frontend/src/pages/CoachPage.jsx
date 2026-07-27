@@ -179,12 +179,25 @@ export default function CoachPage({ auth, onBack }) {
     <div className="coach-page">
       <header className="coach-header">
         <button
-          className="coach-back-button"
           type="button"
+          className="back-button-circle"
           onClick={onBack}
-          aria-label="대시보드로 돌아가기"
+          aria-label="뒤로가기"
         >
-          &lt;
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
         </button>
         <h1>AI 절약 챗봇</h1>
         <span
