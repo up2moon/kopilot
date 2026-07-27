@@ -1,14 +1,9 @@
-const koscomBaseUrl =
-  process.env.KOSCOM_BASE_URL || "https://checkapi.koscom.co.kr";
+const koscomBaseUrl = process.env.KOSCOM_BASE_URL || "https://checkapi.koscom.co.kr";
 
-export const stockMasterPath =
-  process.env.KOSCOM_STOCK_MASTER_PATH || "/stock/m001/code_info";
-export const etfMasterPath =
-  process.env.KOSCOM_ETF_MASTER_PATH || "/stock/m001/code_etf_info";
-export const basicQuotePath =
-  process.env.KOSCOM_BASIC_QUOTE_PATH || "/stock/m001/basic_info";
-export const historyQuotePath =
-  process.env.KOSCOM_HISTORY_QUOTE_PATH || "/stock/m001/hist_info";
+export const stockMasterPath = process.env.KOSCOM_STOCK_MASTER_PATH || "/stock/m001/code_info";
+export const etfMasterPath = process.env.KOSCOM_ETF_MASTER_PATH || "/stock/m001/code_etf_info";
+export const basicQuotePath = process.env.KOSCOM_BASIC_QUOTE_PATH || "/stock/m001/basic_info";
+export const historyQuotePath = process.env.KOSCOM_HISTORY_QUOTE_PATH || "/stock/m001/hist_info";
 
 let koscomRequestQueue = Promise.resolve();
 let lastKoscomRequestAt = 0;
@@ -20,10 +15,7 @@ function sleep(ms) {
 }
 
 async function runWithKoscomThrottle(task) {
-  const minIntervalMs = Math.max(
-    Number(process.env.KOSCOM_REQUEST_INTERVAL_MS) || 1100,
-    1000,
-  );
+  const minIntervalMs = Math.max(Number(process.env.KOSCOM_REQUEST_INTERVAL_MS) || 1100, 1000);
   const queuedTask = koscomRequestQueue.then(async () => {
     const elapsedMs = Date.now() - lastKoscomRequestAt;
 
@@ -39,6 +31,15 @@ async function runWithKoscomThrottle(task) {
   koscomRequestQueue = queuedTask.catch(() => {});
 
   return queuedTask;
+}
+
+function assertKoscomCheckApiEnabled() {
+  if (process.env.CHECK_API_ENABLED !== "true") {
+    const error = new Error("현재 환경에서는 코스콤 CHECK API 호출이 비활성화되어 있습니다.");
+    error.statusCode = 503;
+    error.code = "CHECK_API_DISABLED";
+    throw error;
+  }
 }
 
 export function getKoscomCredentials() {
@@ -87,16 +88,13 @@ function hasAnyKey(raw, keys) {
 }
 
 function decodeXmlEntities(value) {
-  return String(value)
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", "\"")
-    .replaceAll("&apos;", "'");
+  return String(value).replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&apos;", "'");
 }
 
 function stripCdata(value) {
-  return String(value).replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "");
+  return String(value)
+    .replace(/^<!\[CDATA\[/, "")
+    .replace(/\]\]>$/, "");
 }
 
 function parseXmlObject(xml) {
@@ -116,11 +114,7 @@ function parseXmlObject(xml) {
     };
   }
 
-  const rowMatches = Array.from(
-    withoutDeclaration.matchAll(
-      /<((?:row|item|record|list|output|OutBlock|OutBlock_1|outBlock|outBlock1)[^>\s]*)[^>]*>([\s\S]*?)<\/\1>/gi,
-    ),
-  );
+  const rowMatches = Array.from(withoutDeclaration.matchAll(/<((?:row|item|record|list|output|OutBlock|OutBlock_1|outBlock|outBlock1)[^>\s]*)[^>]*>([\s\S]*?)<\/\1>/gi));
   const leafTagPattern = /<([A-Za-z_가-힣][\w가-힣.-]*)[^>]*>([^<>]*)<\/\1>/g;
   const toObject = (body) => {
     const record = {};
@@ -131,9 +125,7 @@ function parseXmlObject(xml) {
 
     return record;
   };
-  const records = rowMatches
-    .map((match) => toObject(match[2]))
-    .filter((record) => Object.keys(record).length > 0);
+  const records = rowMatches.map((match) => toObject(match[2])).filter((record) => Object.keys(record).length > 0);
 
   if (records.length > 1) {
     return {
@@ -151,9 +143,7 @@ function parseXmlObject(xml) {
 }
 
 function extractTagText(html, tagName) {
-  const match = String(html).match(
-    new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "i"),
-  );
+  const match = String(html).match(new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "i"));
 
   if (!match) {
     return "";
@@ -180,9 +170,7 @@ function parseDelimitedText(text) {
     return null;
   }
 
-  const delimiter = ["\t", "|", ","].find((candidate) =>
-    lines[0].includes(candidate),
-  );
+  const delimiter = ["\t", "|", ","].find((candidate) => lines[0].includes(candidate));
 
   if (!delimiter) {
     return null;
@@ -198,9 +186,7 @@ function parseDelimitedText(text) {
     items: lines.slice(1).map((line) => {
       const values = line.split(delimiter);
 
-      return Object.fromEntries(
-        headers.map((header, index) => [header, values[index]?.trim() || ""]),
-      );
+      return Object.fromEntries(headers.map((header, index) => [header, values[index]?.trim() || ""]));
     }),
   };
 }
@@ -222,9 +208,12 @@ function parseTextPayload(text) {
     }
   }
 
-  return parseXmlObject(trimmed) || parseDelimitedText(trimmed) || {
-    raw: text,
-  };
+  return (
+    parseXmlObject(trimmed) ||
+    parseDelimitedText(trimmed) || {
+      raw: text,
+    }
+  );
 }
 
 function collectArrays(value, arrays = []) {
@@ -247,21 +236,7 @@ export function getRecords(payload) {
     return payload;
   }
 
-  const preferredKeys = [
-    "items",
-    "list",
-    "lists",
-    "data",
-    "result",
-    "results",
-    "output",
-    "output1",
-    "output2",
-    "OutBlock",
-    "OutBlock_1",
-    "outBlock",
-    "outBlock1",
-  ];
+  const preferredKeys = ["items", "list", "lists", "data", "result", "results", "output", "output1", "output2", "OutBlock", "OutBlock_1", "outBlock", "outBlock1"];
 
   for (const key of preferredKeys) {
     if (Array.isArray(payload?.[key])) {
@@ -307,41 +282,11 @@ export function getRecords(payload) {
 
 export function normalizeKoscomAsset(raw, fallback = {}) {
   const assetCode = String(
-    pick(raw, [
-      "isuSrtCd",
-      "isu_srt_cd",
-      "isuCd",
-      "isu_cd",
-      "issuecode",
-      "issueCode",
-      "code",
-      "F16013",
-      "stkCd",
-      "stk_cd",
-      "stCode",
-      "shortCode",
-      "short_code",
-      "단축코드",
-      "종목코드",
-    ]) || "",
+    pick(raw, ["isuSrtCd", "isu_srt_cd", "isuCd", "isu_cd", "issuecode", "issueCode", "code", "F16013", "stkCd", "stk_cd", "stCode", "shortCode", "short_code", "단축코드", "종목코드"]) || "",
   ).trim();
   const label = String(
-    pick(raw, [
-      "isuKorNm",
-      "isu_kor_nm",
-      "isuKorAbbrv",
-      "isu_kor_abbrv",
-      "korName",
-      "name",
-      "isuNm",
-      "stockName",
-      "stock_name",
-      "F16002",
-      "shortName",
-      "short_name",
-      "종목명",
-      "한글종목명",
-    ]) || assetCode,
+    pick(raw, ["isuKorNm", "isu_kor_nm", "isuKorAbbrv", "isu_kor_abbrv", "korName", "name", "isuNm", "stockName", "stock_name", "F16002", "shortName", "short_name", "종목명", "한글종목명"]) ||
+      assetCode,
   ).trim();
 
   if (!assetCode || !label) {
@@ -386,37 +331,14 @@ export function normalizeKoscomQuote(raw) {
       "종가",
     ]),
   );
-  const rawDiffRate = pick(raw, [
-    "diffRate",
-    "diff_rate",
-    "cmpprevddRate",
-    "cmpprevdd_rate",
-    "updnRate",
-    "updn_rate",
-    "rate",
-    "F15004",
-  ]);
+  const rawDiffRate = pick(raw, ["diffRate", "diff_rate", "cmpprevddRate", "cmpprevdd_rate", "updnRate", "updn_rate", "rate", "F15004"]);
   let diffRate = getNumber(rawDiffRate);
-  const tradeDate = String(
-    pick(raw, [
-      "trdDd",
-      "trd_dd",
-      "tradeDate",
-      "trade_date",
-      "basDt",
-      "baseDate",
-      "tdd",
-      "date",
-      "F12506",
-      "기준일",
-      "거래일",
-    ]) || "",
-  ).replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
+  const tradeDate = String(pick(raw, ["trdDd", "trd_dd", "tradeDate", "trade_date", "basDt", "baseDate", "tdd", "date", "F12506", "기준일", "거래일"]) || "").replace(
+    /^(\d{4})(\d{2})(\d{2})$/,
+    "$1-$2-$3",
+  );
 
-  if (
-    diffRate !== null &&
-    (raw?.F15004 !== undefined || Math.abs(diffRate) > 1)
-  ) {
+  if (diffRate !== null && (raw?.F15004 !== undefined || Math.abs(diffRate) > 1)) {
     diffRate /= 100;
   }
 
@@ -429,6 +351,7 @@ export function normalizeKoscomQuote(raw) {
 }
 
 export async function callKoscom(path, params = {}) {
+  assertKoscomCheckApiEnabled();
   const { custId, authKey } = getKoscomCredentials();
   const url = new URL(path, koscomBaseUrl);
   const requestPayload = {
@@ -514,9 +437,7 @@ export async function fetchKoscomMaster(path, fallback) {
     data_list: "F16013,F16002",
   });
   const records = getRecords(payload);
-  const assets = records
-    .map((record) => normalizeKoscomAsset(record, fallback))
-    .filter(Boolean);
+  const assets = records.map((record) => normalizeKoscomAsset(record, fallback)).filter(Boolean);
 
   if (!assets.length) {
     console.warn("Koscom master response shape unsupported", {
@@ -605,35 +526,13 @@ function summarizeKoscomPayload(payload) {
     rawLength: raw.length || null,
     rawPreview: raw ? sanitizeKoscomText(raw).slice(0, 240) : null,
     textPreview: textPreview ? sanitizeKoscomText(textPreview).slice(0, 360) : null,
-    message:
-      pick(payload, [
-        "message",
-        "msg",
-        "errorMessage",
-        "error_message",
-        "return_msg",
-        "rsp_msg",
-        "body",
-        "title",
-      ]) || null,
-    code:
-      pick(payload, [
-        "code",
-        "errorCode",
-        "error_code",
-        "return_code",
-        "rsp_cd",
-        "status",
-      ]) || null,
+    message: pick(payload, ["message", "msg", "errorMessage", "error_message", "return_msg", "rsp_msg", "body", "title"]) || null,
+    code: pick(payload, ["code", "errorCode", "error_code", "return_code", "rsp_cd", "status"]) || null,
   };
 }
 
 function sanitizeKoscomText(text) {
   const { custId, authKey } = getKoscomCredentials();
 
-  return String(text)
-    .replaceAll(custId, "[CUST_ID]")
-    .replaceAll(authKey, "[AUTH_KEY]")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(text).replaceAll(custId, "[CUST_ID]").replaceAll(authKey, "[AUTH_KEY]").replace(/\s+/g, " ").trim();
 }

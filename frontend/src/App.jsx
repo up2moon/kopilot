@@ -336,7 +336,6 @@ function BrandHeader({ chip }) {
           alt=""
           aria-hidden="true"
         />
-        <span>Kospay</span>
       </div>
 
       {chip ? <span className="value-chip">{chip}</span> : null}
@@ -476,7 +475,6 @@ function SetupTopBar({ step, title = '초기 설정', onBack }) {
             alt=""
             aria-hidden="true"
           />
-          <span>Kospay</span>
         </div>
       )}
 

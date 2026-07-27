@@ -278,6 +278,7 @@ jobs:
           export KOSCOM_LIVE_REFRESH_ON_READ=false
           export KOSCOM_MASTER_SYNC_ON_READ=false
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
+          export CHECK_API_ENABLED=true
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
@@ -312,6 +313,7 @@ jobs:
           export KOSCOM_LIVE_REFRESH_ON_READ=false
           export KOSCOM_MASTER_SYNC_ON_READ=false
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
+          export CHECK_API_ENABLED=true
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
