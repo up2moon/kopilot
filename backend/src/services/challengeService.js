@@ -16,17 +16,23 @@ const CHALLENGE_TYPES = new Set(["NO_SPEND", "MAX_SPEND"]);
 // 달성되거나 의미가 없다. 그래서 일일 챌린지 후보에서 제외한다.
 const NON_DAILY_CATEGORIES = new Set(["통신", "구독"]);
 
-// 카테고리별 일일 챌린지 성격.
-// - MAX_SPEND: 거의 매일 쓰게 되는 지출이라 완전 무지출은 비현실적 → 평소보다 줄이는 한도형.
-// - NO_SPEND: 간헐적 지출이라 하루 건너뛰기가 현실적이고 검증도 명확하다.
-const CATEGORY_CHALLENGE_MODE = {
-  식비: "MAX_SPEND",
-  "카페·간식": "MAX_SPEND",
-  교통: "MAX_SPEND",
-  배달: "NO_SPEND",
-  쇼핑: "NO_SPEND",
-  문화: "NO_SPEND",
-};
+// 일일 챌린지로 낼 수 있는 카테고리(통신·구독 등 월 고정 결제 제외).
+const DAILY_CHALLENGE_CATEGORIES = new Set([
+  "식비",
+  "카페·간식",
+  "교통",
+  "배달",
+  "쇼핑",
+  "문화",
+]);
+
+// 식비·교통은 매일 필요한 지출이라 완전 무지출이 비현실적 → 항상 한도형(MAX_SPEND).
+const ESSENTIAL_DAILY_CATEGORIES = new Set(["식비", "교통"]);
+
+// 무지출(NO_SPEND)은 자주 쓰는 카테고리에만 배정해야 실제 도전이 된다. 가끔 쓰는
+// 카테고리(쇼핑·문화 등)는 원래 그날 안 쓸 확률이 높아 무지출이 시시하므로 한도형으로 만든다.
+// 최근 30일 중 이 일수 이상 결제한 카테고리만 무지출 챌린지 후보로 본다.
+const FREQUENT_ACTIVE_DAYS = 8;
 
 // 일일 챌린지로 의미가 있으려면 최근 30일 동안 어느 정도 반복된 소비 습관이어야 한다.
 const RECENT_WINDOW_DAYS = 30;
@@ -134,7 +140,7 @@ async function getGenerationContext(userId, transaction) {
   }
 
   const categories = [...statsByName.values()]
-    .filter((stat) => stat.transactionCount > 0 && CATEGORY_CHALLENGE_MODE[stat.categoryName])
+    .filter((stat) => stat.transactionCount > 0 && DAILY_CHALLENGE_CATEGORIES.has(stat.categoryName))
     .map((stat) => {
       const activeDayCount = stat.activeDays.size || 1;
       return {
@@ -163,11 +169,17 @@ async function getGenerationContext(userId, transaction) {
  * 카테고리의 실제 소비 통계로 달성 가능한 챌린지(타입·한도·예상 절약액)를 산출한다.
  * 숫자를 AI가 임의로 만들지 않도록 서버가 결정한다.
  */
+function decideChallengeType(category) {
+  // 식비·교통은 완전 무지출이 비현실적이라 항상 한도형.
+  if (ESSENTIAL_DAILY_CATEGORIES.has(category.categoryName)) return "MAX_SPEND";
+  // 자주 쓰는 카테고리만 무지출이 진짜 도전이 된다. 그 외는 한도형.
+  return category.activeDayCount >= FREQUENT_ACTIVE_DAYS ? "NO_SPEND" : "MAX_SPEND";
+}
+
 function buildChallengeForCategory(category) {
-  const mode = CATEGORY_CHALLENGE_MODE[category.categoryName] || "NO_SPEND";
   const avg = Math.max(0, Math.round(category.avgPerActiveDay));
 
-  if (mode === "MAX_SPEND") {
+  if (decideChallengeType(category) === "MAX_SPEND") {
     // 평소 하루 지출의 약 70% 수준으로 한도를 잡아 "완전히 끊기"가 아닌 현실적 절감으로 만든다.
     let targetAmount = Math.max(500, roundToUnit(avg * 0.7, 500));
     if (targetAmount >= avg) {
@@ -218,25 +230,50 @@ function buildChallengePlan(categories, weekDates) {
   return plan;
 }
 
+// (카테고리, 날짜)로 고정된 인덱스를 뽑아, 문구가 매번 같지 않으면서도 재생성 시엔
+// 동일하게 나오도록 한다(멱등). 카테고리 뒤에는 항상 `지출`을 붙여 조사 오류를 피한다.
+function pickVariant(variants, seed) {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash + seed.charCodeAt(index)) % 100000;
+  }
+  return variants[hash % variants.length];
+}
+
 /**
- * 챌린지 문구를 서버에서 결정론적으로 생성한다. 모든 문구를 "~해요" 톤으로 통일하고,
- * 카테고리 뒤에는 항상 `지출`을 붙여 은/는·을/를 조사 오류가 나지 않게 한다.
+ * 챌린지 문구를 서버에서 결정론적으로 생성한다. "~해요" 톤으로 통일하되, 절약 금액을
+ * 함께 노출하고 타입별로 여러 문구를 돌려 "대충 찍어낸" 느낌을 줄인다.
  */
 function buildChallengeText(planItem) {
   const category = planItem.categoryName;
   const saving = formatWon(planItem.estimatedSavingAmount);
+  const seed = `${planItem.date}-${category}`;
 
   if (planItem.challengeType === "NO_SPEND") {
     return {
-      title: `${category} 지출 없이 보내요`,
-      description: `${category} 결제를 하루만 쉬면 평소 이만큼 쓰던 약 ${saving}을 아낄 수 있어요.`,
+      title: pickVariant([
+        `${category} 무지출 챌린지에 도전해요`,
+        `${category} 결제 없이 지갑을 지켜요`,
+        `${category} 지출 없이 하루를 보내요`,
+      ], seed),
+      description: pickVariant([
+        `${category} 결제를 하루만 쉬면 평소 이만큼 쓰던 약 ${saving}을 아낄 수 있어요.`,
+        `${category} 무지출에 성공하면 약 ${saving}이 그대로 남아요.`,
+      ], seed),
     };
   }
 
   const target = formatWon(planItem.targetAmount);
   return {
-    title: `${category} 지출을 ${target} 이하로 써요`,
-    description: `평소보다 조금만 줄여서 ${category} 지출을 ${target} 이하로 유지하면 약 ${saving}을 아낄 수 있어요.`,
+    title: pickVariant([
+      `${category} 지출 ${target} 이하로 아껴 써요`,
+      `${category} 지출을 ${target}까지만 써요`,
+      `${category} 지출은 ${target} 안에서 해결해요`,
+    ], seed),
+    description: pickVariant([
+      `평소보다 조금만 줄여서 ${category} 지출을 ${target} 이하로 유지하면 약 ${saving}을 아낄 수 있어요.`,
+      `${category} 지출을 ${target} 안에서 마무리하면 약 ${saving}이 남아요.`,
+    ], seed),
   };
 }
 
