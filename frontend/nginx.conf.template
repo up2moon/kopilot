@@ -21,7 +21,7 @@ server {
     listen 80;
     listen [::]:80;
 
-    server_name kopilot.p-e.kr;
+    server_name kospay.kro.kr;
 
     root /usr/share/nginx/html;
     index index.html;
