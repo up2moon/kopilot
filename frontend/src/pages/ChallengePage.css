@@ -29,6 +29,7 @@
 }
 
 .today-challenge-card {
+  position: relative;
   padding: 34px 30px 24px;
 }
 
@@ -70,17 +71,16 @@
   font-weight: 800;
 }
 
-.challenge-verify-button {
-  width: 100%;
-  margin-top: 28px;
-  min-height: 62px;
-  border: 0;
-  border-radius: 20px;
-  background: #dbe8fa;
-  color: #8aa7cd;
-  font-size: 18px;
-  font-weight: 800;
-  cursor: not-allowed;
+.verify-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: challenge-spin 0.7s linear infinite;
 }
 
 .challenge-verify-notice {
@@ -89,6 +89,45 @@
   text-align: center;
   font-size: 12px;
 }
+
+.challenge-progress-box {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f4f8fd;
+  color: #4e5968;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.challenge-progress-box p { margin: 0 0 9px; }
+.challenge-progress-track,
+.weekly-progress-track {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e8eb;
+}
+.challenge-progress-track > span,
+.weekly-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #3182f6;
+  transition: width 0.2s ease;
+}
+
+.challenge-result-notice,
+.challenge-verify-message {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+.challenge-result-notice.success { color: #00a661; }
+.challenge-result-notice.fail,
+.challenge-verify-message { color: #e5484d; }
 
 .weekly-challenge-section {
   margin-top: 42px;
@@ -100,12 +139,22 @@
   letter-spacing: -0.6px;
 }
 
+.weekly-challenge-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.weekly-challenge-heading span { color: #6b7684; font-size: 13px; font-weight: 700; }
+.weekly-progress-track { margin: -8px 0 18px; }
+
 .weekly-challenge-list {
   display: grid;
   gap: 14px;
 }
 
 .weekly-challenge-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -151,6 +200,53 @@
 .status-in_progress { color: #f59f00; }
 .status-success { color: #00a661; }
 .status-fail { color: #8b95a1; }
+
+.weekly-verify-button {
+  flex: 0 0 auto;
+  min-width: 76px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: #3182f6;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.weekly-verify-button:disabled {
+  background: #dbe8fa;
+  color: #8aa7cd;
+  cursor: wait;
+}
+
+.weekly-verify-button .verify-spinner {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  border-width: 2px;
+}
+
+.weekly-verifying-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.93);
+  color: #191f28;
+  font-size: 14px;
+  backdrop-filter: blur(2px);
+}
+
+.weekly-verifying-overlay .challenge-spinner {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
 
 .challenge-state-card {
   display: grid;

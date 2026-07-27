@@ -9,6 +9,7 @@ import {
 } from "../models/index.js";
 import {
   expenseCategories,
+  generateFixtureTransactions,
   generateTransactionsWithOpenAI,
 } from "../services/transactionGenerator.js";
 import { getTopRankings, getUserRankingData } from "../services/ranking.js";
@@ -267,7 +268,10 @@ router.get("/me/onboarding-status", requireAuth, async (req, res) => {
 
 router.post("/me/mydata/connect", requireAuth, async (req, res) => {
   try {
-    const generation = await generateTransactionsWithOpenAI();
+    const useFixture = process.env.MYDATA_TRANSACTION_SOURCE === "fixture";
+    const generation = useFixture
+      ? generateFixtureTransactions()
+      : await generateTransactionsWithOpenAI();
 
     await replaceUserTransactions(req.user.id, generation.transactions);
     await req.user.update({
@@ -281,10 +285,10 @@ router.post("/me/mydata/connect", requireAuth, async (req, res) => {
       budgetSeed: await getGeneratedSummary(req.user.id),
     });
   } catch (error) {
-    console.error("OpenAI mydata generation failed:", error);
+    console.error("Mydata transaction generation failed:", error);
 
     return res.status(502).json({
-      message: `OpenAI 거래내역 생성에 실패했습니다. ${error.message}`,
+      message: `거래내역 생성에 실패했습니다. ${error.message}`,
     });
   }
 });

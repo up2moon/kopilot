@@ -57,6 +57,13 @@ function randomDateWithinLastMonth() {
   return date;
 }
 
+function fixtureDate(daysAgo, hour) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setHours(hour, 0, 0, 0);
+  return date.toISOString();
+}
+
 function normalizeTransaction(raw, index) {
   const category = categories.includes(raw.category) ? raw.category : "식비";
   const amount = Number(raw.amount);
@@ -191,6 +198,24 @@ export async function generateTransactionsWithOpenAI() {
     source: "openai",
     transactions: parsed.transactions.map(normalizeTransaction),
   };
+}
+
+// 개발 검증용: AI 호출 없이 항상 같은 소비 패턴을 생성한다.
+// 오늘 거래는 넣지 않아 챌린지 Fixture가 오늘 대상 카테고리만 독립적으로 제어할 수 있다.
+export function generateFixtureTransactions() {
+  const offsets = [2, 9, 16, 23];
+  const transactions = categories.flatMap((category, categoryIndex) =>
+    offsets.map((daysAgo, offsetIndex) => ({
+      paymentId: `FIX-SEED-${categoryIndex}-${offsetIndex}`,
+      approvedAt: fixtureDate(daysAgo, 10 + offsetIndex),
+      merchantName: merchantPools[category][offsetIndex],
+      amount: amountRanges[category][0] + (categoryIndex + offsetIndex) * (category === "교통" ? 100 : 500),
+      category,
+      status: "APPROVED",
+    })),
+  );
+
+  return { source: "fixture", transactions };
 }
 
 export const expenseCategories = categories;

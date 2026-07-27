@@ -27,7 +27,7 @@
 - `POST /api/auth/logout`: 전달된 refresh token을 Redis에서 폐기합니다.
 - `GET /api/auth/me`: `Authorization: Bearer <accessToken>`으로 현재 사용자 정보를 반환합니다.
 - `GET /api/users/me/onboarding-status`: 현재 사용자의 첫 로그인 초기 설정, 마이데이터, 예산 설정 상태와 저장된 거래/예산 개수를 반환합니다.
-- `POST /api/users/me/mydata/connect`: 실제 마이데이터 연동 대신 `OPEN_AI_KEY` 기반 OpenAI Responses API로 최근 1개월 합성 `transaction_history`를 생성하고 `myDataConnected=true`로 저장합니다. 키 누락이나 OpenAI 생성 실패 시 `502`를 반환하며 로컬 mock 데이터로 대체하지 않습니다.
+- `POST /api/users/me/mydata/connect`: 기본값은 `OPEN_AI_KEY` 기반 OpenAI Responses API로 최근 1개월 합성 `transaction_history`를 생성하고 `myDataConnected=true`로 저장합니다. 개발에서 `MYDATA_TRANSACTION_SOURCE=fixture`를 설정하면 AI 호출 대신 고정 거래 Fixture를 생성합니다.
 - `POST /api/users/me/mydata/disconnect`: 현재 사용자의 마이데이터 연동을 해제하여 `myDataConnected=false`로 전환하고, 해당 사용자의 `transaction_history`를 모두 삭제합니다(재연동 시 `connect`로 재생성). 갱신된 사용자 정보와 `transactionCount: 0`을 반환합니다. 마이 페이지의 "마이데이터 연결 관리" 행이 이 API와 `connect`를 상태에 따라 토글 호출합니다.
 - `GET /api/budget/categories`: 선택 가능한 소비 예산 카테고리 목록을 반환합니다.
 - `POST /api/users/me/budgets`: 사용자의 카테고리별 월 예산 목표를 `user_expense_category.cost`에 저장하고 `firstLoginCompleted=true`, `budgetSetupCompleted=true` 상태로 전환합니다.
@@ -40,7 +40,9 @@
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
-- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지를 반환합니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 마이데이터 연동 및 최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 사용자가 관심 카테고리를 선택했으면 그 카테고리만, 선택하지 않았으면 전체 `expense_category`를 후보로 사용합니다. 이미 저장된 미션은 재생성하지 않습니다. 오늘보다 이전인 진행중 미션은 응답에서 `FAIL`로 투영해 화면에 `미완료`로 표시합니다.
+- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지, 주간 진행률을 반환합니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 마이데이터 연동 및 최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 전날 `IN_PROGRESS` 미션에는 `canVerify=true`를 반환하며, 전날보다 오래된 미인증 미션은 조회 전 `FAIL`로 마감합니다.
+- `GET /api/users/me/challenges/:challengeId/progress`: 대상 챌린지의 미션 날짜 거래금액·건수, 진행률, 다음 날 00:00 인증 가능 여부를 반환합니다.
+- `POST /api/users/me/challenges/:challengeId/verify`: 미션 다음 날 00:00부터 전날 전체 거래내역으로 즉시 성공·실패를 판정합니다. 성공 시 포인트도 같은 트랜잭션에서 지급합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
@@ -87,7 +89,7 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
    - 서버가 먼저 관심 카테고리(미선택 시 전체 소비 카테고리)에서 월~금 5일의 카테고리를 무작위 배정한다. OpenAI Responses API는 이 배정과 최근 30일 카테고리별 소비 통계를 입력으로 받아 해당 카테고리의 미션 문구·한도를 JSON Schema 형태로 반환한다.
    - `(user_id, challenge_date)` 유니크 인덱스로 같은 사용자·날짜 미션의 중복 저장을 막는다. 이미 저장된 주간 미션은 새로고침·재로그인 시에도 그대로 반환하며 AI를 다시 호출하지 않는다.
    - 서버가 월요일 생성 시점을 놓치거나 사용자가 월요일 이후 가입한 경우에도, 현재 주 첫 `GET /api/users/me/challenges` 요청이 생성을 보완한다.
-   - 조회 시 오늘보다 이전인 진행중 미션은 `FAIL` 상태로 응답해 화면에 `미완료`로 표시한다. 이 단계에서는 DB 상태나 포인트를 변경하지 않는다.
+   - 전날 미션은 다음 날 00:00부터 사용자가 인증해 실제 `SUCCESS` 또는 `FAIL`과 포인트 지급을 즉시 확정한다. 전날보다 오래된 미인증 미션만 `FAIL`로 마감한다.
 
 2. **생성 가능한 미션 제약**
    - AI는 서버가 날짜별로 배정한 카테고리만 사용한다. 선택 카테고리가 없으면 전체 소비 카테고리 중에서 랜덤하게 배정한다.
@@ -95,9 +97,10 @@ AI 절약 챗봇은 `docs/features/ai-saving-chatbot.md` 명세에 따라 다음
    - 영수증·사진·자기 신고가 필요한 미션은 생성하지 않는다.
    - AI 응답의 날짜, 카테고리, 금액, 타입을 서버에서 검증하고 형식 오류 시 1회 재요청한다.
 
-3. **이번 브랜치 범위**
-   - 챌린지 조회·생성 및 화면 표시까지만 포함한다.
-   - 오후 인증, 전일 거래내역 최종 재검증, 성공/실패 판정, 포인트 지급·랭킹 반영은 후속 브랜치에서 구현한다.
+3. **인증·최종 판정·보상**
+   - 인증 버튼은 다음 날 00:00부터 전날 미션 행에서 제공한다. 인증은 전날 전체 거래내역을 기준으로 즉시 `SUCCESS` 또는 `FAIL`을 저장한다.
+   - 성공 시 포인트 원장과 `users.total_points`를 한 DB 트랜잭션으로 갱신한다. `PENDING_VERIFICATION`은 새 미션에서 사용하지 않는다.
+   - 랭킹 점수는 이미 적립된 `total_points`만 반영해 챌린지 포인트를 중복 합산하지 않는다.
 
 ## 투자효과 및 코스콤 CHECK API 연동 설계
 

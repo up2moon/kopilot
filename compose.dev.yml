@@ -36,6 +36,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-kopilot-local-compose-secret}
       OPEN_AI_KEY: ${OPEN_AI_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      MYDATA_TRANSACTION_SOURCE: ${MYDATA_TRANSACTION_SOURCE:-openai}
       CUST_ID: ${CUST_ID:-}
       AUTH_KEY: ${AUTH_KEY:-}
       KOSCOM_SYNC_DISABLED: ${KOSCOM_SYNC_DISABLED:-false}

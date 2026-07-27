@@ -197,9 +197,25 @@ export const AiChallenge = sequelize.define(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("IN_PROGRESS", "SUCCESS", "FAIL"),
+      type: DataTypes.ENUM("IN_PROGRESS", "PENDING_VERIFICATION", "SUCCESS", "FAIL"),
       allowNull: false,
       defaultValue: "IN_PROGRESS",
+    },
+    verification_requested_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    completed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    finalized_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    rewarded_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
@@ -223,6 +239,49 @@ export const AiChallenge = sequelize.define(
       },
       {
         fields: ["user_id", "start_date", "status"],
+      },
+    ],
+  },
+);
+
+export const PointLedger = sequelize.define(
+  "PointLedger",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    source_type: {
+      type: DataTypes.ENUM("AI_CHALLENGE"),
+      allowNull: false,
+    },
+    source_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+  },
+  {
+    tableName: "point_ledger",
+    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["source_type", "source_id"],
+      },
+      {
+        fields: ["user_id", "created_at"],
       },
     ],
   },
@@ -373,6 +432,12 @@ ExpenseCategory.hasMany(AiChallenge, {
 });
 AiChallenge.belongsTo(ExpenseCategory, {
   foreignKey: "expense_category_id",
+});
+User.hasMany(PointLedger, {
+  foreignKey: "user_id",
+});
+PointLedger.belongsTo(User, {
+  foreignKey: "user_id",
 });
 
 InvestmentAsset.hasMany(InvestmentPrice, {
