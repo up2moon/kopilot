@@ -228,14 +228,14 @@ function buildChallengeText(planItem) {
 
   if (planItem.challengeType === "NO_SPEND") {
     return {
-      title: `오늘은 ${category} 지출 없이 보내요`,
+      title: `${category} 지출 없이 보내요`,
       description: `${category} 결제를 하루만 쉬면 평소 이만큼 쓰던 약 ${saving}을 아낄 수 있어요.`,
     };
   }
 
   const target = formatWon(planItem.targetAmount);
   return {
-    title: `오늘 ${category} 지출을 ${target} 이하로 써요`,
+    title: `${category} 지출을 ${target} 이하로 써요`,
     description: `평소보다 조금만 줄여서 ${category} 지출을 ${target} 이하로 유지하면 약 ${saving}을 아낄 수 있어요.`,
   };
 }
