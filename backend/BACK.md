@@ -63,7 +63,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 응답 주요 필드는 `answer`, `inScope`, `evidence`, `suggestedQuestions`, `sources`, `model`, `responseId`입니다.
 
 3. **OpenAI Vector Store + File Search**
-   - MVP에서는 `backend/data/payment_transactions_dummy_30.json`의 `trans_list`를 읽어 개인 소비 통계를 계산합니다. `SAVING_BOT_TRANSACTION_JSON_PATH`를 설정하면 다른 JSON 파일 경로를 사용할 수 있습니다. 기존 `transaction_history` 조회 코드는 실제 마이데이터 연동 전환을 위해 `savingBotContext.js`에 주석으로 보존합니다.
+   - 로그인한 사용자의 최근 30일 `transaction_history`를 조회해 개인 소비 통계를 계산합니다. 거래는 반드시 `user_id`로 격리하며, 연결된 `expense_category` 이름을 우선 사용하고 연결 정보가 없는 과거 데이터는 `trans_category` 코드로 분류합니다.
    - 개인 거래 원문은 Vector Store에 업로드하지 않습니다. JSON에서 계산한 개인 소비 통계만 프롬프트에 주입하고, Vector Store에는 `backend/knowledge/saving/*.md`의 검수된 일반 절약 지식만 저장합니다.
    - 질문의 카테고리(카페, 배달, 구독, 쇼핑, 식비, 문화, 예산)를 먼저 판별하고 해당 카테고리와 `common` 문서만 File Search로 검색합니다.
    - 최초 지식 저장소 생성은 `backend/`에서 `npm run knowledge:create`를 실행합니다. 출력된 `OPENAI_SAVING_VECTOR_STORE_ID`를 런타임 환경 변수로 설정한 뒤 백엔드를 재시작합니다.

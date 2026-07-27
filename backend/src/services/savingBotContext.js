@@ -1,15 +1,13 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { Op } from "sequelize";
 
-import { ExpenseCategory, UserExpenseCategory } from "../models/index.js";
+import {
+  ExpenseCategory,
+  TransactionHistory,
+  UserExpenseCategory,
+} from "../models/index.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// 별도 경로를 지정하지 않았을 때 사용하는 MVP용 거래 내역 JSON
-const defaultTransactionJsonUrl = new URL(
-  "../../data/payment_transactions_dummy_30.json",
-  import.meta.url,
-);
 const categoryNameByCode = {
   "01": "카페·간식",
   "02": "식비",
@@ -106,72 +104,15 @@ function getPeriod() {
   };
 }
 
-// 원본 거래 일시(yyyyMMddHHmmss)를 한국 시간 기준 Date 객체로 변환한다.
-function parseTransactionDate(value) {
-  if (typeof value !== "string" || !/^\d{14}$/.test(value)) {
-    return null;
-  }
-
-  const year = value.slice(0, 4);
-  const month = value.slice(4, 6);
-  const day = value.slice(6, 8);
-  const hour = value.slice(8, 10);
-  const minute = value.slice(10, 12);
-  const second = value.slice(12, 14);
-  const parsed = new Date(
-    `${year}-${month}-${day}T${hour}:${minute}:${second}+09:00`,
-  );
-
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-// MVP 거래 JSON을 읽고 분석 가능한 거래만 최근 30일 범위로 정규화한다.
-async function loadTransactionsFromJson(period) {
-  const configuredPath = process.env.SAVING_BOT_TRANSACTION_JSON_PATH;
-  const jsonLocation = configuredPath
-    ? path.resolve(configuredPath)
-    : defaultTransactionJsonUrl;
-  const raw = await readFile(jsonLocation, "utf8");
-  const payload = JSON.parse(raw);
-
-  if (!Array.isArray(payload.trans_list)) {
-    throw new Error("Saving bot transaction JSON must contain trans_list");
-  }
-
-  return payload.trans_list
-    .map((transaction) => {
-      const approvedAt = parseTransactionDate(transaction.trans_dtime);
-
-      if (!approvedAt) {
-        return null;
-      }
-
-      return {
-        ...transaction,
-        trans_amt: Number(transaction.trans_amt),
-        trans_dtime: approvedAt,
-        ExpenseCategory: {
-          name: categoryNameByCode[transaction.trans_category] || "기타",
-        },
-      };
-    })
-    .filter(
-      (transaction) =>
-        transaction &&
-        Number.isFinite(transaction.trans_amt) &&
-        transaction.trans_amt >= 0 &&
-        transaction.trans_dtime >= period.start &&
-        transaction.trans_dtime < period.end,
-    )
-    .sort((a, b) => b.trans_dtime - a.trans_dtime);
-}
-
 // 거래를 카테고리별로 묶어 금액, 빈도, 추세, 주요 가맹점을 집계한다.
 function buildCategorySummary(transactions, budgetMap, period) {
   const grouped = new Map();
 
   for (const transaction of transactions) {
-    const category = transaction.ExpenseCategory?.name || "기타";
+    const category =
+      transaction.ExpenseCategory?.name ||
+      categoryNameByCode[transaction.trans_category] ||
+      "기타";
     const amount = Number(transaction.trans_amt);
     const approvedAt = new Date(transaction.trans_dtime);
 
@@ -350,24 +291,22 @@ function buildCoaching(profile) {
 export async function getSavingBotContext(userId) {
   const period = getPeriod();
   const [transactions, budgets] = await Promise.all([
-    loadTransactionsFromJson(period),
-    // DB 거래내역 조회는 실제 마이데이터 연동 단계에서 다시 사용 예정
-    // TransactionHistory.findAll({
-    //   where: {
-    //     user_id: userId,
-    //     trans_dtime: {
-    //       [Op.gte]: period.start,
-    //       [Op.lt]: period.end,
-    //     },
-    //   },
-    //   include: [
-    //     {
-    //       model: ExpenseCategory,
-    //       attributes: ["id", "name"],
-    //     },
-    //   ],
-    //   order: [["trans_dtime", "DESC"]],
-    // }),
+    TransactionHistory.findAll({
+      where: {
+        user_id: userId,
+        trans_dtime: {
+          [Op.gte]: period.start,
+          [Op.lt]: period.end,
+        },
+      },
+      include: [
+        {
+          model: ExpenseCategory,
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["trans_dtime", "DESC"]],
+    }),
     UserExpenseCategory.findAll({
       where: {
         user_id: userId,
@@ -382,7 +321,9 @@ export async function getSavingBotContext(userId) {
   ]);
   // 카테고리 이름으로 예산을 바로 조회할 수 있도록 Map으로 변환한다.
   const budgetMap = new Map(
-    budgets.map((budget) => [budget.ExpenseCategory.name, Number(budget.cost)]),
+    budgets
+      .filter((budget) => budget.ExpenseCategory)
+      .map((budget) => [budget.ExpenseCategory.name, Number(budget.cost)]),
   );
   const categories = buildCategorySummary(transactions, budgetMap, period);
   const totalAmount = categories.reduce(
