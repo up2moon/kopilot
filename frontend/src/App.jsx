@@ -336,7 +336,7 @@ function BrandHeader({ chip }) {
           alt=""
           aria-hidden="true"
         />
-        <span>Kopilot</span>
+        <span>Kospay</span>
       </div>
 
       {chip ? <span className="value-chip">{chip}</span> : null}
@@ -476,7 +476,7 @@ function SetupTopBar({ step, title = '초기 설정', onBack }) {
             alt=""
             aria-hidden="true"
           />
-          <span>Kopilot</span>
+          <span>Kospay</span>
         </div>
       )}
 
@@ -694,7 +694,7 @@ function FirstLoginScreen({ auth, currentRoute, onNavigate, onLogout, onUserUpda
             <h1>
               절약과 자산 형성을 함께하는
               <br />
-              AI 코파일럿, KoPilot
+              AI 코칭 서비스, Kospay
             </h1>
             <p>소비 내역을 분석하고 나에게 맞는 절약 목표를 설정해보세요.</p>
           </section>
@@ -737,7 +737,7 @@ function FirstLoginScreen({ auth, currentRoute, onNavigate, onLogout, onUserUpda
               <br />
               마이데이터 연동이 필요해요
             </h1>
-            <p>KoPilot은 결제 내역을 기반으로 소비 패턴을 분석하고 절약 목표를 추천해요.</p>
+            <p>Kospay는 결제 내역을 기반으로 소비 패턴을 분석하고 절약 목표를 추천해요.</p>
           </section>
 
           <FeatureList
@@ -985,7 +985,7 @@ function FirstLoginScreen({ auth, currentRoute, onNavigate, onLogout, onUserUpda
               <br />
               완료되었어요
             </h1>
-            <p>이제 KoPilot이 소비를 분석하고 절약 챌린지를 추천해드릴게요.</p>
+            <p>이제 Kospay가 소비를 분석하고 절약 챌린지를 추천해드릴게요.</p>
           </section>
 
           <section className="setup-card completed-summary-card">
@@ -1086,7 +1086,7 @@ function LoginScreen({ onNavigate, onAuthSuccess }) {
 
       <form className="auth-panel login-panel" onSubmit={handleSubmit}>
         <div className="panel-heading">
-          <h2>Kopilot 시작하기</h2>
+          <h2>Kospay 시작하기</h2>
           <p>나만의 절약 코치를 만나보세요.</p>
         </div>
 
@@ -1174,7 +1174,7 @@ function SignupScreen({ onNavigate }) {
       <BrandHeader />
 
       <section className="hero-copy signup-hero">
-        <p className="eyebrow">START WITH Kopilot</p>
+        <p className="eyebrow">START WITH Kospay</p>
         <h1>
           3분 만에 시작하는
           <br />
@@ -1186,7 +1186,7 @@ function SignupScreen({ onNavigate }) {
       <form className="auth-panel signup-panel" onSubmit={handleSubmit}>
         <div className="panel-heading">
           <h2>회원가입</h2>
-          <p>Kopilot을 바로 시작할 수 있어요.</p>
+          <p>Kospay를 바로 시작할 수 있어요.</p>
         </div>
 
         <label className="field-label">

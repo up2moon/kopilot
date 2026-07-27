@@ -67,7 +67,6 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
             alt=""
             aria-hidden="true"
           />
-          <span className="brand-name">Kopilot</span>
         </div>
 
         <button className="user-profile-pill" type="button" onClick={() => onNavigate('/my')} title="마이페이지">
