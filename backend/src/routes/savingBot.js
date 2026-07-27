@@ -1,6 +1,11 @@
 import express from "express";
 
 import { requireAuth } from "../middleware/auth.js";
+import {
+  getSavingBotChatHistory,
+  getSavingBotChatRetentionDays,
+  saveSavingBotChatExchange,
+} from "../services/savingBotChatHistory.js";
 import { getSavingBotContext } from "../services/savingBotContext.js";
 import {
   generateSavingBotAnswer,
@@ -9,6 +14,26 @@ import {
 } from "../services/savingBotOpenAI.js";
 
 const router = express.Router();
+
+async function loadRecentMessages(userId, fallbackMessages = []) {
+  try {
+    const history = await getSavingBotChatHistory(userId);
+
+    return history.slice(-8);
+  } catch (error) {
+    console.error("Saving bot chat history load failed:", error);
+
+    return Array.isArray(fallbackMessages) ? fallbackMessages.slice(-8) : [];
+  }
+}
+
+async function saveChatExchange(userId, message, answer) {
+  try {
+    await saveSavingBotChatExchange(userId, message, answer);
+  } catch (error) {
+    console.error("Saving bot chat history save failed:", error);
+  }
+}
 
 router.get("/me/saving-bot/coaching", requireAuth, async (req, res) => {
   try {
@@ -40,6 +65,23 @@ router.get("/me/saving-bot/coaching", requireAuth, async (req, res) => {
   }
 });
 
+router.get("/me/saving-bot/chat/history", requireAuth, async (req, res) => {
+  try {
+    const messages = await getSavingBotChatHistory(req.user.id);
+
+    return res.status(200).json({
+      messages,
+      retentionDays: getSavingBotChatRetentionDays(),
+    });
+  } catch (error) {
+    console.error("Saving bot chat history failed:", error);
+
+    return res.status(503).json({
+      message: "이전 대화 내용을 불러오지 못했습니다.",
+    });
+  }
+});
+
 router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
   const message =
     typeof req.body.message === "string" ? req.body.message.trim() : "";
@@ -57,8 +99,12 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
   }
 
   if (isClearlyOutOfScope(message)) {
+    const answer = getOutOfScopeAnswer();
+
+    await saveChatExchange(req.user.id, message, answer);
+
     return res.status(200).json({
-      answer: getOutOfScopeAnswer(),
+      answer,
       inScope: false,
       evidence: [],
       suggestedQuestions: [
@@ -71,13 +117,19 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
   }
 
   try {
+    const recentMessages = await loadRecentMessages(
+      req.user.id,
+      req.body.recentMessages,
+    );
     const { profile, coaching } = await getSavingBotContext(req.user.id);
     const answer = await generateSavingBotAnswer({
       message,
-      recentMessages: req.body.recentMessages,
+      recentMessages,
       profile,
       coaching,
     });
+
+    await saveChatExchange(req.user.id, message, answer.answer);
 
     return res.status(200).json(answer);
   } catch (error) {

@@ -32,6 +32,13 @@ export function getSavingBotCoaching(token, signal) {
   });
 }
 
+export function getSavingBotChatHistory(token, signal) {
+  return requestSavingBot("/api/users/me/saving-bot/chat/history", token, {
+    method: "GET",
+    signal,
+  });
+}
+
 export function sendSavingBotMessage(token, payload) {
   return requestSavingBot("/api/users/me/saving-bot/chat", token, {
     method: "POST",

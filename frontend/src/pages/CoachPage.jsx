@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  getSavingBotChatHistory,
   getSavingBotCoaching,
   sendSavingBotMessage,
 } from "../services/savingBot";
@@ -38,14 +39,30 @@ export default function CoachPage({ auth, onBack }) {
       setErrorMessage("");
 
       try {
-        const data = await getSavingBotCoaching(token, signal);
+        const [data, historyResult] = await Promise.all([
+          getSavingBotCoaching(token, signal),
+          getSavingBotChatHistory(token, signal).catch((error) => {
+            if (error.name === "AbortError") {
+              throw error;
+            }
+
+            return { messages: [] };
+          }),
+        ]);
+        const savedMessages = (historyResult.messages || []).map((message) =>
+          createMessage(message.role, message.content),
+        );
 
         setCoaching(data);
         setSuggestions(data.suggestedQuestions || []);
         setMessages((current) =>
-          current.length || !data.greeting
+          current.length
             ? current
-            : [createMessage("assistant", data.greeting)],
+            : savedMessages.length
+              ? savedMessages
+              : data.greeting
+                ? [createMessage("assistant", data.greeting)]
+                : [],
         );
       } catch (error) {
         if (error.name !== "AbortError") {

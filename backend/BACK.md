@@ -37,7 +37,8 @@
 - `GET /api/users/me/spending/summary?month=YYYY-MM`: 지정된 월(기본 현재 월)의 거래 내역을 백엔드에서 집계하여 소비 요약(총 금액, 전월 대비 증감률, 결제 건수, 평균 결제액), 카테고리별 금액/비율/인사이트 문구, 주차별/일자별 소비 추이 및 최고 지출 금액을 반환합니다.
 - `GET /api/users/me/spending/transactions?month=YYYY-MM&page=1&limit=6`: 해당 월의 결제 내역을 최근순으로 무한 스크롤/페이징(`page`, `limit=6` 기본) 형태로 로딩하여 반환합니다 (`items`, `pagination` 메타데이터 포함).
 - `GET /api/users/me/saving-bot/coaching`: 사용자의 마이데이터 지출 내역을 기반으로 생성된 상단 '오늘의 코칭' 카드 정보(메시지, 아낄 수 있는 금액), 코칭 연관 AI 인사말("...줄여볼까요?"), 그리고 생성된 코칭과 연관된 추천 질문 3개를 반환합니다.
-- `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다.
+- `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. 사용자 질문과 AI 답변은 Redis에 저장하며 저장된 최근 대화를 다음 답변의 문맥으로 사용합니다.
+- `GET /api/users/me/saving-bot/chat/history`: Redis에 저장된 현재 사용자의 최근 AI 절약 챗봇 대화를 반환합니다. 대화는 사용자별 List에 최대 100개까지 저장되며 마지막 대화 이후 기본 3일 동안 유지됩니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지를 반환합니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 최근 30일 거래내역 통계를 바탕으로 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 실제 소비가 있는 카테고리만 후보로 쓰고 월 고정 카테고리(`통신`·`구독`)는 제외하며, 카테고리·타입·한도·예상 절약액은 서버가 실제 소비 통계로 확정하고 OpenAI는 문구만 생성합니다(문구 실패 시 템플릿 폴백). 이미 저장된 미션은 재생성하지 않습니다. 오늘보다 이전인 진행중 미션은 응답에서 `FAIL`로 투영해 화면에 `미완료`로 표시합니다.
@@ -177,6 +178,8 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
 신규 가입자의 `is_first_login`은 `true`로 생성합니다. 첫 로그인 초기 설정에서 예산 저장까지 완료되면 `is_first_login=false`, `budget_setup_completed=true`로 변경합니다. `mydata_connected`는 연동하기 경로에서 `true`, 건너뛰기 경로에서는 `false`로 유지합니다.
 
 OpenAI 기반 합성 거래내역 생성과 절약 챗봇은 환경 변수 `OPEN_AI_KEY`를 사용합니다. 모델은 기본 `gpt-4.1-mini`이며 `OPENAI_MODEL`로 변경할 수 있습니다. 절약 챗봇 File Search에는 `OPENAI_SAVING_VECTOR_STORE_ID`가 추가로 필요합니다. Docker Compose 실행 시에도 두 값이 백엔드 컨테이너 환경변수로 전달되어야 합니다.
+
+AI 절약 챗봇 대화는 Redis의 `saving-bot:chat:{userId}` List에 저장합니다. `SAVING_BOT_CHAT_TTL_SECONDS`로 마지막 대화 이후 보관 기간(기본 `259200`초, 3일)을, `SAVING_BOT_CHAT_MAX_MESSAGES`로 사용자별 최대 메시지 수(기본 100개)를 조정할 수 있습니다. 채팅 저장 실패는 AI 답변 생성을 중단시키지 않으며, Redis 조회 실패 시 요청에 포함된 최근 대화를 임시 문맥으로 사용합니다.
 
 ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: true })`를 실행해 `docs/Kopilot.png` 기준 테이블을 최신 모델에 맞춥니다. 환경변수 `DB_SYNC_SCHEMA=false`로 동기화를 끌 수 있고, `DB_SYNC_ALTER=false`로 alter 없이 존재하지 않는 테이블 생성만 수행할 수 있습니다.
 
