@@ -21,7 +21,7 @@ server {
     listen 80;
     listen [::]:80;
 
-    server_name kospay.kro.kr;
+    server_name kospay.p-e.kr;
 
     root /usr/share/nginx/html;
     index index.html;
