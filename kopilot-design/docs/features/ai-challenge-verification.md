@@ -53,6 +53,7 @@
 - 주간 목록에서 전날 `IN_PROGRESS` 미션의 `canVerify=true`일 때 `인증하기` 버튼을 표시한다.
 - 버튼 클릭 중에는 해당 행에 거래내역 확인 로딩 오버레이를 표시한다.
 - 완료/미완료 상태는 판정 결과를 그대로 표시한다.
+- 주간 `N/5 완료`와 진행률은 `SUCCESS` 미션만 집계하며, `FAIL`은 완료 수에 포함하지 않는다.
 
 `GET /api/users/me/challenges`의 각 `weeklyChallenges` 항목은 아래 필드를 포함한다.
 

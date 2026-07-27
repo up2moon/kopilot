@@ -121,14 +121,16 @@ export async function getChallengeProgress(userId, challenge) {
 }
 
 export function getWeeklyProgress(challenges) {
-  const completedCount = challenges.filter((item) => ["SUCCESS", "FAIL"].includes(item.status)).length;
   const successCount = challenges.filter((item) => item.status === "SUCCESS").length;
+  const resolvedCount = challenges.filter((item) => ["SUCCESS", "FAIL"].includes(item.status)).length;
   return {
     totalCount: challenges.length,
-    completedCount,
+    // 화면의 "N/5 완료"는 미션을 성공한 횟수만 뜻한다.
+    completedCount: successCount,
     successCount,
-    weeklyProgressRate: challenges.length ? Math.floor((completedCount / challenges.length) * 100) : 0,
-    successRate: completedCount ? Math.floor((successCount / completedCount) * 100) : 0,
+    failedCount: resolvedCount - successCount,
+    weeklyProgressRate: challenges.length ? Math.floor((successCount / challenges.length) * 100) : 0,
+    successRate: resolvedCount ? Math.floor((successCount / resolvedCount) * 100) : 0,
   };
 }
 

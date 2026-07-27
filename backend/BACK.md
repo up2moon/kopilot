@@ -40,7 +40,7 @@
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
-- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지, 주간 진행률을 반환합니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 마이데이터 연동 및 최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 전날 `IN_PROGRESS` 미션에는 `canVerify=true`를 반환하며, 전날보다 오래된 미인증 미션은 조회 전 `FAIL`로 마감합니다.
+- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지, 주간 진행률을 반환합니다. `weeklyProgress.completedCount`와 진행률은 `SUCCESS` 미션만 집계하며 `FAIL`은 완료 수에 포함하지 않습니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 마이데이터 연동 및 최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 전날 `IN_PROGRESS` 미션에는 `canVerify=true`를 반환하며, 전날보다 오래된 미인증 미션은 조회 전 `FAIL`로 마감합니다.
 - `GET /api/users/me/challenges/:challengeId/progress`: 대상 챌린지의 미션 날짜 거래금액·건수, 진행률, 다음 날 00:00 인증 가능 여부를 반환합니다.
 - `POST /api/users/me/challenges/:challengeId/verify`: 미션 다음 날 00:00부터 전날 전체 거래내역으로 즉시 성공·실패를 판정합니다. 성공 시 포인트도 같은 트랜잭션에서 지급합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
