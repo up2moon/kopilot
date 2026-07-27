@@ -61,13 +61,16 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
       {/* Top Header Bar */}
       <header className="dash-top-bar">
         <div className="brand-lockup">
-          <div className="logo-mark" aria-hidden="true">
-            K
-          </div>
+          <img
+            className="logo-mark"
+            src="/favicon-256x256.png"
+            alt=""
+            aria-hidden="true"
+          />
           <span className="brand-name">Kopilot</span>
         </div>
 
-        <button className="user-profile-pill" type="button" onClick={onLogout} title="로그아웃">
+        <button className="user-profile-pill" type="button" onClick={() => onNavigate('/my')} title="마이페이지">
           <div className="user-avatar-circle">{initialChar}</div>
           <span className="user-name">{nickname}님</span>
         </button>

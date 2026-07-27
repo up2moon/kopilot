@@ -7,8 +7,12 @@ import { db, connectMySQL, syncDatabase } from "./db.js";
 import { seedDefaultCategories } from "./models/index.js";
 import { redisClient, connectRedis } from "./redis.js";
 import authRouter from "./routes/auth.js";
+import investmentRouter from "./routes/investment.js";
 import savingBotRouter from "./routes/savingBot.js";
 import usersRouter, { categoriesHandler } from "./routes/users.js";
+import challengesRouter from "./routes/challenges.js";
+import { startKoscomSyncScheduler } from "./services/investmentSync.js";
+import { startChallengeGenerationScheduler } from "./services/challengeService.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -26,6 +30,8 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/users", savingBotRouter);
+app.use("/api/users", challengesRouter);
+app.use("/api/investment", investmentRouter);
 app.get("/api/budget/categories", categoriesHandler);
 
 app.get("/api/health", (req, res) => {
@@ -113,6 +119,8 @@ async function startServer() {
     },
     () => {
       console.log(`Backend listening on [::]:${port}`);
+      startKoscomSyncScheduler();
+      startChallengeGenerationScheduler();
     },
   );
 }

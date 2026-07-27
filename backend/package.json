@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "nodemon --legacy-watch --watch src --ext js,json src/server.js",
     "knowledge:create": "node scripts/createSavingKnowledgeStore.js"
   },
   "dependencies": {
@@ -15,5 +15,8 @@
     "mysql2": "^3.23.1",
     "redis": "^6.1.0",
     "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

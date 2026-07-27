@@ -24,6 +24,8 @@ env:
   OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
   OPENAI_MODEL: gpt-4.1-mini
   OPENAI_SAVING_VECTOR_STORE_ID: ${{ secrets.OPENAI_SAVING_VECTOR_STORE_ID }}
+  CUST_ID: ${{ secrets.CUST_ID || vars.CUST_ID }}
+  AUTH_KEY: ${{ secrets.AUTH_KEY || vars.AUTH_KEY }}
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"
@@ -273,6 +275,11 @@ jobs:
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
 
+          export KOSCOM_SYNC_DISABLED=false
+          export KOSCOM_LIVE_REFRESH_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=false
+          export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
+
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
             "$WAS_1_TARGET_NO" \
@@ -301,6 +308,11 @@ jobs:
         run: |
           bash -n <<< "$DEPLOY_SCRIPT"
           eval "$DEPLOY_SCRIPT"
+
+          export KOSCOM_SYNC_DISABLED=true
+          export KOSCOM_LIVE_REFRESH_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=false
+          export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \

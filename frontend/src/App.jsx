@@ -5,6 +5,10 @@ import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/DashboardPage'
 import CoachPage from './pages/CoachPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
+import AnonymousRankingPage from './pages/AnonymousRankingPage'
+import InvestmentEffectPage from './pages/InvestmentEffectPage'
+import MyPage from './pages/MyPage'
+import ChallengePage from './pages/ChallengePage'
 import {
   clearAuth,
   getStoredAuth,
@@ -15,6 +19,7 @@ import {
 } from './services/auth'
 import {
   connectMyData,
+  disconnectMyData,
   getBudgetCategories,
   getTransactions,
   saveBudgets,
@@ -61,6 +66,10 @@ function normalizeDefaultRoute() {
 function App() {
   const [route, setRoute] = useState(getInitialRoute)
   const [auth, setAuth] = useState(getStoredAuth)
+  // 마이데이터 연동/해제 진행 상태를 App 레벨에서 관리해 화면 이동에도 유지한다.
+  // (연동은 OpenAI 생성으로 수 초가 걸려, 컴포넌트 로컬 상태면 언마운트 시 사라진다.)
+  const [mydataBusy, setMydataBusy] = useState(false)
+  const [mydataError, setMydataError] = useState('')
 
   useEffect(() => {
     const handlePopState = () => {
@@ -91,12 +100,18 @@ function App() {
     }
 
     if (auth && !isPublicRoute) {
-      // If MyData is not connected, redirect to MyData connection screen first
-      if (!auth.user.myDataConnected && route !== routes.firstLoginMyDataConnect && route !== routes.firstLogin) {
-        navigate(routes.firstLoginMyDataConnect)
-      } else if (!auth.user.firstLoginCompleted && route !== routes.firstLogin && route !== routes.firstLoginMyDataConnect) {
-        navigate(routes.firstLogin)
-      } else if (auth.user.myDataConnected && auth.user.firstLoginCompleted && (route === routes.firstLogin || route === routes.firstLoginMyDataConnect)) {
+      const onOnboardingRoute =
+        route === routes.firstLogin || route === routes.firstLoginMyDataConnect
+
+      if (!auth.user.firstLoginCompleted) {
+        // 온보딩 미완료 사용자만 연동 → 예산 설정 순서로 유도한다.
+        // 온보딩을 마친 사용자는 마이데이터를 해제해도 앱에 머문다(마이페이지에서 재연동).
+        if (!auth.user.myDataConnected && !onOnboardingRoute) {
+          navigate(routes.firstLoginMyDataConnect)
+        } else if (auth.user.myDataConnected && !onOnboardingRoute) {
+          navigate(routes.firstLogin)
+        }
+      } else if (onOnboardingRoute) {
         navigate(routes.dashboard)
       }
     }
@@ -105,12 +120,12 @@ function App() {
   const handleAuthSuccess = (nextAuth) => {
     saveAuth(nextAuth)
     setAuth(nextAuth)
-    if (!nextAuth.user.myDataConnected) {
-      navigate(routes.firstLoginMyDataConnect)
-    } else if (!nextAuth.user.firstLoginCompleted) {
-      navigate(routes.firstLogin)
-    } else {
+    if (nextAuth.user.firstLoginCompleted) {
       navigate(routes.dashboard)
+    } else if (!nextAuth.user.myDataConnected) {
+      navigate(routes.firstLoginMyDataConnect)
+    } else {
+      navigate(routes.firstLogin)
     }
   }
 
@@ -122,6 +137,38 @@ function App() {
 
     saveAuth(nextAuth)
     setAuth(nextAuth)
+  }
+
+  const handleMydataConnect = async () => {
+    if (mydataBusy || !auth) return
+
+    setMydataBusy(true)
+    setMydataError('')
+
+    try {
+      await connectMyData(auth.accessToken)
+      handleUserUpdate({ ...auth.user, myDataConnected: true })
+    } catch (err) {
+      setMydataError(err.message || '연동에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setMydataBusy(false)
+    }
+  }
+
+  const handleMydataDisconnect = async () => {
+    if (mydataBusy || !auth) return
+
+    setMydataBusy(true)
+    setMydataError('')
+
+    try {
+      await disconnectMyData(auth.accessToken)
+      handleUserUpdate({ ...auth.user, myDataConnected: false })
+    } catch (err) {
+      setMydataError(err.message || '연동 해제에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setMydataBusy(false)
+    }
   }
 
   const handleLogout = async () => {
@@ -183,39 +230,32 @@ function App() {
   } else if (route === routes.ranking) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="익명 랭킹"
-        description="이번 달 절약 순위를 확인해보세요."
-        onBack={() => navigate(routes.dashboard)}
+      <AnonymousRankingPage
+        token={auth.accessToken}
+        onNavigate={navigate}
       />
     )
   } else if (route === routes.challenge) {
     if (!auth) return null
-    screenContent = (
-      <SubPageScreen
-        title="일일 챌린지"
-        description="AI가 배정한 오늘의 절약 미션을 수행하세요."
-        onBack={() => navigate(routes.dashboard)}
-      />
-    )
+    screenContent = <ChallengePage token={auth.accessToken} />
   } else if (route === routes.investmentEffect) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="투자효과 시뮬레이션"
-        description="아낀 돈의 기회비용과 미래 가치를 시뮬레이션합니다."
-        onBack={() => navigate(routes.dashboard)}
+      <InvestmentEffectPage
+        token={auth.accessToken}
       />
     )
   } else if (route === routes.my) {
     if (!auth) return null
     screenContent = (
-      <SubPageScreen
-        title="마이 페이지"
-        description="계정 정보와 마이데이터 연동 설정을 관리합니다."
-        onBack={() => navigate(routes.dashboard)}
+      <MyPage
+        auth={auth}
+        onNavigate={navigate}
         onLogout={handleLogout}
-        user={auth.user}
+        mydataBusy={mydataBusy}
+        mydataError={mydataError}
+        onMydataConnect={handleMydataConnect}
+        onMydataDisconnect={handleMydataDisconnect}
       />
     )
   } else {
@@ -287,9 +327,12 @@ function BrandHeader({ chip }) {
   return (
     <header className="brand-header">
       <div className="brand-lockup">
-        <div className="logo-mark" aria-hidden="true">
-          K
-        </div>
+        <img
+          className="logo-mark"
+          src="/favicon-256x256.png"
+          alt=""
+          aria-hidden="true"
+        />
         <span>Kopilot</span>
       </div>
 
@@ -424,9 +467,12 @@ function SetupTopBar({ step, title = '초기 설정', onBack }) {
         </button>
       ) : (
         <div className="setup-brand">
-          <div className="logo-mark" aria-hidden="true">
-            K
-          </div>
+          <img
+            className="logo-mark"
+            src="/favicon-256x256.png"
+            alt=""
+            aria-hidden="true"
+          />
           <span>Kopilot</span>
         </div>
       )}

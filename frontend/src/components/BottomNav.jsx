@@ -1,11 +1,16 @@
+import homeIcon from '../assets/icons/nav-home.png'
+import rankingIcon from '../assets/icons/nav-ranking.png'
+import challengeIcon from '../assets/icons/nav-challenge.png'
+import investmentIcon from '../assets/icons/nav-investment.png'
+import myIcon from '../assets/icons/nav-my.png'
 import './BottomNav.css'
 
 const navItems = [
-  { path: '/dashboard', label: '홈', icon: '🏠' },
-  { path: '/ranking', label: '랭킹', icon: '🏆' },
-  { path: '/challenge', label: '챌린지', icon: '🎯' },
-  { path: '/investment-effect', label: '투자효과', icon: '📈' },
-  { path: '/my', label: '마이', icon: '👤' },
+  { path: '/dashboard', label: '홈', icon: homeIcon },
+  { path: '/ranking', label: '랭킹', icon: rankingIcon },
+  { path: '/challenge', label: '챌린지', icon: challengeIcon },
+  { path: '/investment-effect', label: '투자효과', icon: investmentIcon },
+  { path: '/my', label: '마이', icon: myIcon },
 ]
 
 export default function BottomNav({ currentPath, onNavigate }) {
@@ -21,7 +26,7 @@ export default function BottomNav({ currentPath, onNavigate }) {
             className={`bottom-nav-item${isActive ? ' is-active' : ''}`}
             onClick={() => onNavigate(item.path)}
           >
-            <span className="bottom-nav-icon">{item.icon}</span>
+            <img className='bottom-nav-icon-img' src={item.icon} alt={item.label} />
             <span className="bottom-nav-label">{item.label}</span>
             {isActive && <span className="bottom-nav-dot" aria-hidden="true" />}
           </button>

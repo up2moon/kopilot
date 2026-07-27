@@ -5,6 +5,7 @@ cdk.out/
 db/
 .env
 .vscode/
+.claude/
 chromedriver
 config.ini
 nohup.out

@@ -11,6 +11,8 @@ import {
   expenseCategories,
   generateTransactionsWithOpenAI,
 } from "../services/transactionGenerator.js";
+import { getTopRankings, getUserRankingData } from "../services/ranking.js";
+import { simulationHandler } from "./investment.js";
 
 const router = express.Router();
 
@@ -285,6 +287,24 @@ router.post("/me/mydata/connect", requireAuth, async (req, res) => {
       message: `OpenAI 거래내역 생성에 실패했습니다. ${error.message}`,
     });
   }
+});
+
+router.post("/me/mydata/disconnect", requireAuth, async (req, res) => {
+  await TransactionHistory.destroy({
+    where: {
+      user_id: req.user.id,
+    },
+  });
+
+  await req.user.update({
+    mydata_connected: false,
+  });
+
+  return res.status(200).json({
+    user: toAuthUser(req.user),
+    myDataConnected: false,
+    transactionCount: 0,
+  });
 });
 
 router.post("/me/budgets", requireAuth, async (req, res) => {
@@ -634,6 +654,33 @@ router.get("/me/spending/summary", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Dashboard summary failed:", error);
     return res.status(500).json({ message: "대시보드 데이터 조회 실패" });
+  }
+});
+
+router.get("/me/investment-effect/simulation", requireAuth, simulationHandler);
+
+router.get("/me/ranking", requireAuth, async (req, res) => {
+  try {
+    const data = await getTopRankings(req.user);
+    return res.status(200).json(data.myRanking);
+  } catch (error) {
+    console.error("Get my ranking failed:", error);
+    return res.status(500).json({ message: "내 랭킹 정보 조회 실패" });
+  }
+});
+
+router.get("/ranking/top", requireAuth, async (req, res) => {
+  try {
+    const limit = Number(req.query.limit) || 20;
+    const data = await getTopRankings(req.user);
+    return res.status(200).json({
+      myRanking: data.myRanking,
+      topRankings: data.topRankings.slice(0, limit),
+      updatedAtNotice: data.updatedAtNotice,
+    });
+  } catch (error) {
+    console.error("Get top rankings failed:", error);
+    return res.status(500).json({ message: "상위 랭킹 리스트 조회 실패" });
   }
 });
 
