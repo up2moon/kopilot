@@ -19,7 +19,7 @@
 
 현재 페이지 경로:
 
-- `/login`: 로그인 화면. `POST /api/auth/login`과 연동하며 성공 시 토큰을 저장하고 마이데이터 연동 상태에 따라 `/dashboard` 또는 `/first-login/mydata-connect`로 이동합니다.
+- `/login`: 로그인 화면. 대시보드와 동일한 Kospay 로고와 `소비 분석 → 절약 코칭 → 자산 시뮬레이션` 가치 흐름을 보여줍니다. `POST /api/auth/login`과 연동하며 성공 시 토큰을 저장하고 마이데이터 연동 상태에 따라 `/dashboard` 또는 `/first-login/mydata-connect`로 이동합니다.
 - `/signup`: 회원가입 화면. 비밀번호 확인 일치 여부를 검증한 뒤 `POST /api/auth/signup`과 연동하며 성공 시 `/login`으로 이동합니다.
 - `/first-login`: 첫 로그인 초기 설정 화면. 환영, 마이데이터 안내, 소비 카테고리 선택, 카테고리별 월 예산 목표 설정, 임시 완료 화면을 제공합니다.
 - `/first-login/mydata-connect`: Figma `268:36`에 대응하는 마이데이터 연동 완료 화면. `마이데이터 연동하기` 이후 처리 중 로딩 상태와 연동 완료 상태를 보여주고 소비 카테고리 선택으로 이어집니다. `나중에 하기`를 누르면 소비 목표 설정 없이 온보딩을 완료합니다.

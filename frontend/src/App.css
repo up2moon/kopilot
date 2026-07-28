@@ -45,6 +45,121 @@
   color: #191f28;
 }
 
+.auth-screen-login {
+  padding: 0 22px 28px;
+  background: #f7f9fc;
+}
+
+.login-intro {
+  margin-inline: -22px;
+  padding: 20px 22px 28px;
+  border-bottom: 1px solid #e5e8eb;
+  background: #fff;
+}
+
+.login-brand-header {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.login-logo {
+  width: 42px;
+  height: 42px;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.login-brand strong {
+  color: #191f28;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.login-hero {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.login-eyebrow {
+  margin: 0 0 8px;
+  color: #f06d00;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 16px;
+}
+
+.login-hero h1 {
+  margin: 0;
+  color: #191f28;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 42px;
+  letter-spacing: 0;
+}
+
+.login-hero > p:not(.login-eyebrow) {
+  margin: 12px 0 0;
+  color: #4e5968;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.login-value-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1.35fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 15px 16px;
+  border: 1px solid rgba(49, 130, 246, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.login-value-item {
+  min-width: 0;
+}
+
+.login-value-item span,
+.login-value-item strong {
+  display: block;
+}
+
+.login-value-item span {
+  color: #3182f6;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+}
+
+.login-value-item strong {
+  margin-top: 2px;
+  color: #191f28;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.login-value-divider {
+  width: 1px;
+  height: 28px;
+  background: #d9e2ec;
+}
+
 .brand-header {
   display: flex;
   align-items: center;
@@ -103,75 +218,6 @@
   line-height: 25px;
 }
 
-.insight-card {
-  margin-top: 22px;
-  padding: 20px 20px 14px;
-  min-height: 116px;
-  border: 1px solid #e5e8eb;
-  border-radius: 20px;
-  background: #fff;
-  box-sizing: border-box;
-  text-align: left;
-}
-
-.insight-card h2 {
-  margin: 0 0 6px;
-  color: #191f28;
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.insight-row {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-}
-
-.insight-row span {
-  color: #6b7684;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.insight-row strong {
-  color: #191f28;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.saving-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-top: 2px;
-}
-
-.saving-row strong {
-  flex: 0 0 auto;
-  color: #00a661;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.progress-track {
-  width: 116px;
-  height: 8px;
-  border-radius: 999px;
-  background: #e9eef5;
-  overflow: hidden;
-}
-
-.progress-bar {
-  display: block;
-  width: 68%;
-  height: 100%;
-  border-radius: inherit;
-  background: #00a661;
-}
-
 .auth-panel {
   background: #fff;
   box-sizing: border-box;
@@ -179,10 +225,11 @@
 }
 
 .login-panel {
-  margin-top: 26px;
-  padding: 29px 24px 24px;
-  border-radius: 22px;
-  box-shadow: 0 12px 32px rgba(26, 31, 41, 0.1);
+  margin-top: 20px;
+  padding: 22px;
+  border: 1px solid #e5e8eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(25, 31, 40, 0.07);
 }
 
 .panel-heading {
@@ -237,6 +284,26 @@
   box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
 }
 
+.login-field > span {
+  display: block;
+  margin: 0 0 7px 2px;
+  color: #4e5968;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.login-field + .login-field {
+  margin-top: 16px;
+}
+
+.login-field input {
+  height: 54px;
+  border-radius: 8px;
+  background: #f7f9fc;
+  font-weight: 500;
+}
+
 .primary-button {
   width: 100%;
   height: 58px;
@@ -252,6 +319,31 @@
   transition:
     transform 0.18s ease,
     background-color 0.18s ease;
+}
+
+.login-panel .primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 54px;
+  margin-top: 18px;
+  border-radius: 8px;
+}
+
+.login-button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: login-button-spin 0.8s linear infinite;
+}
+
+@keyframes login-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .primary-button:hover {
@@ -286,8 +378,12 @@
 }
 
 .login-switch {
-  margin-top: 20px;
+  margin: 18px 0 0;
   gap: 10px;
+}
+
+.login-error {
+  margin-bottom: 0;
 }
 
 .auth-switch button {
@@ -1320,21 +1416,33 @@
     font-size: 12px;
   }
 
-  .insight-row {
-    gap: 10px;
+  .auth-screen-login {
+    padding-inline: 18px;
   }
 
-  .insight-row strong {
-    font-size: 21px;
+  .login-intro {
+    margin-inline: -18px;
+    padding-inline: 18px;
   }
 
-  .saving-row {
-    align-items: flex-start;
-    flex-direction: column;
+  .login-hero h1 {
+    font-size: 28px;
+    line-height: 39px;
   }
 
-  .progress-track {
-    width: 100%;
+  .login-value-list {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .login-value-item strong {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-button-spinner {
+    animation: none;
   }
 }
 
