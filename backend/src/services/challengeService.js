@@ -15,6 +15,7 @@ const RECENT_WINDOW_DAYS = 30;
 const WEEKLY_MISSION_COUNT = 5;
 const POINT_PER_MISSION = 100;
 const DISCRETIONARY_CATEGORIES = new Set(["카페·간식", "배달", "쇼핑", "문화", "구독"]);
+const TEST_NOW_ENV = "CHALLENGE_TEST_NOW";
 
 export class ChallengeError extends Error {
   constructor(message, status = 400, code = "CHALLENGE_ERROR", details = null) {
@@ -25,7 +26,23 @@ export class ChallengeError extends Error {
   }
 }
 
-function getKoreanDateParts(date = new Date()) {
+function getChallengeNow() {
+  const configuredNow = process.env[TEST_NOW_ENV]?.trim();
+  const testMode = process.env.NODE_ENV !== "production" && Boolean(configuredNow);
+  if (!testMode) {
+    return { date: new Date(), testMode: false, configuredNow: null };
+  }
+
+  const date = new Date(configuredNow);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(
+      `${TEST_NOW_ENV} must be a valid ISO 8601 datetime with timezone offset`,
+    );
+  }
+  return { date, testMode: true, configuredNow };
+}
+
+function getKoreanDateParts(date = getChallengeNow().date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: KOREA_TIME_ZONE,
     year: "numeric",
@@ -42,6 +59,16 @@ function getKoreanDateParts(date = new Date()) {
     weekday: values.weekday,
     hour: Number(values.hour),
     minute: Number(values.minute),
+  };
+}
+
+export function getChallengeClockInfo() {
+  const clock = getChallengeNow();
+  return {
+    testMode: clock.testMode,
+    configuredNow: clock.configuredNow,
+    currentDateTime: clock.date.toISOString(),
+    timeZone: KOREA_TIME_ZONE,
   };
 }
 

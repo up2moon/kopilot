@@ -41,18 +41,32 @@ export default function ChallengePage({ token }) {
           onRetry={loadChallenges}
         />
       ) : (
-        <WeeklyChallengeSection
-          canVerify={data.canVerify}
-          challenges={data.weeklyChallenges}
-          progress={data.weeklyProgress}
-          verificationOpensAt={data.verificationOpensAt}
-          verificationResult={verificationResult}
-          verifyMessage={verifyMessage}
-          verifying={verifying}
-          weekEndDate={data.weekEndDate}
-          weekStartDate={data.weekStartDate}
-          onVerify={verify}
-        />
+        <>
+          {data.clock?.testMode && (
+            <div className="challenge-test-clock" role="status">
+              <strong>개발 테스트 시간 사용 중</strong>
+              <span>
+                {new Intl.DateTimeFormat('ko-KR', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                  timeZone: 'Asia/Seoul',
+                }).format(new Date(data.clock.currentDateTime))}
+              </span>
+            </div>
+          )}
+          <WeeklyChallengeSection
+            canVerify={data.canVerify}
+            challenges={data.weeklyChallenges}
+            progress={data.weeklyProgress}
+            verificationOpensAt={data.verificationOpensAt}
+            verificationResult={verificationResult}
+            verifyMessage={verifyMessage}
+            verifying={verifying}
+            weekEndDate={data.weekEndDate}
+            weekStartDate={data.weekStartDate}
+            onVerify={verify}
+          />
+        </>
       )}
     </NavigationPageLayout>
   )

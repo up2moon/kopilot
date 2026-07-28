@@ -2,6 +2,24 @@
   position: relative;
 }
 
+.challenge-test-clock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #ffd8a8;
+  border-radius: 14px;
+  background: #fff9ed;
+  color: #8a4b08;
+  font-size: 12px;
+}
+
+.challenge-test-clock strong {
+  font-size: 13px;
+}
+
 .challenge-week-summary,
 .challenge-state-card {
   border-radius: 26px;

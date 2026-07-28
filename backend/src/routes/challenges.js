@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware/auth.js";
 import {
   ChallengeError,
   buildMissionContent,
+  getChallengeClockInfo,
   getKoreanToday,
   getOrCreateWeeklyChallenges,
   getWeeklyCurrentStats,
@@ -62,6 +63,7 @@ router.get("/me/challenges", requireAuth, async (req, res) => {
       weekStartDate: result.weekStart,
       weekEndDate: result.weekEnd,
       today: result.currentDate,
+      clock: getChallengeClockInfo(),
       verificationOpensAt: result.verificationOpensAt,
       verificationClosesAt: result.verificationClosesAt,
       canVerify: result.canVerify,

@@ -44,6 +44,7 @@
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 미션 5개, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 미션이 비어 있으면 직전 주를 우선으로 한 최근 거래내역을 바탕으로 5개를 생성해 저장합니다.
 - `POST /api/users/me/challenges/verify`: 토요일 00:00 KST부터 다음 주 월요일 00:00 직전까지 현재 주 미션 5개를 월~금 전체 거래내역으로 일괄 판정합니다. 성공 미션별 포인트를 같은 트랜잭션에서 지급하고 성공 개수와 `showCelebration`을 반환합니다.
+- 개발 환경에서 `CHALLENGE_TEST_NOW`에 타임존 오프셋을 포함한 ISO 8601 시각을 설정하면 챌린지 조회·생성·인증·만료만 해당 테스트 시각을 사용합니다. 예: `2026-08-01T00:01:00+09:00`. `NODE_ENV=production`에서는 설정값을 무시하고 실제 KST를 사용합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
