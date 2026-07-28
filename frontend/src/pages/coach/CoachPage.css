@@ -1,11 +1,12 @@
 .coach-page {
+  --coach-content-gutter: 20px;
   width: min(100%, 390px);
   height: 844px;
   min-height: 844px;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  padding: 20px 4px;
+  padding: 20px var(--coach-content-gutter);
   background: #f7f9fc;
   box-sizing: border-box;
   color: #191f28;
@@ -409,7 +410,7 @@
 
 @media (max-width: 360px) {
   .coach-page {
-    padding-inline: 18px;
+    --coach-content-gutter: 18px;
   }
 
   .coach-header h1 {
