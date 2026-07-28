@@ -1,6 +1,6 @@
 import kospayLogo from "../../../assets/kospay-logo.png";
 
-export default function DashboardHeader({ nickname, onNavigate }) {
+export default function DashboardHeader() {
   return (
     <header className="dash-top-bar">
       <div className="brand-lockup">
@@ -11,16 +11,6 @@ export default function DashboardHeader({ nickname, onNavigate }) {
           aria-hidden="true"
         />
       </div>
-
-      <button
-        className="user-profile-pill"
-        type="button"
-        onClick={() => onNavigate("/my")}
-        title="마이페이지"
-      >
-        <div className="user-avatar-circle">{nickname.charAt(0)}</div>
-        <span className="user-name">{nickname}님</span>
-      </button>
     </header>
   );
 }

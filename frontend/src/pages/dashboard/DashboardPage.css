@@ -10,7 +10,6 @@
 .dash-top-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 20px 24px 12px;
 }
 
@@ -26,41 +25,6 @@
   font-weight: 800;
   color: #191f28;
   letter-spacing: -0.5px;
-}
-
-.user-profile-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 14px 4px 5px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid #e5e8eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.user-profile-pill:hover {
-  background: #f2f4f6;
-}
-
-.user-avatar-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #e8f2ff;
-  color: #3182f6;
-  font-size: 13px;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #191f28;
 }
 
 .dash-greeting-section {

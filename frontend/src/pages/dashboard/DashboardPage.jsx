@@ -13,7 +13,7 @@ export default function DashboardPage({ auth, onNavigate }) {
 
   return (
     <div className="dashboard-page">
-      <DashboardHeader nickname={nickname} onNavigate={onNavigate} />
+      <DashboardHeader />
       <DashboardGreeting nickname={nickname} />
       <DashboardContent
         coaching={coaching}
