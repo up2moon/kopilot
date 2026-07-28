@@ -136,7 +136,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 화면의 현재가는 `investment_price.close_price`의 최신 거래일 값을 `currentPrice`로 내려주고, 기준가는 선택 월 첫 거래일 값을 `basePrice`로 내려줍니다. 조회/동기화 시각은 `synced_at`을 `quotedAt`으로 사용합니다.
    - 백엔드는 `KOSCOM_SYNC_TIME` 환경 변수 기준 KST 매일 1회 코스콤 CHECK API를 호출합니다. 기본값은 `17:10`입니다.
    - 서버 시작 5초 후 `investment_price`가 0건이면 즉시 초기 동기화를 실행합니다. `KOSCOM_SYNC_ON_START=true`이면 가격 테이블 보유 여부와 관계없이 서버 시작 시 한 번 동기화합니다. `KOSCOM_SYNC_DISABLED=true`이면 스케줄러와 초기 동기화를 모두 끕니다.
-   - 운영 배포에서는 WAS 1과 WAS 2 모두 `CHECK_API_ENABLED=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. 사용자 요청에 필요한 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. DB에 시세가 있으면 CHECK API를 호출하지 않습니다.
+   - 운영 배포에서는 WAS 1과 WAS 2 모두 `CHECK_API_ENABLED=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. 사용자 요청에 필요한 기준일 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. 최신가는 당일 KST 기준으로 동기화된 행이 없으면 fallback하며, 휴장일에는 CHECK API가 반환한 직전 거래일 행의 `synced_at`을 갱신해 같은 날 중복 호출을 막습니다.
    - 여러 WAS의 동시 fallback은 `external_api_lock` 테이블의 MySQL row lock으로 직렬화합니다. 잠금 대기 시간은 `KOSCOM_DB_LOCK_TIMEOUT_SECONDS`로 설정하며 기본값은 10초입니다. 두 WAS가 동일한 NAT Gateway 공인 IP를 사용한다는 운영 네트워크 구성을 전제로 합니다.
    - fallback 오류 상세는 개발 환경 또는 `INVESTMENT_DEBUG_ERRORS=true`에서만 API 응답의 `debug` 필드로 제공합니다. 운영 기본값은 `false`이며 인증키나 요청 credential은 상세 응답에 포함하지 않습니다.
    - 로컬 `compose.dev.yml`은 `CHECK_API_ENABLED=false`가 기본값입니다. 로컬 화면은 백엔드의 `CHECK_API_DISABLED` 오류와 개발자 상세를 표시할 수 있지만 실제 CHECK API는 호출하지 않아 운영 인증키의 기준 IP를 변경하지 않습니다.

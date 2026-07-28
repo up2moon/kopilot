@@ -37,7 +37,7 @@ export const defaultBenchmarkCodes = defaultBenchmarkAssets.map(
   (asset) => asset.assetCode,
 );
 
-function getKstDate() {
+function getKstDate(date = new Date()) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
     year: "numeric",
@@ -45,7 +45,7 @@ function getKstDate() {
     day: "2-digit",
   });
 
-  return formatter.format(new Date());
+  return formatter.format(date);
 }
 
 function getKstMonth() {
@@ -901,57 +901,125 @@ export async function getOrFetchStoredPrice(assetCode, tradeDate) {
     return storedPrice;
   }
 
-  getKoscomCredentials();
+  console.log("Koscom price fallback started", {
+    assetCode,
+    tradeDate,
+    priceType: "HISTORICAL",
+  });
 
-  const asset = await InvestmentAsset.findByPk(assetCode);
+  try {
+    getKoscomCredentials();
 
-  if (!asset) {
-    return null;
-  }
+    const asset = await InvestmentAsset.findByPk(assetCode);
 
-  return withKoscomPriceRequestLock(async (transaction) => {
-    const recheckedPrice = await getStoredPrice(
-      assetCode,
-      tradeDate,
-      transaction,
-    );
-
-    if (recheckedPrice) {
-      return recheckedPrice;
+    if (!asset) {
+      return null;
     }
 
-    const fetchedPrice = await runKoscomPriceRequest(() =>
-      upsertPrice(asset, tradeDate, transaction),
+    const fetchedPrice = await withKoscomPriceRequestLock(
+      async (transaction) => {
+        const recheckedPrice = await getStoredPrice(
+          assetCode,
+          tradeDate,
+          transaction,
+        );
+
+        if (recheckedPrice) {
+          return recheckedPrice;
+        }
+
+        const result = await runKoscomPriceRequest(() =>
+          upsertPrice(asset, tradeDate, transaction),
+        );
+
+        return getStoredPrice(assetCode, result.tradeDate, transaction);
+      },
     );
 
-    return getStoredPrice(assetCode, fetchedPrice.tradeDate, transaction);
-  });
+    console.log("Koscom price fallback completed", {
+      assetCode,
+      requestedTradeDate: tradeDate,
+      savedTradeDate: fetchedPrice?.trade_date || null,
+      priceType: "HISTORICAL",
+    });
+
+    return fetchedPrice;
+  } catch (error) {
+    console.error("Koscom price fallback failed", {
+      assetCode,
+      tradeDate,
+      priceType: "HISTORICAL",
+      code: error.code || null,
+      message: error.message,
+      meta: error.meta || null,
+    });
+    throw error;
+  }
 }
 
 export async function getOrFetchLatestStoredPrice(assetCode) {
   const storedPrice = await getLatestStoredPrice(assetCode);
+  const syncedDate = storedPrice?.synced_at
+    ? getKstDate(storedPrice.synced_at)
+    : null;
 
-  if (storedPrice) {
+  if (storedPrice && syncedDate === getKstDate()) {
     return storedPrice;
   }
 
-  getKoscomCredentials();
+  console.log("Koscom price fallback started", {
+    assetCode,
+    storedTradeDate: storedPrice?.trade_date || null,
+    storedSyncedDate: syncedDate,
+    priceType: "LATEST",
+  });
 
-  const asset = await InvestmentAsset.findByPk(assetCode);
+  try {
+    getKoscomCredentials();
 
-  if (!asset) {
-    return null;
-  }
+    const asset = await InvestmentAsset.findByPk(assetCode);
 
-  return withKoscomPriceRequestLock(async (transaction) => {
-    const recheckedPrice = await getLatestStoredPrice(assetCode, transaction);
-
-    if (recheckedPrice) {
-      return recheckedPrice;
+    if (!asset) {
+      return null;
     }
 
-    await runKoscomPriceRequest(() => upsertPrice(asset, null, transaction));
+    const fetchedPrice = await withKoscomPriceRequestLock(
+      async (transaction) => {
+        const recheckedPrice = await getLatestStoredPrice(
+          assetCode,
+          transaction,
+        );
+        const recheckedSyncedDate = recheckedPrice?.synced_at
+          ? getKstDate(recheckedPrice.synced_at)
+          : null;
 
-    return getLatestStoredPrice(assetCode, transaction);
-  });
+        if (recheckedPrice && recheckedSyncedDate === getKstDate()) {
+          return recheckedPrice;
+        }
+
+        await runKoscomPriceRequest(() =>
+          upsertPrice(asset, null, transaction),
+        );
+
+        return getLatestStoredPrice(assetCode, transaction);
+      },
+    );
+
+    console.log("Koscom price fallback completed", {
+      assetCode,
+      savedTradeDate: fetchedPrice?.trade_date || null,
+      priceType: "LATEST",
+    });
+
+    return fetchedPrice;
+  } catch (error) {
+    console.error("Koscom price fallback failed", {
+      assetCode,
+      priceType: "LATEST",
+      code: error.code || null,
+      message: error.message,
+      meta: error.meta || null,
+    });
+    throw error;
+  }
 }
