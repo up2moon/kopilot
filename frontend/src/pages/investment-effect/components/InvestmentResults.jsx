@@ -5,10 +5,11 @@ import { formatWon } from '../utils/formatters'
 export default function InvestmentResults({
   children,
   data,
+  isRefreshing,
   selectedAssets,
 }) {
   const primaryBenchmark = data?.benchmarks?.[0]
-  const comparisons = data?.comparisons || []
+  const comparisons = isRefreshing ? [] : data?.comparisons || []
   const investmentAmount =
     data?.investmentAmount ?? data?.spendingAmount ?? data?.savedAmount
 

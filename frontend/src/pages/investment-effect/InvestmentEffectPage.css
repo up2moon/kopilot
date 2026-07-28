@@ -442,6 +442,45 @@
   text-align: center;
 }
 
+.investment-refresh-note {
+  position: sticky;
+  z-index: 8;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 12px auto -2px;
+  padding: 8px 12px;
+  border: 1px solid #cfe3ff;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1b64da;
+  box-shadow: 0 5px 16px rgba(49, 130, 246, 0.14);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.investment-refresh-note.is-error {
+  border-color: #ffd7d9;
+  color: #e5484d;
+}
+
+.investment-refresh-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3182f6;
+  animation: investment-refresh-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes investment-refresh-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+}
+
 .investment-state-card strong {
   color: #191f28;
   font-size: 16px;

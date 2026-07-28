@@ -13,7 +13,6 @@ export default function InvestmentEffectPage({ token }) {
 
   const handleSelectAsset = (asset) => {
     simulation.selectAsset(asset);
-    search.clearSearch();
   };
 
   return (
@@ -32,14 +31,26 @@ export default function InvestmentEffectPage({ token }) {
       <InvestmentStateCard
         errorCode={simulation.errorCode}
         errorDebug={simulation.errorDebug}
-        errorMessage={simulation.errorMessage}
-        isLoading={simulation.isLoading}
+        errorMessage={simulation.data ? "" : simulation.errorMessage}
+        isLoading={simulation.isLoading && !simulation.data}
       />
 
-      {!simulation.isLoading && !simulation.errorMessage ? (
+      {simulation.data ? (
         <>
+          {simulation.isRefreshing ? (
+            <div className="investment-refresh-note" role="status">
+              <span className="investment-refresh-dot" />
+              선택한 종목의 투자효과를 계산하고 있어요.
+            </div>
+          ) : null}
+          {!simulation.isRefreshing && simulation.errorMessage ? (
+            <div className="investment-refresh-note is-error" role="alert">
+              {simulation.errorMessage}
+            </div>
+          ) : null}
           <InvestmentResults
             data={simulation.data}
+            isRefreshing={simulation.isRefreshing}
             selectedAssets={simulation.selectedAssets}
           >
             <AssetSearchCard {...search} onSelectAsset={handleSelectAsset} />

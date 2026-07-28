@@ -38,7 +38,6 @@ export default function useInvestmentSimulation(token) {
           setErrorMessage(err.message)
           setErrorCode(err.code || '')
           setErrorDebug(err.debug || null)
-          setData(null)
         }
       } finally {
         if (!ignore) {
@@ -55,6 +54,14 @@ export default function useInvestmentSimulation(token) {
   }, [token, selectedMonth, selectedCategory, selectedAssets])
 
   const selectAsset = (asset) => {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            comparisons: [],
+          }
+        : current,
+    )
     setSelectedAssets([asset])
   }
 
@@ -64,6 +71,7 @@ export default function useInvestmentSimulation(token) {
     selectedAssets,
     data,
     isLoading,
+    isRefreshing: isLoading && Boolean(data),
     errorMessage,
     errorCode,
     errorDebug,

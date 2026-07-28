@@ -18,7 +18,7 @@ export default function SelectedAssetResults({
             <strong>
               {selectedAssets.map((asset) => asset.label).join(', ')}
             </strong>
-            <small>시세를 불러오면 결과가 표시됩니다.</small>
+            <small>선택한 종목의 시세와 수익률을 계산하고 있어요.</small>
           </div>
         </article>
       </section>
