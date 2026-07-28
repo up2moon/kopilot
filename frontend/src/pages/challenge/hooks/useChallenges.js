@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   getWeeklyChallenges,
-  verifyChallenge,
+  verifyWeeklyChallenges,
 } from '../../../services/challenges.js'
 
 function wait(ms) {
@@ -13,7 +13,9 @@ export default function useChallenges(token) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [verifyMessage, setVerifyMessage] = useState('')
-  const [verifyingChallengeId, setVerifyingChallengeId] = useState(null)
+  const [verifying, setVerifying] = useState(false)
+  const [verificationResult, setVerificationResult] = useState(null)
+  const [celebrationKey, setCelebrationKey] = useState(0)
 
   const loadChallenges = useCallback(
     async (showLoading = true) => {
@@ -34,22 +36,26 @@ export default function useChallenges(token) {
     if (token) loadChallenges()
   }, [loadChallenges, token])
 
-  const verify = async (challenge) => {
-    if (!challenge || verifyingChallengeId) return
+  const verify = async () => {
+    if (verifying || !data?.canVerify) return
 
     try {
-      setVerifyingChallengeId(challenge.id)
+      setVerifying(true)
       setVerifyMessage('')
       const [result] = await Promise.all([
-        verifyChallenge(token, challenge.id),
+        verifyWeeklyChallenges(token),
         wait(550),
       ])
       setVerifyMessage(result.message)
+      setVerificationResult(result)
+      if (result.showCelebration) {
+        setCelebrationKey((current) => current + 1)
+      }
       await loadChallenges(false)
     } catch (err) {
       setVerifyMessage(err.message || '챌린지 인증에 실패했습니다.')
     } finally {
-      setVerifyingChallengeId(null)
+      setVerifying(false)
     }
   }
 
@@ -58,7 +64,9 @@ export default function useChallenges(token) {
     loading,
     error,
     verifyMessage,
-    verifyingChallengeId,
+    verifying,
+    verificationResult,
+    celebrationKey,
     loadChallenges,
     verify,
   }
