@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getMyRanking, getTopRankings } from '../services/ranking.js'
+import NavigationPageLayout from '../components/NavigationPageLayout'
 import './AnonymousRankingPage.css'
 
 export default function AnonymousRankingPage({ token, onNavigate }) {
@@ -42,16 +43,11 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
   }
 
   return (
-    <div className="ranking-page-container">
-      {/* 1. Header Bar with Home Button */}
-      <header className="ranking-header">
-        <div className="ranking-header-title-group">
-          <h1>익명 랭킹</h1>
-          <p className="ranking-header-subtitle">
-            이번 달 나와 동료들의 절약 성과를 확인해요
-          </p>
-        </div>
-      </header>
+    <NavigationPageLayout
+      className="ranking-page-container"
+      title="익명 랭킹"
+      content="이번 달 나와 동료들의 절약 성과를 확인해요"
+    >
 
       {/* Update Notice Badge */}
       <div className="ranking-notice-bar">
@@ -164,6 +160,6 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
           </section>
         </>
       )}
-    </div>
+    </NavigationPageLayout>
   )
 }

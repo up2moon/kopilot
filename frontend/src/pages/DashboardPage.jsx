@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getDashboardSummary } from '../services/dashboard'
 import { getSavingBotCoaching } from '../services/savingBot'
+import arrowIcon from '../assets/icons/arrow.svg'
 import './DashboardPage.css'
 
 function formatWon(value) {
@@ -128,7 +129,7 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
               onClick={() => onNavigate('/spending')}
             >
               <span>소비 상세 보기</span>
-              <span className="btn-arrow">&gt;</span>
+              <img className="btn-arrow is-light" src={arrowIcon} alt="" aria-hidden="true" />
             </button>
           </section>
 
@@ -146,7 +147,7 @@ export default function DashboardPage({ auth, onNavigate, onLogout }) {
               onClick={() => onNavigate('/coach')}
             >
               <span>AI 코치와 대화하기</span>
-              <span className="btn-arrow">&gt;</span>
+              <img className="btn-arrow is-primary" src={arrowIcon} alt="" aria-hidden="true" />
             </button>
 
             <p className="ai-coach-footer-note">질문하면 소비 습관과 절약 미션을 바로 추천해요.</p>

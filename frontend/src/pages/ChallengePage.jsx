@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getWeeklyChallenges, verifyChallenge } from '../services/challenges.js'
+import NavigationPageLayout from '../components/NavigationPageLayout'
 import './ChallengePage.css'
 
 const statusLabel = {
@@ -58,11 +59,11 @@ export default function ChallengePage({ token }) {
   }
 
   return (
-    <div className="challenge-page">
-      <header className="challenge-header">
-        <h1>챌린지</h1>
-        <p>AI가 이번 주 수행할 절약 미션을 배정해요.</p>
-      </header>
+    <NavigationPageLayout
+      className="challenge-page"
+      title="챌린지"
+      content="AI가 이번 주 수행할 절약 미션을 배정해요."
+    >
 
       {loading ? (
         <div className="challenge-state-card"><span className="challenge-spinner" />챌린지를 준비하고 있어요.</div>
@@ -147,6 +148,6 @@ export default function ChallengePage({ token }) {
           </section>
         </>
       )}
-    </div>
+    </NavigationPageLayout>
   )
 }

@@ -1,14 +1,16 @@
 .floating-chatbot-btn {
   position: absolute;
-  bottom: 76px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
   right: 20px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
   background: #3182f6;
   color: #ffffff;
-  border: none;
-  box-shadow: 0 8px 20px rgba(49, 130, 246, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(25, 31, 40, 0.05),
+    0 8px 20px rgba(49, 130, 246, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,7 +21,9 @@
 
 .floating-chatbot-btn:hover {
   transform: scale(1.06);
-  box-shadow: 0 10px 24px rgba(49, 130, 246, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(25, 31, 40, 0.05),
+    0 10px 24px rgba(49, 130, 246, 0.45);
 }
 
 .floating-chatbot-btn:active {
@@ -27,7 +31,8 @@
 }
 
 .chatbot-speech-icon {
-  font-size: 24px;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
   filter: brightness(0) invert(1);
 }

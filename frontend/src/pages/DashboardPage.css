@@ -235,9 +235,18 @@
 }
 
 .btn-arrow {
-  font-size: 14px;
-  font-weight: 700;
+  display: block;
+  width: 16px;
+  height: 16px;
   margin-left: 6px;
+}
+
+.btn-arrow.is-light {
+  filter: brightness(0) invert(1);
+}
+
+.btn-arrow.is-primary {
+  filter: brightness(0) saturate(100%) invert(45%) sepia(92%) saturate(2614%) hue-rotate(201deg) brightness(99%) contrast(95%);
 }
 
 .dashboard-loading,
