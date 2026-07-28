@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getInvestmentEffectSimulation, searchInvestmentAssets } from '../services/investment.js'
+import NavigationPageLayout from '../components/NavigationPageLayout'
 import './InvestmentEffectPage.css'
 const isLocalDevelopment = import.meta.env.DEV
 
@@ -185,11 +186,11 @@ export default function InvestmentEffectPage({ token }) {
   const investmentAmount = data?.investmentAmount ?? data?.spendingAmount ?? data?.savedAmount
 
   return (
-    <div className="investment-page">
-      <header className="investment-header">
-        <h1>투자효과</h1>
-        <p>소비한 돈을 투자했다면 현재 얼마인지 계산해요.</p>
-      </header>
+    <NavigationPageLayout
+      className="investment-page"
+      title="투자효과"
+      content="소비한 돈을 투자했다면 현재 얼마인지 계산해요."
+    >
 
       <label className="investment-month-picker">
         <span>조회 월</span>
@@ -361,6 +362,6 @@ export default function InvestmentEffectPage({ token }) {
           </p>
         </>
       )}
-    </div>
+    </NavigationPageLayout>
   )
 }

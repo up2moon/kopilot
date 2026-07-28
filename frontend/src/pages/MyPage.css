@@ -1,30 +1,3 @@
-.mypage {
-  min-height: 100%;
-  padding: 24px 20px 100px;
-  background: #f7f9fc;
-  box-sizing: border-box;
-  color: #191f28;
-}
-
-/* Header */
-.mypage-header {
-  margin-bottom: 20px;
-}
-
-.mypage-header h1 {
-  margin: 0 0 6px;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.mypage-subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7684;
-  line-height: 1.4;
-}
-
 /* 프로필 카드 */
 .mypage-profile-card {
   display: flex;

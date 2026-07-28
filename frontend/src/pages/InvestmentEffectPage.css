@@ -1,25 +1,3 @@
-.investment-page {
-  min-height: 100%;
-  padding: 32px 24px 112px;
-  box-sizing: border-box;
-  background: #f7f9fc;
-  color: #191f28;
-}
-
-.investment-header h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.3;
-}
-
-.investment-header p {
-  margin: 8px 0 0;
-  color: #6b7684;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
 .investment-month-picker {
   min-height: 48px;
   display: flex;

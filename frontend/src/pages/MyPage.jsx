@@ -3,6 +3,7 @@ import lockIcon from '../assets/icons/lock.svg'
 import logoutIcon from '../assets/icons/logout.svg'
 import notificationsIcon from '../assets/icons/notifications.svg'
 import arrowIcon from '../assets/icons/arrow.svg'
+import NavigationPageLayout from '../components/NavigationPageLayout'
 import './MyPage.css'
 
 // 알림 설정은 백엔드 영향이 없는 UI 전용 토글이라(BACK.md 방침) 값을 localStorage에만 저장한다.
@@ -101,11 +102,11 @@ export default function MyPage({
   ]
 
   return (
-    <div className="mypage">
-      <header className="mypage-header">
-        <h1>마이</h1>
-        <p className="mypage-subtitle">계정과 서비스 설정을 관리해요.</p>
-      </header>
+    <NavigationPageLayout
+      className="mypage"
+      title="마이"
+      content="계정과 서비스 설정을 관리해요."
+    >
 
       <section className="mypage-profile-card">
         <div className="mypage-avatar" aria-hidden="true">
@@ -206,6 +207,6 @@ export default function MyPage({
           </div>
         </div>
       )}
-    </div>
+    </NavigationPageLayout>
   )
 }
