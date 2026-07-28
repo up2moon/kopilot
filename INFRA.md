@@ -249,7 +249,7 @@ Web 서버, Public Load Balancer, Bastion Host, 외부 사용자는 MySQL에 직
 - 대규모 migration은 서비스 영향도를 검토한 후 진행한다.
 - 운영 데이터 삭제 쿼리는 명시적 승인 없이 실행하지 않는다.
 
-현재 MVP 인증 구현은 배포본 실행 시 최신 테이블로 맞추기 위해 Sequelize `sync({ alter: true })`를 사용할 수 있다. 이 동작은 `DB_SYNC_SCHEMA=false` 또는 `DB_SYNC_ALTER=false`로 제어하며, 운영 안정화 단계에서는 migration 기반 관리로 전환한다.
+Sequelize schema sync는 `DB_SYNC_SCHEMA=true`일 때 실행하되 운영에서는 `DB_SYNC_ALTER=false`로 고정하여 존재하지 않는 테이블만 생성한다. `sync({ alter: true })`는 `UNIQUE` 인덱스를 반복 생성할 수 있으므로 운영에서 사용하지 않으며 기존 테이블 변경은 migration으로 관리한다.
 
 권장 환경변수:
 
@@ -477,6 +477,7 @@ DB, Redis, Load Balancer, NAT Gateway는 일반 애플리케이션 배포 대상
 ```
 
 두 WAS를 동시에 중지하거나 재시작하지 않는다.
+배포 또는 로컬 Health Check에 실패한 노드는 비정상 상태로 대상 그룹에 다시 등록하지 않고, 정상 노드가 트래픽을 처리하는 동안 원인을 수정한 뒤 재배포한다.
 
 ---
 

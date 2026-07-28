@@ -25,7 +25,7 @@ export const db = new Sequelize(
 export const sequelize = db;
 
 export const shouldSyncSchema = process.env.DB_SYNC_SCHEMA !== "false";
-export const shouldAlterSchema = process.env.DB_SYNC_ALTER !== "false";
+export const shouldAlterSchema = process.env.DB_SYNC_ALTER === "true";
 
 export async function syncDatabase() {
   if (!shouldSyncSchema) {

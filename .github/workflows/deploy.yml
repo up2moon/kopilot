@@ -200,13 +200,7 @@ env:
 
         show_logs "$service_name"
 
-        echo "$node_name: LB 타깃 재등록을 시도합니다."
-
-        retry_lb_command \
-          addTarget \
-          "$target_group_no" \
-          "$target_no" \
-          "$node_name" || true
+        echo "$node_name: 비정상 컨테이너이므로 LB 제외 상태를 유지합니다."
 
         return 1
       fi
@@ -227,13 +221,7 @@ env:
 
         show_logs "$service_name"
 
-        echo "$node_name: LB 타깃 재등록을 시도합니다."
-
-        retry_lb_command \
-          addTarget \
-          "$target_group_no" \
-          "$target_no" \
-          "$node_name" || true
+        echo "$node_name: 비정상 컨테이너이므로 LB 제외 상태를 유지합니다."
 
         return 1
       fi
@@ -280,6 +268,8 @@ jobs:
           export KOSCOM_DB_LOCK_TIMEOUT_SECONDS=10
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
           export CHECK_API_ENABLED=true
+          export DB_SYNC_SCHEMA=true
+          export DB_SYNC_ALTER=false
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \
@@ -315,6 +305,8 @@ jobs:
           export KOSCOM_DB_LOCK_TIMEOUT_SECONDS=10
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
           export CHECK_API_ENABLED=true
+          export DB_SYNC_SCHEMA=true
+          export DB_SYNC_ALTER=false
 
           deploy_node \
             "$WAS_TARGET_GROUP_NO" \

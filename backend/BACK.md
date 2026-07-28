@@ -187,7 +187,7 @@ OpenAI 기반 합성 거래내역 생성과 절약 챗봇은 환경 변수 `OPEN
 
 AI 절약 챗봇 대화는 Redis의 `saving-bot:chat:{userId}` List에 저장합니다. `SAVING_BOT_CHAT_TTL_SECONDS`로 마지막 대화 이후 보관 기간(기본 `259200`초, 3일)을, `SAVING_BOT_CHAT_MAX_MESSAGES`로 사용자별 최대 메시지 수(기본 100개)를 조정할 수 있습니다. 채팅 저장 실패는 AI 답변 생성을 중단시키지 않으며, Redis 조회 실패 시 요청에 포함된 최근 대화를 임시 문맥으로 사용합니다.
 
-ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: true })`를 실행해 `docs/Kopilot.png` 기준 테이블을 최신 모델에 맞춥니다. 환경변수 `DB_SYNC_SCHEMA=false`로 동기화를 끌 수 있고, `DB_SYNC_ALTER=false`로 alter 없이 존재하지 않는 테이블 생성만 수행할 수 있습니다.
+ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: false })`를 실행해 존재하지 않는 테이블만 생성합니다. `DB_SYNC_SCHEMA=false`로 schema sync 전체를 끌 수 있고, `DB_SYNC_ALTER=true`를 명시한 경우에만 기존 테이블을 변경합니다. 운영에서는 Sequelize가 `UNIQUE` 인덱스를 반복 생성하지 않도록 `DB_SYNC_ALTER=false`로 고정하고 기존 테이블 변경은 migration으로 관리합니다.
 
 ## 구현 기준
 현재 백엔드는 Express 5 기반 JavaScript ES 모듈입니다. 진입점은 `backend/server.js`이며, 런타임 설정은 `PORT`, `CORS_ORIGIN` 같은 환경 변수를 사용합니다. API 변경 후에는 `GET /api/health`와 변경된 엔드포인트를 직접 호출해 응답 상태와 JSON 구조를 확인합니다.
