@@ -237,7 +237,7 @@ export const AiChallenge = sequelize.define(
       allowNull: false,
     },
     sequence: {
-      type: DataTypes.TINYINT.UNSIGNED,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
     expense_category_id: {
@@ -324,10 +324,6 @@ export const AiChallenge = sequelize.define(
     underscored: true,
     timestamps: false,
     indexes: [
-      {
-        unique: true,
-        fields: ["user_id", "challenge_date"],
-      },
       {
         unique: true,
         name: "ai_challenge_user_week_sequence",

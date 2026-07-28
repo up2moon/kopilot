@@ -2,6 +2,31 @@
   position: relative;
 }
 
+.new-challenge-notice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(49, 130, 246, 0.2);
+  border-radius: 16px;
+  background: #e8f2ff;
+  color: #1b64da;
+  font-size: var(--font-size-body);
+  font-weight: 800;
+  animation: challenge-notice-in 420ms ease-out both;
+}
+
+.new-challenge-notice span {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 9px;
+  background: #3182f6;
+  color: #fff;
+}
+
 .challenge-test-clock {
   display: flex;
   align-items: center;
@@ -107,6 +132,17 @@
   box-shadow: 0 7px 20px rgba(49, 82, 128, 0.06);
 }
 
+.weekly-challenge-item.is-newly-added {
+  border: 2px solid rgba(49, 130, 246, 0.72);
+  background:
+    radial-gradient(circle at 96% 8%, rgba(49, 130, 246, 0.12), transparent 34%),
+    #fff;
+  box-shadow:
+    0 0 0 6px rgba(49, 130, 246, 0.1),
+    0 14px 32px rgba(49, 130, 246, 0.2);
+  animation: challenge-new-card 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .challenge-item-topline {
   display: flex;
   align-items: center;
@@ -138,6 +174,17 @@
   flex: 0 0 auto;
   font-size: var(--font-size-caption);
   font-weight: 800;
+}
+
+.challenge-new-badge {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #3182f6;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .status-success {
@@ -357,6 +404,35 @@
   }
 }
 
+@keyframes challenge-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes challenge-new-card {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.015);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes confetti-fall {
   0% {
     opacity: 1;
@@ -383,5 +459,10 @@
 
   .weekly-progress-track > span {
     transition: none;
+  }
+
+  .new-challenge-notice,
+  .weekly-challenge-item.is-newly-added {
+    animation: none;
   }
 }

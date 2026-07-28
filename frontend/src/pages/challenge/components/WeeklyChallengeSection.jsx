@@ -11,6 +11,7 @@ function formatDateRange(start, end) {
 export default function WeeklyChallengeSection({
   canVerify,
   challenges,
+  highlightedChallengeId,
   progress,
   verificationOpensAt,
   verificationResult,
@@ -33,18 +34,25 @@ export default function WeeklyChallengeSection({
 
   return (
     <section className="weekly-challenge-section">
+      {highlightedChallengeId && (
+        <div className="new-challenge-notice" role="status" aria-live="polite">
+          <span aria-hidden="true">✦</span>
+          새로운 챌린지가 추가됐어요!
+        </div>
+      )}
+
       <div className="challenge-week-summary">
         <span>이번 주 챌린지</span>
         <strong>{dateRange}</strong>
         <p>
           {resolved
-            ? `${progress.successCount}/5 미션에 성공했어요`
-            : '금요일까지 다섯 가지 미션을 함께 진행해요'}
+            ? `${progress.successCount}/${progress.totalCount} 미션에 성공했어요`
+            : `금요일까지 ${progress.totalCount}개의 미션을 함께 진행해요`}
         </p>
       </div>
 
       <div className="weekly-challenge-heading">
-        <h2>나의 미션 5개</h2>
+        <h2>나의 미션 {progress.totalCount}개</h2>
         <span>
           {progress.successCount}/{progress.totalCount} 성공
         </span>
@@ -56,7 +64,11 @@ export default function WeeklyChallengeSection({
 
       <div className="weekly-challenge-list">
         {challenges.map((challenge) => (
-          <WeeklyChallengeItem challenge={challenge} key={challenge.id} />
+          <WeeklyChallengeItem
+            challenge={challenge}
+            highlighted={Number(challenge.id) === highlightedChallengeId}
+            key={challenge.id}
+          />
         ))}
       </div>
 

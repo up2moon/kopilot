@@ -3,7 +3,6 @@ import express from "express";
 import { requireAuth } from "../middleware/auth.js";
 import {
   ChallengeError,
-  buildMissionContent,
   calculateChallengeDifficulty,
   getChallengeClockInfo,
   getKoreanToday,
@@ -26,7 +25,7 @@ function toChallengeResponse(challenge, currentStats) {
     sequence: Number(challenge.sequence),
     category: challenge.ExpenseCategory?.name || null,
     content: challenge.baseline_period_start
-      ? buildMissionContent(challenge)
+      ? challenge.title
       : challenge.description || challenge.title,
     challengeType: challenge.challenge_type,
     baselinePeriodStart: challenge.baseline_period_start,
@@ -76,7 +75,7 @@ router.get("/me/challenges", requireAuth, async (req, res) => {
       verificationClosesAt: result.verificationClosesAt,
       canVerify: result.canVerify,
       onboardingRequired: result.onboardingRequired,
-      generated: result.challenges.length === 5,
+      generated: result.challenges.length > 0,
       successfulCount: progress.successCount,
       totalCount: progress.totalCount,
       weeklyChallenges: result.challenges.map((challenge) => (
@@ -104,7 +103,7 @@ router.post("/me/challenges/verify", requireAuth, async (req, res) => {
       earnedPoints: result.earnedPoints,
       showCelebration: result.showCelebration,
       message: result.successfulCount > 0
-        ? `${result.successfulCount}/5 미션 성공! ${result.earnedPoints}P를 받았어요.`
+        ? `${result.successfulCount}/${result.totalCount} 미션 성공! ${result.earnedPoints}P를 받았어요.`
         : "이번 주에는 성공한 미션이 없어요. 다음 주에 다시 가볍게 도전해봐요.",
       challenges: result.challenges.map((challenge) => ({
         challengeId: Number(challenge.id),

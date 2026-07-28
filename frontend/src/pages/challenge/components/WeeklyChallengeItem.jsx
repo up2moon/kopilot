@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+
 import formatWon from '../utils/formatWon'
 
 const statusLabel = {
@@ -22,12 +24,31 @@ function targetLabel(challenge) {
   return `현재 ${formatWon(challenge.currentSpentAmount)} / 목표 0원`
 }
 
-export default function WeeklyChallengeItem({ challenge }) {
+export default function WeeklyChallengeItem({ challenge, highlighted = false }) {
+  const itemRef = useRef(null)
+
+  useEffect(() => {
+    if (!highlighted || !itemRef.current) return
+
+    itemRef.current.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+      block: 'center',
+    })
+  }, [highlighted])
+
   return (
-    <article className="weekly-challenge-item">
+    <article
+      className={`weekly-challenge-item${highlighted ? ' is-newly-added' : ''}`}
+      ref={itemRef}
+    >
       <div className="challenge-item-topline">
         <span className="challenge-sequence">{challenge.sequence}</span>
         <span className="challenge-category">{challenge.category}</span>
+        {highlighted && (
+          <span className="challenge-new-badge">방금 추가됨</span>
+        )}
         {challenge.status !== 'IN_PROGRESS' && (
           <span
             className={`challenge-status status-${challenge.status.toLowerCase()}`}
