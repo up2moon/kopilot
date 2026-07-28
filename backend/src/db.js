@@ -58,8 +58,15 @@ async function ensureWeeklyChallengeSchema() {
 
   let columns = await queryInterface.describeTable("ai_challenge");
   const additions = [
+    [
+      "challenge_type",
+      {
+        type: DataTypes.ENUM("NO_SPEND", "MAX_SPEND", "MAX_COUNT"),
+        allowNull: true,
+      },
+    ],
     ["week_start_date", { type: DataTypes.DATEONLY, allowNull: true }],
-    ["sequence", { type: DataTypes.TINYINT.UNSIGNED, allowNull: true }],
+    ["sequence", { type: DataTypes.INTEGER.UNSIGNED, allowNull: true }],
     ["baseline_period_start", { type: DataTypes.DATEONLY, allowNull: true }],
     ["baseline_period_end", { type: DataTypes.DATEONLY, allowNull: true }],
     ["baseline_count", { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 }],
@@ -102,13 +109,22 @@ async function ensureWeeklyChallengeSchema() {
       type: DataTypes.DATEONLY,
       allowNull: false,
     });
-    await queryInterface.changeColumn("ai_challenge", "sequence", {
-      type: DataTypes.TINYINT.UNSIGNED,
-      allowNull: false,
-    });
+  }
+  await queryInterface.changeColumn("ai_challenge", "sequence", {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+  });
+
+  let indexes = await queryInterface.showIndex("ai_challenge");
+  const legacyDailyUniqueIndexes = indexes.filter((index) => {
+    const fields = index.fields?.map((field) => field.attribute).join(",");
+    return index.unique && fields === "user_id,challenge_date";
+  });
+  for (const index of legacyDailyUniqueIndexes) {
+    await queryInterface.removeIndex("ai_challenge", index.name);
   }
 
-  const indexes = await queryInterface.showIndex("ai_challenge");
+  indexes = await queryInterface.showIndex("ai_challenge");
   const hasWeeklyUniqueIndex = indexes.some((index) => {
     const fields = index.fields?.map((field) => field.attribute).join(",");
     return index.unique && fields === "user_id,week_start_date,sequence";
@@ -120,6 +136,7 @@ async function ensureWeeklyChallengeSchema() {
       { unique: true, name: "ai_challenge_user_week_sequence" },
     );
   }
+  indexes = await queryInterface.showIndex("ai_challenge");
   const duplicateWeeklyIndex = indexes.find(
     (index) => index.name === "ai_challenge_user_id_week_start_date_sequence",
   );

@@ -6,7 +6,7 @@ import CoachingInsightCard from "./components/CoachingInsightCard";
 import useCoachChat from "./hooks/useCoachChat";
 import "./CoachPage.css";
 
-export default function CoachPage({ auth, onBack }) {
+export default function CoachPage({ auth, onBack, onNavigate }) {
   const {
     coaching,
     messages,
@@ -15,6 +15,7 @@ export default function CoachPage({ auth, onBack }) {
     showSuggestions,
     isLoading,
     isSending,
+    loadingMessage,
     errorMessage,
     messageListRef,
     loadCoaching,
@@ -22,7 +23,8 @@ export default function CoachPage({ auth, onBack }) {
     toggleSuggestions,
     selectSuggestion,
     sendQuestion,
-  } = useCoachChat(auth?.accessToken);
+    handleMessageAction,
+  } = useCoachChat(auth?.accessToken, onNavigate);
 
   const hasSuggestions = suggestions.length > 0;
   const hasVisibleSuggestions = showSuggestions && hasSuggestions;
@@ -45,8 +47,10 @@ export default function CoachPage({ auth, onBack }) {
       <CoachConversation
         expanded={!hasVisibleSuggestions}
         isSending={isSending}
+        loadingMessage={loadingMessage}
         messageListRef={messageListRef}
         messages={messages}
+        onMessageAction={handleMessageAction}
       />
 
       <CoachSuggestions

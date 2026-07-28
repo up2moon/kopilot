@@ -12,8 +12,25 @@ import {
   getOutOfScopeAnswer,
   isClearlyOutOfScope,
 } from "../services/savingBotOpenAI.js";
+import {
+  CREATE_WEEKLY_CHALLENGE_ACTION,
+  executeSavingBotTool,
+} from "../services/savingBotTools.js";
 
 const router = express.Router();
+const allowedRequestedActions = new Set([CREATE_WEEKLY_CHALLENGE_ACTION]);
+
+function toSuggestedQuestion(label, index) {
+  const isChallengeCreation = label === "이번 주 미션 만들기";
+
+  return {
+    id: isChallengeCreation
+      ? "create-weekly-challenge"
+      : `suggestion-${index + 1}`,
+    label,
+    action: isChallengeCreation ? CREATE_WEEKLY_CHALLENGE_ACTION : "ASK",
+  };
+}
 
 async function loadRecentMessages(userId, fallbackMessages = []) {
   try {
@@ -51,10 +68,7 @@ router.get("/me/saving-bot/coaching", requireAuth, async (req, res) => {
         evidence: coaching.evidence,
       },
       greeting: coaching.greeting,
-      suggestedQuestions: coaching.suggestedQuestions.map((label, index) => ({
-        id: `suggestion-${index + 1}`,
-        label,
-      })),
+      suggestedQuestions: coaching.suggestedQuestions.map(toSuggestedQuestion),
     });
   } catch (error) {
     console.error("Saving bot coaching failed:", error);
@@ -85,6 +99,10 @@ router.get("/me/saving-bot/chat/history", requireAuth, async (req, res) => {
 router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
   const message =
     typeof req.body.message === "string" ? req.body.message.trim() : "";
+  const requestedAction =
+    typeof req.body.requestedAction === "string"
+      ? req.body.requestedAction.trim()
+      : null;
 
   if (!message) {
     return res.status(400).json({
@@ -95,6 +113,13 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
   if (message.length > 1000) {
     return res.status(400).json({
       message: "질문은 1,000자 이내로 입력해주세요.",
+    });
+  }
+
+  if (requestedAction && !allowedRequestedActions.has(requestedAction)) {
+    return res.status(400).json({
+      message: "지원하지 않는 채팅 액션이에요.",
+      code: "INVALID_REQUESTED_ACTION",
     });
   }
 
@@ -127,6 +152,11 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
       recentMessages,
       profile,
       coaching,
+      requestedAction,
+      executeTool: (name, args) => executeSavingBotTool(name, {
+        ...args,
+        userId: req.user.id,
+      }),
     });
 
     await saveChatExchange(req.user.id, message, answer.answer);

@@ -12,9 +12,10 @@ import { sequelize } from "../db.js";
 
 const KOREA_TIME_ZONE = "Asia/Seoul";
 const RECENT_WINDOW_DAYS = 30;
-const WEEKLY_MISSION_COUNT = 5;
+const DEFAULT_WEEKLY_MISSION_COUNT = 5;
 const DISCRETIONARY_CATEGORIES = new Set(["카페·간식", "배달", "쇼핑", "문화", "구독"]);
 const TEST_NOW_ENV = "CHALLENGE_TEST_NOW";
+const CHALLENGE_CREATION_WEEKDAYS = new Set(["Mon", "Tue", "Wed", "Thu", "Fri"]);
 const DIFFICULTY_REWARDS = {
   EASY: 50,
   MEDIUM: 100,
@@ -337,11 +338,17 @@ function buildNoSpendMission(category, context) {
   };
 }
 
-function buildChallengePlan(context, weekStart) {
+function buildChallengePlan(
+  context,
+  weekStart,
+  count = DEFAULT_WEEKLY_MISSION_COUNT,
+  sequenceOffset = 0,
+) {
   const plan = [];
-  for (let index = 0; index < WEEKLY_MISSION_COUNT; index += 1) {
-    const category = context.categories[index % context.categories.length];
-    const categoryUseCount = Math.floor(index / context.categories.length);
+  for (let index = 0; index < count; index += 1) {
+    const absoluteIndex = sequenceOffset + index;
+    const category = context.categories[absoluteIndex % context.categories.length];
+    const categoryUseCount = Math.floor(absoluteIndex / context.categories.length);
     let mission;
     if (category.baselineCount >= 2 && categoryUseCount % 2 === 0) {
       mission = buildCountMission(category, context);
@@ -357,8 +364,8 @@ function buildChallengePlan(context, weekStart) {
 
     plan.push({
       ...mission,
-      sequence: index + 1,
-      challengeDate: addDays(weekStart, index),
+      sequence: absoluteIndex + 1,
+      challengeDate: weekStart,
       categoryId: category.categoryId,
       categoryName: category.categoryName,
       baselineCount: category.baselineCount,
@@ -371,6 +378,30 @@ function buildChallengePlan(context, weekStart) {
   }));
 }
 
+function toChallengeRow(userId, weekStart, weekEnd, context, challenge) {
+  return {
+    user_id: userId,
+    week_start_date: weekStart,
+    sequence: challenge.sequence,
+    challenge_date: challenge.challengeDate,
+    expense_category_id: challenge.categoryId,
+    challenge_type: challenge.challengeType,
+    title: challenge.content,
+    description: null,
+    baseline_period_start: context.periodStart,
+    baseline_period_end: context.periodEnd,
+    baseline_count: challenge.baselineCount,
+    baseline_amount: challenge.baselineAmount,
+    target_count: challenge.targetCount,
+    target_amount: challenge.targetAmount,
+    estimated_saving_amount: challenge.estimatedSavingAmount,
+    point: challenge.point,
+    start_date: weekStart,
+    end_date: weekEnd,
+    status: "IN_PROGRESS",
+  };
+}
+
 export async function createWeeklyChallenges(userId, weekStart) {
   return sequelize.transaction(async (transaction) => {
     await User.findByPk(userId, { transaction, lock: transaction.LOCK.UPDATE });
@@ -380,7 +411,7 @@ export async function createWeeklyChallenges(userId, weekStart) {
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
-    const isReplaceableLegacySet = existingChallenges.length === WEEKLY_MISSION_COUNT
+    const isReplaceableLegacySet = existingChallenges.length === DEFAULT_WEEKLY_MISSION_COUNT
       && existingChallenges.every((item) => item.status === "IN_PROGRESS")
       && existingChallenges.every((item) => !item.baseline_period_start);
     if (isReplaceableLegacySet) {
@@ -388,11 +419,8 @@ export async function createWeeklyChallenges(userId, weekStart) {
         where: { id: { [Op.in]: existingChallenges.map((item) => item.id) } },
         transaction,
       });
-    } else if (existingChallenges.length === WEEKLY_MISSION_COUNT) {
+    } else if (existingChallenges.length > 0) {
       return { created: false, onboardingRequired: false };
-    }
-    if (existingChallenges.length > 0 && !isReplaceableLegacySet) {
-      throw new Error("A partial weekly challenge set already exists");
     }
 
     const context = await getGenerationContext(userId, weekStart, transaction);
@@ -400,29 +428,85 @@ export async function createWeeklyChallenges(userId, weekStart) {
 
     const weekEnd = addDays(weekStart, 4);
     const plan = buildChallengePlan(context, weekStart);
-    await AiChallenge.bulkCreate(plan.map((challenge) => ({
-      user_id: userId,
-      week_start_date: weekStart,
-      sequence: challenge.sequence,
-      challenge_date: challenge.challengeDate,
-      expense_category_id: challenge.categoryId,
-      challenge_type: challenge.challengeType,
-      title: challenge.content,
-      description: null,
-      baseline_period_start: context.periodStart,
-      baseline_period_end: context.periodEnd,
-      baseline_count: challenge.baselineCount,
-      baseline_amount: challenge.baselineAmount,
-      target_count: challenge.targetCount,
-      target_amount: challenge.targetAmount,
-      estimated_saving_amount: challenge.estimatedSavingAmount,
-      point: challenge.point,
-      start_date: weekStart,
-      end_date: weekEnd,
-      status: "IN_PROGRESS",
-    })), { transaction });
+    await AiChallenge.bulkCreate(
+      plan.map((challenge) => (
+        toChallengeRow(userId, weekStart, weekEnd, context, challenge)
+      )),
+      { transaction },
+    );
 
     return { created: true, onboardingRequired: false };
+  });
+}
+
+export async function appendCurrentWeeklyChallenge(userId) {
+  await finalizePastChallenges();
+  const currentDateParts = getKoreanDateParts();
+  const creationAllowed = CHALLENGE_CREATION_WEEKDAYS.has(currentDateParts.weekday);
+  const weekStart = toMonday(currentDateParts.date);
+  const weekEnd = addDays(weekStart, 4);
+
+  if (!creationAllowed) {
+    return {
+      created: false,
+      creationAllowed: false,
+      onboardingRequired: false,
+      weekStart,
+      weekEnd,
+      challenge: null,
+      totalCount: 0,
+    };
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    await User.findByPk(userId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    const existingChallenges = await AiChallenge.findAll({
+      where: { user_id: userId, week_start_date: weekStart },
+      order: [["sequence", "ASC"]],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    const context = await getGenerationContext(userId, weekStart, transaction);
+
+    if (!context) {
+      return {
+        created: false,
+        creationAllowed: true,
+        onboardingRequired: true,
+        weekStart,
+        weekEnd,
+        challenge: null,
+        totalCount: existingChallenges.length,
+      };
+    }
+
+    const nextSequence = existingChallenges.reduce(
+      (max, challenge) => Math.max(max, Number(challenge.sequence || 0)),
+      0,
+    ) + 1;
+    const [challengePlan] = buildChallengePlan(
+      context,
+      weekStart,
+      1,
+      nextSequence - 1,
+    );
+    const challenge = await AiChallenge.create(
+      toChallengeRow(userId, weekStart, weekEnd, context, challengePlan),
+      { transaction },
+    );
+
+    return {
+      created: true,
+      creationAllowed: true,
+      onboardingRequired: false,
+      weekStart,
+      weekEnd,
+      challenge,
+      totalCount: existingChallenges.length + 1,
+    };
   });
 }
 
@@ -541,7 +625,7 @@ export async function verifyWeeklyChallenges(userId) {
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
-    if (challenges.length !== WEEKLY_MISSION_COUNT) {
+    if (challenges.length === 0) {
       throw new ChallengeError("이번 주 챌린지를 찾을 수 없습니다.", 404, "CHALLENGE_NOT_FOUND");
     }
 
@@ -600,14 +684,19 @@ export async function getOrCreateWeeklyChallenges(
   referenceDate = getKoreanDateParts().date,
 ) {
   await finalizePastChallenges();
-  const currentDate = getKoreanDateParts().date;
+  const currentDateParts = getKoreanDateParts();
+  const currentDate = currentDateParts.date;
   const weekStart = toMonday(referenceDate);
   const isCurrentWeek = weekStart === toMonday(currentDate);
+  const creationAllowed = isCurrentWeek
+    && CHALLENGE_CREATION_WEEKDAYS.has(currentDateParts.weekday);
   let onboardingRequired = false;
+  let created = false;
 
-  if (isCurrentWeek) {
+  if (creationAllowed) {
     const result = await createWeeklyChallenges(userId, weekStart);
     onboardingRequired = result.onboardingRequired;
+    created = result.created;
   }
 
   const challenges = await AiChallenge.findAll({
@@ -630,6 +719,8 @@ export async function getOrCreateWeeklyChallenges(
     weekStart,
     weekEnd: addDays(weekStart, 4),
     currentDate,
+    created,
+    creationAllowed,
     onboardingRequired,
     challenges,
     verificationOpensAt: verification.opensAt,
@@ -637,7 +728,7 @@ export async function getOrCreateWeeklyChallenges(
     canVerify: isCurrentWeek
       && isVerificationOpen(weekStart, currentDate)
       && !allResolved
-      && challenges.length === WEEKLY_MISSION_COUNT,
+      && challenges.length > 0,
   };
 }
 

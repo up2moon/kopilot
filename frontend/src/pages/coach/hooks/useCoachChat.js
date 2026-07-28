@@ -5,7 +5,11 @@ import {
   sendSavingBotMessage,
 } from "../../../services/savingBot";
 
-export default function useCoachChat(token) {
+const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
+const CHALLENGE_PATH = "/challenge";
+const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
+
+export default function useCoachChat(token, onNavigate) {
   const [coaching, setCoaching] = useState(null);
   const [messages, setMessages] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -13,21 +17,72 @@ export default function useCoachChat(token) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [requestedAction, setRequestedAction] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const messageListRef = useRef(null);
   const nextMessageIdRef = useRef(1);
 
-  const createMessage = useCallback((role, text) => {
+  const createMessage = useCallback((role, text, action = null) => {
     const message = {
       id: nextMessageIdRef.current,
       role,
       text,
+      action,
     };
 
     nextMessageIdRef.current += 1;
 
     return message;
   }, []);
+
+  const isSafeClientAction = useCallback(
+    (action) =>
+      action?.type === "NAVIGATE" &&
+      action?.path === CHALLENGE_PATH &&
+      (
+        action.highlightChallengeId === undefined
+        || (
+          Number.isInteger(Number(action.highlightChallengeId))
+          && Number(action.highlightChallengeId) > 0
+        )
+      ) &&
+      typeof onNavigate === "function",
+    [onNavigate],
+  );
+
+  const rememberChallengeHighlight = useCallback((action) => {
+    if (!action?.highlightChallengeId) {
+      return;
+    }
+
+    try {
+      window.sessionStorage.setItem(
+        CHALLENGE_HIGHLIGHT_STORAGE_KEY,
+        JSON.stringify({
+          challengeId: Number(action.highlightChallengeId),
+          expiresAt: Date.now() + 60_000,
+        }),
+      );
+    } catch {
+      // 저장소 접근이 제한되어도 화면 이동 자체는 유지한다.
+    }
+  }, []);
+
+  const handleMessageAction = useCallback(
+    (action) => {
+      if (!isSafeClientAction(action)) {
+        return;
+      }
+
+      rememberChallengeHighlight(action);
+      onNavigate(action.path);
+    },
+    [
+      isSafeClientAction,
+      onNavigate,
+      rememberChallengeHighlight,
+    ],
+  );
 
   const loadCoaching = useCallback(
     async (signal) => {
@@ -94,7 +149,7 @@ export default function useCoachChat(token) {
     }
   }, [messages, isSending]);
 
-  const sendQuestion = async (nextQuestion) => {
+  const sendQuestion = async (nextQuestion, nextRequestedAction = null) => {
     const trimmedQuestion = nextQuestion.trim();
 
     if (!trimmedQuestion || isSending) {
@@ -113,16 +168,29 @@ export default function useCoachChat(token) {
     setQuestion("");
     setErrorMessage("");
     setIsSending(true);
+    setRequestedAction(nextRequestedAction);
 
     try {
-      const data = await sendSavingBotMessage(token, {
+      const payload = {
         message: trimmedQuestion,
         recentMessages,
-      });
+      };
+
+      if (nextRequestedAction === CREATE_WEEKLY_CHALLENGE_ACTION) {
+        payload.requestedAction = nextRequestedAction;
+      }
+
+      const data = await sendSavingBotMessage(token, payload);
+      const clientAction = isSafeClientAction(data.clientAction)
+        ? {
+            ...data.clientAction,
+            label: "챌린지 보기",
+          }
+        : null;
 
       setMessages((current) => [
         ...current,
-        createMessage("assistant", data.answer),
+        createMessage("assistant", data.answer, clientAction),
       ]);
       setSuggestions(
         (data.suggestedQuestions || []).map((suggestion, index) =>
@@ -146,6 +214,7 @@ export default function useCoachChat(token) {
       ]);
     } finally {
       setIsSending(false);
+      setRequestedAction(null);
     }
   };
 
@@ -154,9 +223,24 @@ export default function useCoachChat(token) {
   };
 
   const selectSuggestion = (suggestion) => {
+    const normalizedSuggestion =
+      typeof suggestion === "string"
+        ? { label: suggestion, action: "ASK" }
+        : suggestion;
+
     setShowSuggestions(false);
-    sendQuestion(suggestion);
+    sendQuestion(
+      normalizedSuggestion.label,
+      normalizedSuggestion.action === CREATE_WEEKLY_CHALLENGE_ACTION
+        ? CREATE_WEEKLY_CHALLENGE_ACTION
+        : null,
+    );
   };
+
+  const loadingMessage =
+    requestedAction === CREATE_WEEKLY_CHALLENGE_ACTION
+      ? "이번 주 소비를 살펴보고 미션을 만들고 있어요…"
+      : "답변을 생각하고 있어요…";
 
   return {
     coaching,
@@ -166,6 +250,7 @@ export default function useCoachChat(token) {
     showSuggestions,
     isLoading,
     isSending,
+    loadingMessage,
     errorMessage,
     messageListRef,
     loadCoaching,
@@ -173,5 +258,6 @@ export default function useCoachChat(token) {
     toggleSuggestions,
     selectSuggestion,
     sendQuestion,
+    handleMessageAction,
   };
 }

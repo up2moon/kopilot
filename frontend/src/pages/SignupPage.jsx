@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import kospayLogo from '../assets/kospay-logo.png'
 import { signup } from '../services/auth'
 import routes from '../routes'
 
@@ -8,7 +9,7 @@ function BrandHeader({ chip }) {
       <div className="brand-lockup">
         <img
           className="logo-mark"
-          src="/favicon-256x256.png"
+          src={kospayLogo}
           alt=""
           aria-hidden="true"
         />

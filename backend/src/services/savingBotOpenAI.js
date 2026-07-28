@@ -1,3 +1,11 @@
+import {
+  CREATE_WEEKLY_CHALLENGE_ACTION,
+  CREATE_WEEKLY_CHALLENGE_TOOL,
+  getChallengeClientAction,
+  getChallengeToolFallbackAnswer,
+  getSavingBotFunctionTools,
+} from "./savingBotTools.js";
+
 const outOfScopeAnswer =
   "저는 지출과 절약을 돕는 AI 코치예요. 커피값, 배달비, 구독료처럼 줄이고 싶은 지출을 알려주세요.";
 const OPENAI_REQUEST_TIMEOUT_MS = 60000;
@@ -57,6 +65,26 @@ function extractResponseText(data) {
   return chunks.join("");
 }
 
+function extractFileSources(...responses) {
+  const sources = [];
+
+  for (const data of responses) {
+    for (const output of data?.output || []) {
+      if (output.type !== "file_search_call") continue;
+
+      for (const result of output.results || []) {
+        sources.push({
+          fileId: result.file_id || null,
+          filename: result.filename || null,
+          score: result.score ?? null,
+        });
+      }
+    }
+  }
+
+  return sources;
+}
+
 function sanitizeRecentMessages(value) {
   if (!Array.isArray(value)) {
     return [];
@@ -107,7 +135,11 @@ function buildInput({ message, recentMessages, profile, coaching }) {
 6. 투자, 대출, 금융상품을 추천하지 않는다.
 7. 소비와 절약 범위 밖 질문에는 정해진 거절 문구로 답한다.
 8. 한국어 존댓말로 최대 3문장 이내로 답한다.
-9. 답변에 사용한 개인 데이터 근거를 evidence 배열에 넣는다.`;
+9. 답변에 사용한 개인 데이터 근거를 evidence 배열에 넣는다.
+10. 사용자가 이번 주 챌린지를 실제로 만들어 달라고 명확히 요청하면 create_weekly_saving_challenge를 호출한다.
+11. 챌린지 생성 방법, 추천 또는 설명만 묻는 질문에는 Tool을 호출하지 않는다.
+12. Tool 실행 결과의 상태, 금액, 기간을 바꾸거나 만들어내지 않는다.
+13. Tool로 챌린지를 생성했다면 challenge.content를 요약하거나 바꾸지 말고 그대로 안내한다.`;
   const context = {
     USER_FACTS: profile,
     CALCULATED_COACHING: coaching,
@@ -127,51 +159,48 @@ function buildInput({ message, recentMessages, profile, coaching }) {
   ];
 }
 
-export function isClearlyOutOfScope(message) {
-  return clearlyOutOfScopePatterns.some((pattern) => pattern.test(message));
+function getStructuredTextFormat() {
+  return {
+    format: {
+      type: "json_schema",
+      name: "saving_bot_answer",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "answer",
+          "inScope",
+          "evidence",
+          "suggestedQuestions",
+        ],
+        properties: {
+          answer: {
+            type: "string",
+          },
+          inScope: {
+            type: "boolean",
+          },
+          evidence: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+          suggestedQuestions: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "string",
+            },
+          },
+        },
+      },
+    },
+  };
 }
 
-export function getOutOfScopeAnswer() {
-  return outOfScopeAnswer;
-}
-
-export async function generateSavingBotAnswer({
-  message,
-  recentMessages,
-  profile,
-  coaching,
-}) {
-  const apiKey = process.env.OPEN_AI_KEY;
-  const vectorStoreId = process.env.OPENAI_SAVING_VECTOR_STORE_ID;
-
-  if (!apiKey) {
-    const error = new Error("OPEN_AI_KEY is required for saving bot chat");
-
-    error.code = "OPENAI_NOT_CONFIGURED";
-    throw error;
-  }
-
-  if (!vectorStoreId) {
-    const error = new Error(
-      "OPENAI_SAVING_VECTOR_STORE_ID is required for saving bot File Search",
-    );
-
-    error.code = "VECTOR_STORE_NOT_CONFIGURED";
-    throw error;
-  }
-
-  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-  const filters = {
-    type: "in",
-    key: "category",
-    value: resolveKnowledgeCategories(message, coaching),
-  };
-  const fileSearchTool = {
-    type: "file_search",
-    vector_store_ids: [vectorStoreId],
-    max_num_results: 4,
-    filters,
-  };
+async function requestOpenAIResponse(apiKey, body) {
   let response;
 
   try {
@@ -182,55 +211,7 @@ export async function generateSavingBotAnswer({
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        input: buildInput({
-          message,
-          recentMessages,
-          profile,
-          coaching,
-        }),
-        tools: [fileSearchTool],
-        include: ["file_search_call.results"],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "saving_bot_answer",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              required: [
-                "answer",
-                "inScope",
-                "evidence",
-                "suggestedQuestions",
-              ],
-              properties: {
-                answer: {
-                  type: "string",
-                },
-                inScope: {
-                  type: "boolean",
-                },
-                evidence: {
-                  type: "array",
-                  items: {
-                    type: "string",
-                  },
-                },
-                suggestedQuestions: {
-                  type: "array",
-                  maxItems: 3,
-                  items: {
-                    type: "string",
-                  },
-                },
-              },
-            },
-          },
-        },
-      }),
+      body: JSON.stringify(body),
     });
   } catch (cause) {
     if (cause?.name === "TimeoutError") {
@@ -257,7 +238,10 @@ export async function generateSavingBotAnswer({
     throw error;
   }
 
-  const data = await response.json();
+  return response.json();
+}
+
+function parseStructuredAnswer(data) {
   const responseText = extractResponseText(data);
 
   if (!responseText) {
@@ -267,10 +251,8 @@ export async function generateSavingBotAnswer({
     throw error;
   }
 
-  let parsed;
-
   try {
-    parsed = JSON.parse(responseText);
+    return JSON.parse(responseText);
   } catch (cause) {
     const error = new Error("OpenAI saving bot returned invalid JSON", {
       cause,
@@ -279,19 +261,194 @@ export async function generateSavingBotAnswer({
     error.code = "OPENAI_INVALID_RESPONSE";
     throw error;
   }
-  const fileSearchCall = (data.output || []).find(
-    (output) => output.type === "file_search_call",
+}
+
+function parseFunctionArguments(functionCall) {
+  let args;
+
+  try {
+    args = JSON.parse(functionCall.arguments || "{}");
+  } catch (cause) {
+    const error = new Error("OpenAI saving bot returned invalid tool arguments", {
+      cause,
+    });
+
+    error.code = "OPENAI_INVALID_TOOL_ARGUMENTS";
+    throw error;
+  }
+
+  if (
+    !args
+    || typeof args !== "object"
+    || Array.isArray(args)
+    || Object.keys(args).length > 0
+  ) {
+    const error = new Error("Saving bot challenge tool does not accept arguments");
+
+    error.code = "OPENAI_INVALID_TOOL_ARGUMENTS";
+    throw error;
+  }
+
+  return args;
+}
+
+export function isClearlyOutOfScope(message) {
+  return clearlyOutOfScopePatterns.some((pattern) => pattern.test(message));
+}
+
+export function getOutOfScopeAnswer() {
+  return outOfScopeAnswer;
+}
+
+export async function generateSavingBotAnswer({
+  message,
+  recentMessages,
+  profile,
+  coaching,
+  requestedAction,
+  executeTool,
+}) {
+  const apiKey = process.env.OPEN_AI_KEY;
+  const vectorStoreId = process.env.OPENAI_SAVING_VECTOR_STORE_ID;
+
+  if (!apiKey) {
+    const error = new Error("OPEN_AI_KEY is required for saving bot chat");
+
+    error.code = "OPENAI_NOT_CONFIGURED";
+    throw error;
+  }
+
+  if (!vectorStoreId && requestedAction !== CREATE_WEEKLY_CHALLENGE_ACTION) {
+    const error = new Error(
+      "OPENAI_SAVING_VECTOR_STORE_ID is required for saving bot File Search",
+    );
+
+    error.code = "VECTOR_STORE_NOT_CONFIGURED";
+    throw error;
+  }
+
+  const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const filters = {
+    type: "in",
+    key: "category",
+    value: resolveKnowledgeCategories(message, coaching),
+  };
+  const fileSearchTool = {
+    type: "file_search",
+    vector_store_ids: [vectorStoreId],
+    max_num_results: 4,
+    filters,
+  };
+  const input = buildInput({
+    message,
+    recentMessages,
+    profile,
+    coaching,
+  });
+  const tools = [
+    ...(vectorStoreId ? [fileSearchTool] : []),
+    ...getSavingBotFunctionTools(),
+  ];
+  const initialRequest = {
+    model,
+    input,
+    tools,
+    parallel_tool_calls: false,
+    text: getStructuredTextFormat(),
+    ...(vectorStoreId ? { include: ["file_search_call.results"] } : {}),
+    ...(requestedAction === CREATE_WEEKLY_CHALLENGE_ACTION
+      ? {
+          tool_choice: {
+            type: "function",
+            name: CREATE_WEEKLY_CHALLENGE_TOOL,
+          },
+        }
+      : {}),
+  };
+  const initialData = await requestOpenAIResponse(apiKey, initialRequest);
+  const functionCalls = (initialData.output || []).filter(
+    (output) => output.type === "function_call",
   );
-  const sources = (fileSearchCall?.results || []).map((result) => ({
-    fileId: result.file_id || null,
-    filename: result.filename || null,
-    score: result.score ?? null,
-  }));
+
+  if (!functionCalls.length) {
+    return {
+      ...parseStructuredAnswer(initialData),
+      sources: extractFileSources(initialData),
+      model,
+      responseId: initialData.id,
+    };
+  }
+
+  if (functionCalls.length > 1) {
+    const error = new Error("Saving bot can execute only one function per request");
+
+    error.code = "OPENAI_TOO_MANY_TOOL_CALLS";
+    throw error;
+  }
+
+  if (typeof executeTool !== "function") {
+    const error = new Error("Saving bot tool executor is not configured");
+
+    error.code = "SAVING_BOT_TOOL_EXECUTOR_MISSING";
+    throw error;
+  }
+
+  const functionCall = functionCalls[0];
+  const args = parseFunctionArguments(functionCall);
+  const toolResult = await executeTool(functionCall.name, args);
+  const finalInput = [
+    ...input,
+    ...(initialData.output || []),
+    {
+      type: "function_call_output",
+      call_id: functionCall.call_id,
+      output: JSON.stringify(toolResult),
+    },
+  ];
+  let finalData;
+  let parsed;
+
+  try {
+    finalData = await requestOpenAIResponse(apiKey, {
+      model,
+      input: finalInput,
+      tools,
+      tool_choice: "none",
+      parallel_tool_calls: false,
+      text: getStructuredTextFormat(),
+      ...(vectorStoreId ? { include: ["file_search_call.results"] } : {}),
+    });
+    parsed = parseStructuredAnswer(finalData);
+  } catch (error) {
+    console.error("Saving bot final tool response failed:", error);
+    parsed = {
+      answer: getChallengeToolFallbackAnswer(toolResult),
+      inScope: true,
+      evidence: [],
+      suggestedQuestions: [],
+    };
+  }
+
+  if (toolResult.status === "CREATED") {
+    parsed = {
+      answer: getChallengeToolFallbackAnswer(toolResult),
+      inScope: true,
+      evidence: toolResult.challenge?.content
+        ? [`추가된 챌린지: ${toolResult.challenge.content}`]
+        : [],
+      suggestedQuestions: [],
+    };
+  }
 
   return {
     ...parsed,
-    sources,
+    sources: extractFileSources(initialData, finalData),
+    toolResult: {
+      name: functionCall.name,
+      ...toolResult,
+    },
+    clientAction: getChallengeClientAction(toolResult),
     model,
-    responseId: data.id,
+    responseId: finalData?.id || initialData.id,
   };
 }

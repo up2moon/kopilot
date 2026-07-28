@@ -4,6 +4,8 @@ import {
   verifyWeeklyChallenges,
 } from '../../../services/challenges.js'
 
+const CHALLENGE_HIGHLIGHT_STORAGE_KEY = 'kopilot:new-challenge-highlight'
+
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
@@ -16,6 +18,7 @@ export default function useChallenges(token) {
   const [verifying, setVerifying] = useState(false)
   const [verificationResult, setVerificationResult] = useState(null)
   const [celebrationKey, setCelebrationKey] = useState(0)
+  const [highlightedChallengeId, setHighlightedChallengeId] = useState(null)
 
   const loadChallenges = useCallback(
     async (showLoading = true) => {
@@ -35,6 +38,44 @@ export default function useChallenges(token) {
   useEffect(() => {
     if (token) loadChallenges()
   }, [loadChallenges, token])
+
+  useEffect(() => {
+    if (!data?.weeklyChallenges?.length) return
+
+    let storedHighlight
+
+    try {
+      const rawHighlight = window.sessionStorage.getItem(
+        CHALLENGE_HIGHLIGHT_STORAGE_KEY,
+      )
+
+      if (!rawHighlight) return
+      window.sessionStorage.removeItem(CHALLENGE_HIGHLIGHT_STORAGE_KEY)
+      storedHighlight = JSON.parse(rawHighlight)
+    } catch {
+      return
+    }
+
+    const challengeId = Number(storedHighlight?.challengeId)
+    const isFresh = Number(storedHighlight?.expiresAt) > Date.now()
+    const challengeExists = data.weeklyChallenges.some(
+      (challenge) => Number(challenge.id) === challengeId,
+    )
+
+    if (isFresh && challengeExists) {
+      setHighlightedChallengeId(challengeId)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (!highlightedChallengeId) return undefined
+
+    const timer = window.setTimeout(() => {
+      setHighlightedChallengeId(null)
+    }, 4_000)
+
+    return () => window.clearTimeout(timer)
+  }, [highlightedChallengeId])
 
   const verify = async () => {
     if (verifying || !data?.canVerify) return
@@ -67,6 +108,7 @@ export default function useChallenges(token) {
     verifying,
     verificationResult,
     celebrationKey,
+    highlightedChallengeId,
     loadChallenges,
     verify,
   }

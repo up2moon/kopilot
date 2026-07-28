@@ -1,8 +1,10 @@
 export default function CoachConversation({
   expanded,
   isSending,
+  loadingMessage,
   messageListRef,
   messages,
+  onMessageAction,
 }) {
   return (
     <main
@@ -12,16 +14,25 @@ export default function CoachConversation({
       <p className="coach-date">오늘</p>
       <div className="coach-message-list" ref={messageListRef}>
         {messages.map((message) => (
-          <p
+          <div
             className={`coach-message coach-message-${message.role}`}
             key={message.id}
           >
-            {message.text}
-          </p>
+            <span>{message.text}</span>
+            {message.action ? (
+              <button
+                className="coach-message-action"
+                type="button"
+                onClick={() => onMessageAction(message.action)}
+              >
+                {message.action.label}
+              </button>
+            ) : null}
+          </div>
         ))}
         {isSending ? (
           <p className="coach-message coach-message-assistant coach-message-loading">
-            답변을 생각하고 있어요…
+            {loadingMessage}
           </p>
         ) : null}
       </div>

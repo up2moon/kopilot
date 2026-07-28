@@ -206,7 +206,11 @@ function App() {
   } else if (route === routes.coach) {
     if (!auth) return null
     screenContent = (
-      <CoachPage auth={auth} onBack={() => navigate(routes.dashboard)} />
+      <CoachPage
+        auth={auth}
+        onBack={() => navigate(routes.dashboard)}
+        onNavigate={navigate}
+      />
     )
   } else if (route === routes.ranking) {
     if (!auth) return null

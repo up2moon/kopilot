@@ -14,6 +14,7 @@ export default function ChallengePage({ token }) {
     verifying,
     verificationResult,
     celebrationKey,
+    highlightedChallengeId,
     loadChallenges,
     verify,
   } = useChallenges(token)
@@ -28,7 +29,7 @@ export default function ChallengePage({ token }) {
     <NavigationPageLayout
       className="challenge-page"
       title="챌린지"
-      content="지난 소비를 살펴보고, 이번 주에 도전할 미션 5개를 준비했어요."
+      content="지난 소비를 살펴보고, 이번 주에 도전할 맞춤 미션을 준비했어요."
     >
       {celebrationKey > 0 && (
         <ChallengeConfetti key={celebrationKey} />
@@ -57,6 +58,7 @@ export default function ChallengePage({ token }) {
           <WeeklyChallengeSection
             canVerify={data.canVerify}
             challenges={data.weeklyChallenges}
+            highlightedChallengeId={highlightedChallengeId}
             progress={data.weeklyProgress}
             verificationOpensAt={data.verificationOpensAt}
             verificationResult={verificationResult}

@@ -51,7 +51,7 @@ export default function CoachSuggestions({
               }`}
               type="button"
               key={suggestion.id || suggestion.label}
-              onClick={() => onSelect(suggestion.label)}
+              onClick={() => onSelect(suggestion)}
               disabled={isSending || !open}
               tabIndex={open ? 0 : -1}
             >

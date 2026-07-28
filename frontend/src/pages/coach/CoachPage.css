@@ -56,7 +56,8 @@
 .coach-suggestion:focus-visible,
 .coach-suggestion-toggle:focus-visible,
 .coach-input-form input:focus-visible,
-.coach-input-form button:focus-visible {
+.coach-input-form button:focus-visible,
+.coach-message-action:focus-visible {
   outline: 3px solid rgba(49, 130, 246, 0.22);
   outline-offset: 2px;
 }
@@ -215,6 +216,30 @@
   align-self: flex-end;
   background: #3182f6;
   color: #fff;
+}
+
+.coach-message span {
+  display: block;
+  white-space: pre-line;
+}
+
+.coach-message-action {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 10px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #3182f6;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.coach-message-action:hover {
+  background: #1b64da;
 }
 
 .coach-message-loading {
