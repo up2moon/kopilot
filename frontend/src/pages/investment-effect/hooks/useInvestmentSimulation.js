@@ -2,9 +2,30 @@ import { useEffect, useState } from 'react'
 import { getInvestmentEffectSimulation } from '../../../services/investment.js'
 import { getCurrentMonth } from '../utils/formatters'
 
+const supportedCategories = new Set([
+  'savings',
+  'coffee',
+  'food',
+  'delivery',
+  'transport',
+  'shopping',
+  'subscription',
+  'all',
+])
+
+function getInitialMonth() {
+  const month = new URLSearchParams(window.location.search).get('month')
+  return /^\d{4}-\d{2}$/.test(month || '') ? month : getCurrentMonth()
+}
+
+function getInitialCategory() {
+  const category = new URLSearchParams(window.location.search).get('category')
+  return supportedCategories.has(category) ? category : 'coffee'
+}
+
 export default function useInvestmentSimulation(token) {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
-  const [selectedCategory, setSelectedCategory] = useState('coffee')
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth)
+  const [selectedCategory, setSelectedCategory] = useState(getInitialCategory)
   const [selectedAssets, setSelectedAssets] = useState([])
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)

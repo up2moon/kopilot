@@ -5,7 +5,7 @@ import WeeklyChallengeSection from './components/WeeklyChallengeSection'
 import useChallenges from './hooks/useChallenges'
 import './ChallengePage.css'
 
-export default function ChallengePage({ token }) {
+export default function ChallengePage({ onNavigate, token }) {
   const {
     data,
     loading,
@@ -24,6 +24,16 @@ export default function ChallengePage({ token }) {
     || Boolean(error)
     || data?.onboardingRequired
     || !data?.weeklyChallenges?.length
+
+  const openSavingInvestment = () => {
+    const currentMonth = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+    }).format(new Date())
+
+    onNavigate(`/investment-effect?category=savings&month=${currentMonth}`)
+  }
 
   return (
     <NavigationPageLayout
@@ -60,13 +70,13 @@ export default function ChallengePage({ token }) {
             challenges={data.weeklyChallenges}
             highlightedChallengeId={highlightedChallengeId}
             progress={data.weeklyProgress}
-            verificationOpensAt={data.verificationOpensAt}
             verificationResult={verificationResult}
             verifyMessage={verifyMessage}
             verifying={verifying}
             weekEndDate={data.weekEndDate}
             weekStartDate={data.weekStartDate}
             onVerify={verify}
+            onViewInvestment={openSavingInvestment}
           />
         </>
       )}

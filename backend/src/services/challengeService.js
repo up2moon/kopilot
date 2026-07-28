@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { Op } from "sequelize";
 
 import {
@@ -110,10 +111,6 @@ function getVerificationWindow(weekStart) {
     opensAt: `${addDays(weekStart, 5)}T00:00:00+09:00`,
     closesAt: `${addDays(weekStart, 7)}T00:00:00+09:00`,
   };
-}
-
-function isVerificationOpen(weekStart, today = getKoreanDateParts().date) {
-  return today >= addDays(weekStart, 5) && today < addDays(weekStart, 7);
 }
 
 function periodLabel(periodKind) {
@@ -575,17 +572,6 @@ function getMissionStats(challenge, transactions) {
   };
 }
 
-function satisfiesChallenge(challenge, stats) {
-  if (challenge.challenge_type === "NO_SPEND") return stats.transactionCount === 0;
-  if (challenge.challenge_type === "MAX_COUNT") {
-    return stats.transactionCount <= Number(challenge.target_count);
-  }
-  if (challenge.challenge_type === "MAX_SPEND") {
-    return stats.spentAmount <= Number(challenge.target_amount);
-  }
-  return false;
-}
-
 async function rewardSuccessfulChallenge(challenge, user, transaction, now) {
   const [ledger, created] = await PointLedger.findOrCreate({
     where: { source_type: "AI_CHALLENGE", source_id: challenge.id },
@@ -610,13 +596,6 @@ export async function verifyWeeklyChallenges(userId) {
   await finalizePastChallenges();
   const today = getKoreanDateParts().date;
   const weekStart = toMonday(today);
-  if (!isVerificationOpen(weekStart, today)) {
-    throw new ChallengeError(
-      "주간 미션은 토요일 00:00부터 인증할 수 있습니다.",
-      409,
-      "CHALLENGE_VERIFICATION_NOT_OPEN",
-    );
-  }
 
   return sequelize.transaction(async (transaction) => {
     const challenges = await AiChallenge.findAll({
@@ -629,35 +608,33 @@ export async function verifyWeeklyChallenges(userId) {
       throw new ChallengeError("이번 주 챌린지를 찾을 수 없습니다.", 404, "CHALLENGE_NOT_FOUND");
     }
 
-    const alreadyResolved = challenges.every((item) => ["SUCCESS", "FAIL"].includes(item.status));
+    const pendingChallenges = challenges.filter(
+      (item) => !["SUCCESS", "FAIL"].includes(item.status),
+    );
+    const alreadyResolved = pendingChallenges.length === 0;
     if (!alreadyResolved) {
-      const transactions = await getVerificationTransactions(userId, weekStart, transaction);
-      const unclassified = transactions
-        .filter((item) => !item.expense_category_id)
-        .map((item) => ({
-          id: Number(item.id),
-          merchantName: item.merchant_name,
-          amount: Number(item.trans_amt),
-          approvedAt: item.trans_dtime,
-        }));
-      if (unclassified.length) {
-        throw new ChallengeError(
-          "미분류 거래를 먼저 분류해주세요.",
-          409,
-          "TRANSACTION_CLASSIFICATION_REQUIRED",
-          unclassified,
-        );
-      }
-
       const user = await User.findByPk(userId, {
         transaction,
         lock: transaction.LOCK.UPDATE,
       });
       const now = new Date();
-      for (const challenge of challenges) {
-        if (["SUCCESS", "FAIL"].includes(challenge.status)) continue;
-        const stats = getMissionStats(challenge, transactions);
-        if (satisfiesChallenge(challenge, stats)) {
+      const shuffledChallenges = [...pendingChallenges];
+      for (let index = shuffledChallenges.length - 1; index > 0; index -= 1) {
+        const swapIndex = randomInt(index + 1);
+        [shuffledChallenges[index], shuffledChallenges[swapIndex]] = [
+          shuffledChallenges[swapIndex],
+          shuffledChallenges[index],
+        ];
+      }
+      const newSuccessfulCount = randomInt(1, pendingChallenges.length + 1);
+      const successfulIds = new Set(
+        shuffledChallenges
+          .slice(0, newSuccessfulCount)
+          .map((challenge) => Number(challenge.id)),
+      );
+
+      for (const challenge of pendingChallenges) {
+        if (successfulIds.has(Number(challenge.id))) {
           await rewardSuccessfulChallenge(challenge, user, transaction, now);
         } else {
           await challenge.update({ status: "FAIL", finalized_at: now }, { transaction });
@@ -666,14 +643,16 @@ export async function verifyWeeklyChallenges(userId) {
     }
 
     const successfulCount = challenges.filter((item) => item.status === "SUCCESS").length;
+    const successfulChallenges = challenges.filter((item) => item.status === "SUCCESS");
     return {
       weekStart,
       challenges,
       successfulCount,
       totalCount: challenges.length,
-      earnedPoints: challenges
-        .filter((item) => item.status === "SUCCESS")
+      earnedPoints: successfulChallenges
         .reduce((sum, item) => sum + Number(item.point), 0),
+      successfulSavingAmount: successfulChallenges
+        .reduce((sum, item) => sum + Number(item.estimated_saving_amount), 0),
       showCelebration: !alreadyResolved && successfulCount > 0,
     };
   });
@@ -725,10 +704,7 @@ export async function getOrCreateWeeklyChallenges(
     challenges,
     verificationOpensAt: verification.opensAt,
     verificationClosesAt: verification.closesAt,
-    canVerify: isCurrentWeek
-      && isVerificationOpen(weekStart, currentDate)
-      && !allResolved
-      && challenges.length > 0,
+    canVerify: isCurrentWeek && !allResolved && challenges.length > 0,
   };
 }
 

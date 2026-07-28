@@ -291,7 +291,8 @@
 }
 
 .challenge-verification-result {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -303,13 +304,49 @@
   color: #00a661;
 }
 
-.challenge-verification-result strong {
+.challenge-verification-result > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.challenge-verification-result > div:first-child strong {
   font-size: var(--font-size-section-title);
 }
 
-.challenge-verification-result span {
+.challenge-verification-result > div:first-child span {
   font-size: var(--font-size-caption);
   font-weight: 800;
+}
+
+.challenge-saving-reward {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+
+.challenge-saving-reward span {
+  color: #4e5968;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.challenge-saving-reward strong {
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.challenge-verification-result > button {
+  grid-column: 1 / -1;
+  min-height: 46px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 14px;
+  background: #00a661;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .weekly-verifying-overlay {

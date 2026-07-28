@@ -10,7 +10,7 @@
 5. 인프라나 배포 변경이 포함되면 루트 `INFRA.md`
 
 ## 와이어프레임 연계 규칙
-백엔드 작업도 화면 요구사항과 연결되면 `kopilot-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. AI 챌린지 API는 `docs/features/ai-challenge.md`의 거래내역 기반 가변 개수 주간 미션, DB 영속화, 토요일 00:00 KST 일괄 인증, 자동 검증 가능한 미션 유형을 기준으로 응답을 구성합니다. 투자효과 API는 `docs/features/investment-effect.md`의 기회비용 시뮬레이션, 코스콤 CHECK API 시세 연동, 사용자 선택 비교 종목 및 안전자산(예금) 믹스를 기준으로 응답을 구성합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
+백엔드 작업도 화면 요구사항과 연결되면 `kopilot-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. AI 챌린지와 절약액 투자효과 API는 `docs/features/prototype-challenge-saving-investment.md`의 즉시 랜덤 인증, DB 영속화, 예상 절약액 월 집계 규칙을 우선 적용합니다. 투자효과 시세와 종목 비교는 `docs/features/investment-effect.md`를 기준으로 합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
 
 프론트엔드가 와이어프레임에 맞춰 표시해야 하는 문구가 있다면 API 응답 필드 이름과 값이 그 요구사항을 명확히 지원해야 합니다. 실제 외부 API가 없는 범위는 mock 데이터와 명시적인 상태값으로 처리합니다.
 
@@ -43,9 +43,9 @@
 - `GET /api/users/me/consumption-dna?month=YYYY-MM&refresh=true`: 해당 월의 마이데이터 결제 내역을 최소화해 OpenAI Responses API로 분석하고, 월별 소비 DNA 별명·요약·4개 성향 축을 저장해 반환합니다. 저장된 월간 결과는 기본적으로 재사용하며 `refresh=true`일 때 다시 분석합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 미션 전체, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 미션이 비어 있으면 기본 추천 미션을 생성하며 AI 채팅으로 추가된 미션까지 모두 반환합니다.
-- `POST /api/users/me/challenges/verify`: 토요일 00:00 KST부터 다음 주 월요일 00:00 직전까지 현재 주의 모든 미션을 월~금 전체 거래내역으로 일괄 판정합니다. 성공 미션별 포인트를 같은 트랜잭션에서 지급하고 성공 개수와 `showCelebration`을 반환합니다.
+- `POST /api/users/me/challenges/verify`: 프로토타입에서는 시간 제한 없이 현재 주의 미인증 미션을 서버에서 무작위 판정합니다. 최소 1개를 성공 처리하고 성공 미션별 포인트를 같은 트랜잭션에서 지급하며, 성공 개수, 예상 절약액 합계와 `showCelebration`을 반환합니다.
 - 개발 환경에서 `CHALLENGE_TEST_NOW`에 타임존 오프셋을 포함한 ISO 8601 시각을 설정하면 챌린지 조회·생성·인증·만료만 해당 테스트 시각을 사용합니다. 예: `2026-08-01T00:01:00+09:00`. `NODE_ENV=production`에서는 설정값을 무시하고 실제 KST를 사용합니다.
-- `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
+- `GET /api/users/me/investment-effect/simulation?category=coffee|savings&month=YYYY-MM&assetCodes=005930,360750`: 소비 카테고리는 월별 소비액을, `savings`는 선택 월에 성공 완료된 챌린지의 예상 절약액 합계를 투자 원금으로 사용합니다. DB에 저장된 코스콤 종가(`investment_price`)를 사용해 지수 ETF, 선택 종목, 정기예금/CMA 결과를 반환하며 절약액이 없으면 `NO_SAVINGS`를 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 선택적인 `keyword`로 서버 검색할 수도 있습니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
 - `POST /api/investment/sync?mode=all|prices|base-prices|missing-base-prices&limit=200&months=2026-07&assetCodes=005930&allAssets=true`: 코스콤 CHECK API 종목 마스터, 최신 종가, 선택 월 첫 거래일 기준가를 수동 동기화합니다. `missing-base-prices`는 이미 동기화 대상으로 활성화된 종목 중 최근 월 첫 거래일 기준가가 DB에 없는 항목만 보강합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
@@ -112,7 +112,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 영수증·사진·자기 신고가 필요한 미션은 생성하지 않는다.
 
 3. **인증·최종 판정·보상**
-   - 인증 버튼은 토요일 00:00 KST부터 활성화한다. 월요일 00:00 이상 토요일 00:00 미만의 거래내역으로 이번 주 전체 미션을 한 번에 판정한다.
+   - 프로토타입에서는 시간 제한 없이 인증 버튼을 활성화한다. 인증 시 미확정 미션 중 최소 1개를 서버에서 무작위 성공 처리하고 결과와 포인트를 DB에 저장해 재추첨과 중복 지급을 막는다.
    - 기준 소비 대비 목표 감축률이 20% 이하면 `EASY=50P`, 20% 초과 40% 이하면 `MEDIUM=100P`, 40% 초과면 `HARD=150P`를 지급한다. `NO_SPEND`는 기준 거래 1회면 `MEDIUM`, 2회 이상이면 `HARD`로 분류한다.
    - 성공 시 포인트 원장과 `users.total_points`를 한 DB 트랜잭션으로 갱신한다. `PENDING_VERIFICATION`은 새 미션에서 사용하지 않는다.
    - 성공 미션이 하나 이상이면 `showCelebration=true`를 반환해 프론트엔드가 컨페티를 한 번 재생할 수 있게 한다.
@@ -154,7 +154,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - mock 시세나 mock 기준가는 사용하지 않습니다. 기준일 종가가 없으면 `PRICE_HISTORY_MISSING`으로 응답합니다.
 
 4. **기회비용 시뮬레이션 산출 계산식**
-   - 투자효과는 `month=YYYY-MM` 기준으로 월별 카테고리 소비액과 투자 가정 월을 동일하게 묶습니다. 예를 들어 `month=2026-06`은 `6월 소비액을 6월 첫 거래일에 투자했다면`, `month=2026-07`은 `7월 소비액을 7월 첫 거래일에 투자했다면`으로 계산합니다.
+   - 투자효과는 `month=YYYY-MM` 기준으로 월별 카테고리 소비액 또는 월별 챌린지 예상 절약액과 투자 가정 월을 동일하게 묶습니다. `category=savings`는 KST 기준 선택 월에 완료된 `SUCCESS` 미션의 `estimated_saving_amount` 합계를 사용합니다.
    - 기준가는 선택 월의 첫 거래일 가격을 사용합니다. 해당 월 1일이 휴장일이면 그 월의 첫 거래 가능일 가격을 사용합니다.
    - `평가 금액 = 소비 금액 × (1 + 수익률)`
    - `손익 금액 = 평가 금액 - 소비 금액` (예: `+8,400원`)

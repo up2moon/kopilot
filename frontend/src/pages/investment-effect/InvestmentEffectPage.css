@@ -141,6 +141,51 @@
   color: #3182f6;
 }
 
+.investment-empty-savings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 30px 22px;
+  border: 1px solid #dbe8df;
+  border-radius: 20px;
+  background: #f4fbf7;
+  text-align: center;
+}
+
+.investment-empty-savings > span {
+  font-size: 30px;
+}
+
+.investment-empty-savings strong {
+  color: #191f28;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.investment-empty-savings p {
+  margin: 0;
+  color: #6b7684;
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.investment-empty-savings button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 14px;
+  background: #3182f6;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .investment-hero-card {
   margin-top: 18px;
   padding: 22px 24px 12px;

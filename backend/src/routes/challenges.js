@@ -101,13 +101,15 @@ router.post("/me/challenges/verify", requireAuth, async (req, res) => {
       successfulCount: result.successfulCount,
       totalCount: result.totalCount,
       earnedPoints: result.earnedPoints,
+      successfulSavingAmount: result.successfulSavingAmount,
       showCelebration: result.showCelebration,
       message: result.successfulCount > 0
-        ? `${result.successfulCount}/${result.totalCount} 미션 성공! ${result.earnedPoints}P를 받았어요.`
+        ? `${result.successfulCount}/${result.totalCount} 미션 성공! ${result.earnedPoints}P와 예상 절약액 ${result.successfulSavingAmount.toLocaleString("ko-KR")}원을 얻었어요.`
         : "이번 주에는 성공한 미션이 없어요. 다음 주에 다시 가볍게 도전해봐요.",
       challenges: result.challenges.map((challenge) => ({
         challengeId: Number(challenge.id),
         status: challenge.status,
+        estimatedSavingAmount: Number(challenge.estimated_saving_amount || 0),
         message: challenge.status === "SUCCESS"
           ? `${challenge.title} 성공!`
           : `${challenge.title}은 아쉽게 미완료예요.`,

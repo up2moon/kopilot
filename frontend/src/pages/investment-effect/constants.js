@@ -1,4 +1,5 @@
 export const categoryOptions = [
+  { value: 'savings', label: '절약액' },
   { value: 'coffee', label: '카페·간식' },
   { value: 'food', label: '식비' },
   { value: 'delivery', label: '배달' },

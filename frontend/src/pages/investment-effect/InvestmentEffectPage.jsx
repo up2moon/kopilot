@@ -7,7 +7,7 @@ import useAssetSearch from "./hooks/useAssetSearch";
 import useInvestmentSimulation from "./hooks/useInvestmentSimulation";
 import "./InvestmentEffectPage.css";
 
-export default function InvestmentEffectPage({ token }) {
+export default function InvestmentEffectPage({ onNavigate, token }) {
   const simulation = useInvestmentSimulation(token);
   const search = useAssetSearch(token);
 
@@ -19,7 +19,11 @@ export default function InvestmentEffectPage({ token }) {
     <NavigationPageLayout
       className="investment-page"
       title="투자효과"
-      content="소비한 돈을 투자했다면 현재 얼마인지 계산해요."
+      content={
+        simulation.selectedCategory === "savings"
+          ? "챌린지로 아낀 돈의 미래 가치를 계산해요."
+          : "소비한 돈을 투자했다면 현재 얼마인지 계산해요."
+      }
     >
       <InvestmentFilters
         selectedCategory={simulation.selectedCategory}
@@ -51,6 +55,7 @@ export default function InvestmentEffectPage({ token }) {
           <InvestmentResults
             data={simulation.data}
             isRefreshing={simulation.isRefreshing}
+            onOpenChallenges={() => onNavigate("/challenge")}
             selectedAssets={simulation.selectedAssets}
           >
             <AssetSearchCard {...search} onSelectAsset={handleSelectAsset} />

@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 
 import { requireAuth } from "../middleware/auth.js";
 import {
+  AiChallenge,
   ExpenseCategory,
   TransactionHistory,
 } from "../models/index.js";
@@ -100,6 +101,7 @@ function categoryToKorean(category) {
     culture: "문화",
     communication: "통신",
     all: "전체",
+    savings: "절약액",
   };
 
   return map[category] || category || "카페·간식";
@@ -154,6 +156,45 @@ async function getSpendingAmount(userId, month, category) {
     month: normalizedMonth,
     categoryLabel: requestedCategory,
     source: "CATEGORY_SPENDING_AMOUNT",
+  };
+}
+
+async function getChallengeSavingAmount(userId, month) {
+  const normalizedMonth = normalizeMonth(month);
+  const nextMonthDate = new Date(`${normalizedMonth}-01T12:00:00.000Z`);
+  nextMonthDate.setUTCMonth(nextMonthDate.getUTCMonth() + 1);
+  const nextMonth = nextMonthDate.toISOString().slice(0, 7);
+  const start = new Date(`${normalizedMonth}-01T00:00:00+09:00`);
+  const end = new Date(`${nextMonth}-01T00:00:00+09:00`);
+  const savedAmount = await AiChallenge.sum("estimated_saving_amount", {
+    where: {
+      user_id: userId,
+      status: "SUCCESS",
+      completed_at: {
+        [Op.gte]: start,
+        [Op.lt]: end,
+      },
+    },
+  });
+
+  return {
+    spendingAmount: 0,
+    savedAmount: Number(savedAmount || 0),
+    month: normalizedMonth,
+    categoryLabel: "절약액",
+    source: "CHALLENGE_ESTIMATED_SAVINGS",
+  };
+}
+
+async function getInvestmentSourceAmount(userId, month, category) {
+  if (category === "savings") {
+    return getChallengeSavingAmount(userId, month);
+  }
+
+  const spending = await getSpendingAmount(userId, month, category);
+  return {
+    ...spending,
+    savedAmount: spending.spendingAmount,
   };
 }
 
@@ -470,27 +511,42 @@ export async function simulationHandler(req, res) {
     const month = normalizeMonth(req.query.month);
     const category = String(req.query.category || "coffee");
     const assetCodes = normalizeAssetCodes(req.query.assetCodes);
-    const spending = await getSpendingAmount(req.user.id, month, category);
-    const investmentAmount = spending.spendingAmount;
+    const amountSource = await getInvestmentSourceAmount(
+      req.user.id,
+      month,
+      category,
+    );
+    const isSavings = category === "savings";
+    const investmentAmount = isSavings
+      ? amountSource.savedAmount
+      : amountSource.spendingAmount;
     const assumedBuyDate = getFirstTradingDate(month);
     const monthLabel = `${Number(month.slice(5, 7))}월`;
     const categoryLabel =
-      spending.categoryLabel === "카페·간식" ? "카페·간식" : spending.categoryLabel;
+      amountSource.categoryLabel === "카페·간식"
+        ? "카페·간식"
+        : amountSource.categoryLabel;
 
     if (investmentAmount <= 0) {
       return res.status(200).json({
         month,
         category,
-        categoryLabel: spending.categoryLabel,
-        spendingAmount: investmentAmount,
+        categoryLabel: amountSource.categoryLabel,
+        spendingAmount: isSavings ? 0 : investmentAmount,
         investmentAmount,
-        savedAmount: investmentAmount,
+        savedAmount: isSavings ? amountSource.savedAmount : investmentAmount,
+        amountSource: amountSource.source,
+        savedAmountSource: amountSource.source,
         assumedBuyDate,
-        summaryText: `${monthLabel} ${categoryLabel} 소비가 없어 시뮬레이션할 금액이 없어요.`,
-        assumptionText: `'${monthLabel} 소비액을 ${monthLabel} 첫 거래일에 투자했다면'으로 계산합니다.`,
+        summaryText: isSavings
+          ? `${monthLabel}에 인증된 챌린지 절약액이 아직 없어요.`
+          : `${monthLabel} ${categoryLabel} 소비가 없어 시뮬레이션할 금액이 없어요.`,
+        assumptionText: isSavings
+          ? "챌린지를 인증하면 절약액의 투자효과를 확인할 수 있어요."
+          : `'${monthLabel} 소비액을 ${monthLabel} 첫 거래일에 투자했다면'으로 계산합니다.`,
         benchmarks: [],
         comparisons: [],
-        status: "NO_SPENDING",
+        status: isSavings ? "NO_SAVINGS" : "NO_SPENDING",
         disclaimer: "투자 권유가 아닌 참고용 시뮬레이션입니다.",
       });
     }
@@ -517,15 +573,19 @@ export async function simulationHandler(req, res) {
     return res.status(200).json({
       month,
       category,
-      categoryLabel: spending.categoryLabel,
-      spendingAmount: investmentAmount,
+      categoryLabel: amountSource.categoryLabel,
+      spendingAmount: isSavings ? 0 : investmentAmount,
       investmentAmount,
       savedAmount: investmentAmount,
-      amountSource: spending.source,
-      savedAmountSource: spending.source,
+      amountSource: amountSource.source,
+      savedAmountSource: amountSource.source,
       assumedBuyDate,
-      summaryText: `${monthLabel} ${categoryLabel} 소비액 ${investmentAmount.toLocaleString("ko-KR")}원을 기준으로 계산했어요.`,
-      assumptionText: `'${monthLabel}에 쓴 돈을 ${monthLabel} 첫 거래일에 투자했다면'으로 계산했어요.`,
+      summaryText: isSavings
+        ? `${monthLabel} 챌린지로 만든 예상 절약액 ${investmentAmount.toLocaleString("ko-KR")}원을 기준으로 계산했어요.`
+        : `${monthLabel} ${categoryLabel} 소비액 ${investmentAmount.toLocaleString("ko-KR")}원을 기준으로 계산했어요.`,
+      assumptionText: isSavings
+        ? `이 절약액을 ${monthLabel} 첫 거래일에 투자했다면 현재 얼마인지 계산했어요.`
+        : `'${monthLabel}에 쓴 돈을 ${monthLabel} 첫 거래일에 투자했다면'으로 계산했어요.`,
       benchmarks,
       comparisons,
       status: "OK",

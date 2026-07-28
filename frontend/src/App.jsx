@@ -67,8 +67,10 @@ function App() {
   }, [])
 
   const navigate = (nextRoute) => {
-    window.history.pushState({}, '', nextRoute)
-    setRoute(nextRoute)
+    const nextUrl = new URL(nextRoute, window.location.origin)
+
+    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`)
+    setRoute(nextUrl.pathname)
     window.scrollTo({ top: 0 })
   }
 
@@ -217,11 +219,17 @@ function App() {
     screenContent = <AnonymousRankingPage token={auth.accessToken} />
   } else if (route === routes.challenge) {
     if (!auth) return null
-    screenContent = <ChallengePage token={auth.accessToken} />
+    screenContent = (
+      <ChallengePage
+        onNavigate={navigate}
+        token={auth.accessToken}
+      />
+    )
   } else if (route === routes.investmentEffect) {
     if (!auth) return null
     screenContent = (
       <InvestmentEffectPage
+        onNavigate={navigate}
         token={auth.accessToken}
       />
     )

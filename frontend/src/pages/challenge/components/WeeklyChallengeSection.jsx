@@ -13,24 +13,17 @@ export default function WeeklyChallengeSection({
   challenges,
   highlightedChallengeId,
   progress,
-  verificationOpensAt,
   verificationResult,
   verifyMessage,
   verifying,
   weekEndDate,
   weekStartDate,
   onVerify,
+  onViewInvestment,
 }) {
   const resolved = progress
     && progress.successCount + progress.failedCount === progress.totalCount
   const dateRange = formatDateRange(weekStartDate, weekEndDate)
-  const opensAt = new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(verificationOpensAt))
 
   return (
     <section className="weekly-challenge-section">
@@ -74,11 +67,26 @@ export default function WeeklyChallengeSection({
 
       {verificationResult && (
         <div className="challenge-verification-result" role="status">
-          <strong>
-            {verificationResult.successfulCount}/
-            {verificationResult.totalCount} 성공
-          </strong>
-          <span>{verificationResult.earnedPoints}P를 받았어요</span>
+          <div>
+            <strong>
+              {verificationResult.successfulCount}/
+              {verificationResult.totalCount} 성공
+            </strong>
+            <span>{verificationResult.earnedPoints}P를 받았어요</span>
+          </div>
+          <div className="challenge-saving-reward">
+            <span>예상 절약액</span>
+            <strong>
+              {Number(
+                verificationResult.successfulSavingAmount || 0,
+              ).toLocaleString('ko-KR')}원
+            </strong>
+          </div>
+          {Number(verificationResult.successfulSavingAmount || 0) > 0 && (
+            <button type="button" onClick={onViewInvestment}>
+              투자효과 보기
+            </button>
+          )}
         </div>
       )}
 
@@ -92,7 +100,7 @@ export default function WeeklyChallengeSection({
           {verifying ? (
             <>
               <span className="verify-spinner" />
-              거래내역 확인 중
+              미션 결과 확인 중
             </>
           ) : resolved ? (
             '인증 완료'
@@ -100,8 +108,8 @@ export default function WeeklyChallengeSection({
             '인증하기'
           )}
         </button>
-        {!canVerify && !resolved && (
-          <p>{opensAt}부터 인증할 수 있어요</p>
+        {canVerify && !resolved && (
+          <p>이번 주 미션 결과를 바로 확인해 보세요</p>
         )}
         {verifyMessage && (
           <p className="challenge-verify-message">{verifyMessage}</p>
@@ -111,7 +119,7 @@ export default function WeeklyChallengeSection({
       {verifying && (
         <div className="weekly-verifying-overlay" role="status" aria-live="polite">
           <span className="challenge-spinner" />
-          <strong>이번 주 거래내역을 확인하고 있어요</strong>
+          <strong>이번 주 미션 결과를 확인하고 있어요</strong>
         </div>
       )}
     </section>
