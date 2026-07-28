@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware/auth.js";
 import {
   ChallengeError,
   buildMissionContent,
+  calculateChallengeDifficulty,
   getChallengeClockInfo,
   getKoreanToday,
   getOrCreateWeeklyChallenges,
@@ -15,6 +16,11 @@ import {
 const router = express.Router();
 
 function toChallengeResponse(challenge, currentStats) {
+  const reward = calculateChallengeDifficulty(challenge);
+  const storedPoint = Number(challenge.point || 0);
+  const difficulty = challenge.status === "IN_PROGRESS"
+    ? reward.difficulty
+    : storedPoint >= 150 ? "HARD" : storedPoint >= 100 ? "MEDIUM" : "EASY";
   return {
     id: Number(challenge.id),
     sequence: Number(challenge.sequence),
@@ -32,7 +38,9 @@ function toChallengeResponse(challenge, currentStats) {
     currentCount: currentStats?.transactionCount || 0,
     currentSpentAmount: currentStats?.spentAmount || 0,
     estimatedSavingAmount: Number(challenge.estimated_saving_amount || 0),
-    point: Number(challenge.point || 0),
+    point: storedPoint,
+    difficulty,
+    reductionRate: reward.reductionRate,
     status: challenge.status,
   };
 }

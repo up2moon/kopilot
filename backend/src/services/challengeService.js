@@ -13,9 +13,13 @@ import { sequelize } from "../db.js";
 const KOREA_TIME_ZONE = "Asia/Seoul";
 const RECENT_WINDOW_DAYS = 30;
 const WEEKLY_MISSION_COUNT = 5;
-const POINT_PER_MISSION = 100;
 const DISCRETIONARY_CATEGORIES = new Set(["카페·간식", "배달", "쇼핑", "문화", "구독"]);
 const TEST_NOW_ENV = "CHALLENGE_TEST_NOW";
+const DIFFICULTY_REWARDS = {
+  EASY: 50,
+  MEDIUM: 100,
+  HARD: 150,
+};
 
 export class ChallengeError extends Error {
   constructor(message, status = 400, code = "CHALLENGE_ERROR", details = null) {
@@ -145,6 +149,36 @@ function spendMissionContent(categoryName, baselineAmount, targetAmount, label) 
 function noSpendMissionContent(categoryName, baselineCount, label) {
   const expression = categoryExpression(categoryName);
   return `${label}에는 ${expression.subject}를 ${baselineCount}${expression.counter} ${expression.countAction}. 이번 주에는 잠시 쉬어볼까요?`;
+}
+
+export function calculateChallengeDifficulty(challenge) {
+  const baselineCount = Number(challenge.baselineCount ?? challenge.baseline_count ?? 0);
+  const baselineAmount = Number(challenge.baselineAmount ?? challenge.baseline_amount ?? 0);
+  const targetCount = Number(challenge.targetCount ?? challenge.target_count ?? 0);
+  const targetAmount = Number(challenge.targetAmount ?? challenge.target_amount ?? 0);
+
+  if (challenge.challengeType === "NO_SPEND" || challenge.challenge_type === "NO_SPEND") {
+    const difficulty = baselineCount >= 2 ? "HARD" : "MEDIUM";
+    return { difficulty, point: DIFFICULTY_REWARDS[difficulty], reductionRate: 100 };
+  }
+
+  const isCountMission = (
+    challenge.challengeType === "MAX_COUNT"
+    || challenge.challenge_type === "MAX_COUNT"
+  );
+  const baseline = isCountMission ? baselineCount : baselineAmount;
+  const target = isCountMission ? targetCount : targetAmount;
+  const reductionRate = baseline > 0
+    ? Math.max(0, Math.min(100, ((baseline - target) / baseline) * 100))
+    : 0;
+  const difficulty = reductionRate <= 20
+    ? "EASY"
+    : reductionRate <= 40 ? "MEDIUM" : "HARD";
+  return {
+    difficulty,
+    point: DIFFICULTY_REWARDS[difficulty],
+    reductionRate: Math.round(reductionRate),
+  };
 }
 
 export function buildMissionContent(challenge) {
@@ -331,7 +365,10 @@ function buildChallengePlan(context, weekStart) {
       baselineAmount: category.baselineAmount,
     });
   }
-  return plan;
+  return plan.map((challenge) => ({
+    ...challenge,
+    ...calculateChallengeDifficulty(challenge),
+  }));
 }
 
 export async function createWeeklyChallenges(userId, weekStart) {
@@ -379,7 +416,7 @@ export async function createWeeklyChallenges(userId, weekStart) {
       target_count: challenge.targetCount,
       target_amount: challenge.targetAmount,
       estimated_saving_amount: challenge.estimatedSavingAmount,
-      point: POINT_PER_MISSION,
+      point: challenge.point,
       start_date: weekStart,
       end_date: weekEnd,
       status: "IN_PROGRESS",
@@ -578,6 +615,13 @@ export async function getOrCreateWeeklyChallenges(
     include: [{ model: ExpenseCategory, attributes: ["id", "name"] }],
     order: [["sequence", "ASC"]],
   });
+  for (const challenge of challenges) {
+    if (challenge.status !== "IN_PROGRESS") continue;
+    const reward = calculateChallengeDifficulty(challenge);
+    if (Number(challenge.point) !== reward.point) {
+      await challenge.update({ point: reward.point });
+    }
+  }
   const verification = getVerificationWindow(weekStart);
   const allResolved = challenges.length > 0
     && challenges.every((item) => ["SUCCESS", "FAIL"].includes(item.status));

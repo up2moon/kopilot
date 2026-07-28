@@ -163,8 +163,34 @@
 }
 
 .challenge-target-row span {
-  color: #00a661;
   font-weight: 800;
+}
+
+.challenge-reward {
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+
+.difficulty-easy {
+  background: #eef6ff;
+  color: #3182f6;
+}
+
+.difficulty-medium {
+  background: #fff7e6;
+  color: #e67700;
+}
+
+.difficulty-hard {
+  background: #fff0f0;
+  color: #e5484d;
+}
+
+.challenge-estimated-saving {
+  color: #00a661;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
 }
 
 .challenge-verification-panel {

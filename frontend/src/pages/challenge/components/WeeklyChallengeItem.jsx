@@ -6,6 +6,12 @@ const statusLabel = {
   FAIL: '미완료',
 }
 
+const difficultyLabel = {
+  EASY: '쉬움',
+  MEDIUM: '보통',
+  HARD: '어려움',
+}
+
 function targetLabel(challenge) {
   if (challenge.challengeType === 'MAX_COUNT') {
     return `현재 ${challenge.currentCount}번 / 목표 ${challenge.targetCount}번`
@@ -35,12 +41,15 @@ export default function WeeklyChallengeItem({ challenge }) {
 
       <div className="challenge-target-row">
         <strong>{targetLabel(challenge)}</strong>
-        {challenge.estimatedSavingAmount > 0 && (
-          <span>
-            예상 절약 {formatWon(challenge.estimatedSavingAmount)}
-          </span>
-        )}
+        <span className={`challenge-reward difficulty-${challenge.difficulty.toLowerCase()}`}>
+          {difficultyLabel[challenge.difficulty]} · {challenge.point}P
+        </span>
       </div>
+      {challenge.estimatedSavingAmount > 0 && (
+        <small className="challenge-estimated-saving">
+          예상 절약 {formatWon(challenge.estimatedSavingAmount)}
+        </small>
+      )}
     </article>
   )
 }
