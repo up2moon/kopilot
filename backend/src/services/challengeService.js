@@ -81,6 +81,10 @@ function getWeekDates(weekStart) {
   return Array.from({ length: 5 }, (_, index) => addDays(weekStart, index));
 }
 
+function formatWon(value) {
+  return `${Math.round(Number(value) || 0).toLocaleString("ko-KR")}원`;
+}
+
 function getKoreanDayRange(dateString) {
   const start = new Date(`${dateString}T00:00:00.000+09:00`);
   return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
@@ -236,12 +240,6 @@ export async function verifyChallenge(userId, challengeId) {
     const resolvedChallenge = await resolveChallenge(challenge, transaction);
     return { challenge: resolvedChallenge, conditionFailed: resolvedChallenge.status === "FAIL" };
   });
-}
-
-function extractResponseText(data) {
-  if (typeof data.output_text === "string") {
-    return data.output_text;
-  }
 }
 
 function roundToUnit(value, unit) {
@@ -454,30 +452,29 @@ export async function createWeeklyChallenges(userId, weekStart) {
     const context = await getGenerationContext(userId, transaction);
     if (!context) return { created: false, onboardingRequired: true };
 
-    const categoryPlan = selectRandomCategoryPlan(context.categories, weekDates);
-    const { challenges, categoryMap } = await requestWeeklyChallengesFromOpenAI(
-      context,
-      weekDates,
-      categoryPlan,
-    );
+    const challengePlan = buildChallengePlan(context.categories, weekDates);
     const createdAt = new Date();
-    await AiChallenge.bulkCreate(challenges.map((challenge) => ({
-      user_id: userId,
-      expense_category_id: categoryMap.get(challenge.expenseCategoryName).categoryId,
-      challenge_date: challenge.date,
-      challenge_type: challenge.challengeType,
-      title: challenge.title,
-      description: challenge.description,
-      target_amount: challenge.targetAmount,
-      estimated_saving_amount: challenge.estimatedSavingAmount,
-      point: challenge.point,
-      start_date: challenge.date,
-      end_date: challenge.date,
-      // 전날 미션까지는 다음 날에 사용자가 판정할 수 있게 두고,
-      // 전전날 이전 미션만 이미 만료된 것으로 처리한다.
-      status: challenge.date < addDays(today, -1) ? "FAIL" : "IN_PROGRESS",
-      finalized_at: challenge.date < addDays(today, -1) ? createdAt : null,
-    })), { transaction });
+    await AiChallenge.bulkCreate(challengePlan.map((challenge) => {
+      const text = buildChallengeText(challenge);
+      const isExpired = challenge.date < addDays(today, -1);
+      return {
+        user_id: userId,
+        expense_category_id: challenge.categoryId,
+        challenge_date: challenge.date,
+        challenge_type: challenge.challengeType,
+        title: text.title,
+        description: text.description,
+        target_amount: challenge.targetAmount,
+        estimated_saving_amount: challenge.estimatedSavingAmount,
+        point: 100,
+        start_date: challenge.date,
+        end_date: challenge.date,
+        // 전날 미션까지는 다음 날에 사용자가 판정할 수 있게 두고,
+        // 전전날 이전 미션만 이미 만료된 것으로 처리한다.
+        status: isExpired ? "FAIL" : "IN_PROGRESS",
+        finalized_at: isExpired ? createdAt : null,
+      };
+    }), { transaction });
 
     return { created: true, onboardingRequired: false };
   });
