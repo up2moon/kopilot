@@ -40,6 +40,7 @@
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. 사용자 질문과 AI 답변은 Redis에 저장하며 저장된 최근 대화를 다음 답변의 문맥으로 사용합니다.
 - `GET /api/users/me/saving-bot/chat/history`: Redis에 저장된 현재 사용자의 최근 AI 절약 챗봇 대화를 반환합니다. 대화는 사용자별 List에 최대 100개까지 저장되며 마지막 대화 이후 기본 3일 동안 유지됩니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
+- `GET /api/users/me/consumption-dna?month=YYYY-MM&refresh=true`: 해당 월의 마이데이터 결제 내역을 최소화해 OpenAI Responses API로 분석하고, 월별 소비 DNA 별명·요약·4개 성향 축을 저장해 반환합니다. 저장된 월간 결과는 기본적으로 재사용하며 `refresh=true`일 때 다시 분석합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월~금 AI 챌린지 목록과 오늘의 챌린지, 주간 진행률을 반환합니다. `weeklyProgress.completedCount`와 진행률은 `SUCCESS` 미션만 집계하며 `FAIL`은 완료 수에 포함하지 않습니다. 현재 주 미션이 비어 있으면 월요일 또는 그 이후 어느 요일의 첫 요청에서도, 마이데이터 연동 및 최근 30일 거래내역을 바탕으로 OpenAI가 5개 미션을 생성해 `ai_challenge`에 저장한 뒤 반환합니다. 전날 `IN_PROGRESS` 미션에는 `canVerify=true`를 반환하며, 전날보다 오래된 미인증 미션은 조회 전 `FAIL`로 마감합니다.
 - `GET /api/users/me/challenges/:challengeId/progress`: 대상 챌린지의 미션 날짜 거래금액·건수, 진행률, 다음 날 00:00 인증 가능 여부를 반환합니다.
