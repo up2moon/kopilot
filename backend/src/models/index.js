@@ -147,6 +147,67 @@ export const TransactionHistory = sequelize.define(
   },
 );
 
+export const ConsumptionDna = sequelize.define(
+  "ConsumptionDna",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    month: {
+      type: DataTypes.STRING(7),
+      allowNull: false,
+    },
+    nickname: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+    },
+    emoji: {
+      type: DataTypes.STRING(8),
+      allowNull: false,
+      defaultValue: "🧬",
+    },
+    summary: {
+      type: DataTypes.STRING(240),
+      allowNull: false,
+    },
+    dimensions: {
+      type: DataTypes.JSON,
+      allowNull: false,
+    },
+    top_categories: {
+      type: DataTypes.JSON,
+      allowNull: false,
+    },
+    model: {
+      type: DataTypes.STRING(80),
+      allowNull: false,
+    },
+    response_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+  },
+  {
+    tableName: "consumption_dna",
+    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    indexes: [
+      {
+        unique: true,
+        fields: ["user_id", "month"],
+      },
+    ],
+  },
+);
+
 export const AiChallenge = sequelize.define(
   "AiChallenge",
   {
@@ -435,6 +496,13 @@ TransactionHistory.belongsTo(User, {
 });
 TransactionHistory.belongsTo(ExpenseCategory, {
   foreignKey: "expense_category_id",
+});
+
+User.hasMany(ConsumptionDna, {
+  foreignKey: "user_id",
+});
+ConsumptionDna.belongsTo(User, {
+  foreignKey: "user_id",
 });
 
 User.hasMany(AiChallenge, {

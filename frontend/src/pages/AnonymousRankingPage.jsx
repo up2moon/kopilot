@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getMyRanking, getTopRankings } from '../services/ranking.js'
-import NavigationPageLayout from '../components/NavigationPageLayout'
+
+import { getConsumptionDna, getTopRankings } from '../services/ranking.js'
+
 import './AnonymousRankingPage.css'
 
 export default function AnonymousRankingPage({ token, onNavigate }) {
@@ -9,12 +10,24 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
   const [myRanking, setMyRanking] = useState(null)
   const [topRankings, setTopRankings] = useState([])
   const [notice, setNotice] = useState('1시간마다 갱신')
+  const [consumptionDna, setConsumptionDna] = useState(null)
+  const [dnaError, setDnaError] = useState('')
+  const [dnaLoading, setDnaLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true)
         setError('')
+        setDnaLoading(true)
+        setDnaError('')
+        try {
+          setConsumptionDna(await getConsumptionDna(token))
+        } catch (dnaErr) {
+          setDnaError(dnaErr.message)
+        } finally {
+          setDnaLoading(false)
+        }
         const res = await getTopRankings(token, 20)
         setMyRanking(res.myRanking)
         setTopRankings(res.topRankings || [])
@@ -33,6 +46,21 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
       loadData()
     }
   }, [token])
+
+  const refreshDna = async () => {
+    try {
+      setDnaLoading(true)
+      setDnaError('')
+      setConsumptionDna(await getConsumptionDna(token, { refresh: true }))
+      const res = await getTopRankings(token, 20)
+      setMyRanking(res.myRanking)
+      setTopRankings(res.topRankings || [])
+    } catch (err) {
+      setDnaError(err.message)
+    } finally {
+      setDnaLoading(false)
+    }
+  }
 
   const formatCurrency = (amt) => {
     return (amt || 0).toLocaleString('ko-KR') + '원'
@@ -54,6 +82,49 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
         <span className="notice-icon" aria-hidden="true">⏱️</span>
         <span className="notice-text">{notice}</span>
       </div>
+
+      <section className="dna-card" aria-live="polite">
+        <div className="dna-card-heading">
+          <div>
+            <span className="dna-eyebrow">이번 달 소비 DNA</span>
+            <h2>
+              {dnaLoading
+                ? '소비 성향을 분석하고 있어요...'
+                : consumptionDna
+                  ? `${consumptionDna.emoji} ${consumptionDna.nickname}`
+                  : '아직 분석하지 못했어요'}
+            </h2>
+          </div>
+          {consumptionDna && (
+            <button type="button" className="dna-refresh-button" onClick={refreshDna}>
+              다시 분석
+            </button>
+          )}
+        </div>
+        {consumptionDna ? (
+          <>
+            <p className="dna-summary">{consumptionDna.summary}</p>
+            <div className="dna-dimensions">
+              {consumptionDna.dimensions.map((dimension) => (
+                <div className="dna-dimension" key={dimension.key}>
+                  <div className="dna-labels">
+                    <span>{dimension.leftLabel}</span>
+                    <span>{dimension.rightLabel}</span>
+                  </div>
+                  <div className="dna-track">
+                    <span style={{ left: `${dimension.score}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : dnaError ? (
+          <div className="dna-error">
+            <p>{dnaError}</p>
+            <button type="button" onClick={refreshDna}>분석 다시 시도</button>
+          </div>
+        ) : null}
+      </section>
 
       {loading ? (
         <div className="ranking-loading-state">
@@ -146,7 +217,9 @@ export default function AnonymousRankingPage({ token, onNavigate }) {
                         {item.isMe && <span className="item-me-pill">나</span>}
                       </div>
                       <span className="item-sub-text">
-                        절약 {formatCurrency(item.savedAmount)}
+                        {item.consumptionDna
+                          ? `${item.consumptionDna.emoji} ${item.consumptionDna.nickname}`
+                          : `절약 ${formatCurrency(item.savedAmount)}`}
                       </span>
                     </div>
 

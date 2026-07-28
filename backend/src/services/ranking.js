@@ -1,5 +1,6 @@
 import { User, TransactionHistory, UserExpenseCategory, AiChallenge } from "../models/index.js";
 import { Op } from "sequelize";
+import { getConsumptionDnaMap } from "./consumptionDna.js";
 
 const ADJECTIVES = [
   "알뜰한",
@@ -133,15 +134,24 @@ export async function getUserRankingData(user) {
  */
 export async function getTopRankings(currentUser) {
   const allDbUsers = await User.findAll().catch(() => [currentUser]);
+  const month = new Date().toISOString().slice(0, 7);
+  const dnaMap = await getConsumptionDnaMap(
+    allDbUsers.map((user) => Number(user.id)),
+    month,
+  ).catch(() => new Map());
 
   const rawList = await Promise.all(allDbUsers.map((u) => getUserRankingData(u)));
+  const listWithDna = rawList.map((item) => ({
+    ...item,
+    consumptionDna: dnaMap.get(Number(item.userId)) || null,
+  }));
 
   // 랭킹 점수 기준 내림차순 정렬
-  rawList.sort((a, b) => b.rankScore - a.rankScore);
+  listWithDna.sort((a, b) => b.rankScore - a.rankScore);
 
   // 공동 순위(Standard Competition Ranking: 1, 1, 3 방식) 계산
   let currentRank = 1;
-  const rankedList = rawList.map((item, index, arr) => {
+  const rankedList = listWithDna.map((item, index, arr) => {
     if (index > 0 && item.rankScore < arr[index - 1].rankScore) {
       currentRank = index + 1;
     }
@@ -156,6 +166,7 @@ export async function getTopRankings(currentUser) {
   const currentUserData = await getUserRankingData(currentUser);
   const myRankInfo = rankedList.find((item) => item.isMe) || {
     ...currentUserData,
+    consumptionDna: dnaMap.get(Number(currentUser.id)) || null,
     rank: 1,
     isMe: true,
   };

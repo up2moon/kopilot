@@ -13,6 +13,7 @@ import {
   generateTransactionsWithOpenAI,
 } from "../services/transactionGenerator.js";
 import { getTopRankings, getUserRankingData } from "../services/ranking.js";
+import { getConsumptionDna } from "../services/consumptionDna.js";
 import { simulationHandler } from "./investment.js";
 
 const router = express.Router();
@@ -670,6 +671,29 @@ router.get("/me/ranking", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Get my ranking failed:", error);
     return res.status(500).json({ message: "내 랭킹 정보 조회 실패" });
+  }
+});
+
+router.get("/me/consumption-dna", requireAuth, async (req, res) => {
+  try {
+    const data = await getConsumptionDna(req.user.id, req.query.month, {
+      refresh: req.query.refresh === "true",
+    });
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("Get consumption DNA failed:", error);
+    const status =
+      error.code === "INSUFFICIENT_DATA"
+        ? 422
+        : error.code === "OPENAI_NOT_CONFIGURED"
+          ? 503
+          : 502;
+
+    return res.status(status).json({
+      code: error.code || "CONSUMPTION_DNA_FAILED",
+      message: error.message || "소비 DNA 분석에 실패했습니다.",
+    });
   }
 });
 
