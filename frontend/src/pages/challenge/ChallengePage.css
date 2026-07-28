@@ -29,7 +29,7 @@
 
 .today-challenge-card h2 {
   margin: 0;
-  font-size: 27px;
+  font-size: 22px;
   line-height: 1.35;
   letter-spacing: -1px;
 }
@@ -37,7 +37,7 @@
 .today-challenge-description {
   margin: 14px 0 0;
   color: #6b7684;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
@@ -112,7 +112,7 @@
 
 .weekly-challenge-section h2 {
   margin: 0 0 18px;
-  font-size: 22px;
+  font-size: var(--font-size-section-title);
   letter-spacing: -0.6px;
 }
 
@@ -146,7 +146,7 @@
 .challenge-weekday {
   width: 22px;
   color: #3182f6;
-  font-size: 18px;
+  font-size: var(--font-size-section-title);
   font-weight: 800;
 }
 
@@ -158,7 +158,7 @@
 }
 
 .challenge-item-copy strong {
-  font-size: 16px;
+  font-size: var(--font-size-card-title);
   line-height: 1.4;
   overflow-wrap: anywhere;
   word-break: keep-all;

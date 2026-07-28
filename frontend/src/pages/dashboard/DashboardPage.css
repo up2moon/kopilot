@@ -70,7 +70,7 @@
 
 .greeting-title {
   margin: 0;
-  font-size: 26px;
+  font-size: var(--font-size-hero-title);
   font-weight: 800;
   line-height: 1.35;
   color: #191f28;
@@ -79,7 +79,7 @@
 
 .greeting-subtitle {
   margin: 10px 0 0;
-  font-size: 15px;
+  font-size: var(--font-size-body);
   color: #6b7684;
   line-height: 1.4;
 }
@@ -109,7 +109,7 @@
 }
 
 .spending-main-amount {
-  font-size: 34px;
+  font-size: var(--font-size-metric);
   font-weight: 800;
   color: #191f28;
   letter-spacing: -0.5px;
@@ -144,7 +144,7 @@
 }
 
 .count-value {
-  font-size: 17px;
+  font-size: var(--font-size-card-title);
   font-weight: 800;
   color: #191f28;
 }
@@ -194,7 +194,7 @@
 
 .ai-coach-advice {
   margin: 12px 0 20px;
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 1.4;
   color: #ffffff;
