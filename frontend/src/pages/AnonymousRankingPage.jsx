@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { getConsumptionDna, getTopRankings } from '../services/ranking.js'
+import NavigationPageLayout from '../components/NavigationPageLayout'
 
 import './AnonymousRankingPage.css'
 
