@@ -276,8 +276,8 @@ jobs:
           eval "$DEPLOY_SCRIPT"
 
           export KOSCOM_SYNC_DISABLED=false
-          export KOSCOM_LIVE_REFRESH_ON_READ=false
-          export KOSCOM_MASTER_SYNC_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=true
+          export KOSCOM_DB_LOCK_TIMEOUT_SECONDS=10
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
           export CHECK_API_ENABLED=true
 
@@ -311,8 +311,8 @@ jobs:
           eval "$DEPLOY_SCRIPT"
 
           export KOSCOM_SYNC_DISABLED=true
-          export KOSCOM_LIVE_REFRESH_ON_READ=false
-          export KOSCOM_MASTER_SYNC_ON_READ=false
+          export KOSCOM_MASTER_SYNC_ON_READ=true
+          export KOSCOM_DB_LOCK_TIMEOUT_SECONDS=10
           export KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS=600000
           export CHECK_API_ENABLED=true
 

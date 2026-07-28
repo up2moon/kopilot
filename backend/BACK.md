@@ -136,8 +136,10 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 화면의 현재가는 `investment_price.close_price`의 최신 거래일 값을 `currentPrice`로 내려주고, 기준가는 선택 월 첫 거래일 값을 `basePrice`로 내려줍니다. 조회/동기화 시각은 `synced_at`을 `quotedAt`으로 사용합니다.
    - 백엔드는 `KOSCOM_SYNC_TIME` 환경 변수 기준 KST 매일 1회 코스콤 CHECK API를 호출합니다. 기본값은 `17:10`입니다.
    - 서버 시작 5초 후 `investment_price`가 0건이면 즉시 초기 동기화를 실행합니다. `KOSCOM_SYNC_ON_START=true`이면 가격 테이블 보유 여부와 관계없이 서버 시작 시 한 번 동기화합니다. `KOSCOM_SYNC_DISABLED=true`이면 스케줄러와 초기 동기화를 모두 끕니다.
-   - 운영 배포에서는 코스콤 CHECK API의 IP 제한을 피하기 위해 WAS 1만 스케줄러를 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 사용자 요청에서는 `KOSCOM_LIVE_REFRESH_ON_READ=false`, `KOSCOM_MASTER_SYNC_ON_READ=false`로 DB에 저장된 시세와 마스터만 읽습니다.
-   - 로컬 개발에서는 `KOSCOM_LIVE_REFRESH_ON_READ=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 즉시 insert 검증을 허용할 수 있습니다. 운영에서 이 값을 켜면 ALB 라우팅 또는 다중 WAS 공인 IP 차이로 `직전 API 조회 IP와 현재 IP가 다릅니다` 오류가 발생할 수 있습니다.
+   - 운영 배포에서는 WAS 1과 WAS 2 모두 `CHECK_API_ENABLED=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. 사용자 요청에 필요한 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. DB에 시세가 있으면 CHECK API를 호출하지 않습니다.
+   - 여러 WAS의 동시 fallback은 `external_api_lock` 테이블의 MySQL row lock으로 직렬화합니다. 잠금 대기 시간은 `KOSCOM_DB_LOCK_TIMEOUT_SECONDS`로 설정하며 기본값은 10초입니다. 두 WAS가 동일한 NAT Gateway 공인 IP를 사용한다는 운영 네트워크 구성을 전제로 합니다.
+   - fallback 오류 상세는 개발 환경 또는 `INVESTMENT_DEBUG_ERRORS=true`에서만 API 응답의 `debug` 필드로 제공합니다. 운영 기본값은 `false`이며 인증키나 요청 credential은 상세 응답에 포함하지 않습니다.
+   - 정기 동기화 스케줄러는 중복 배치를 막기 위해 WAS 1만 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 이 설정은 사용자 요청의 DB miss fallback을 비활성화하지 않습니다.
    - 모든 종목의 최신 종가를 매일 적재하려면 `KOSCOM_PRICE_SYNC_ALL_ASSETS=true`를 사용합니다. 기본값은 호출량 제어를 위해 `false`이며, 운영에서는 WAS 1에서만 실행해야 합니다.
    - 스케줄러는 최신 종가와 함께 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 기준가도 적재합니다. 기본값은 3개월이며, `KOSCOM_BASE_PRICE_SYNC_LIMIT`로 기준가 백필 대상 자산 수를 제한합니다.
    - 10분마다 `price_sync_enabled=true` 종목 중 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월 첫 거래일 기준가가 누락된 항목을 보강합니다. 주기는 `KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS`로 조정하고, 1회 최대 보강 건수는 `KOSCOM_MISSING_BASE_PRICE_SYNC_LIMIT`로 제한합니다. 운영에서는 WAS 1만 `KOSCOM_SYNC_DISABLED=false`로 실행하고 WAS 2는 `true`로 둡니다.

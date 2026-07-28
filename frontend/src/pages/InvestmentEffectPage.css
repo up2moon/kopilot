@@ -453,6 +453,35 @@
   line-height: 1.5;
 }
 
+.investment-error-debug {
+  width: 100%;
+  margin-top: 16px;
+  border-top: 1px solid #e5e8eb;
+  padding-top: 12px;
+  text-align: left;
+}
+
+.investment-error-debug summary {
+  color: #4e5968;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.investment-error-debug pre {
+  max-height: 220px;
+  margin: 10px 0 0;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: #191f28;
+  color: #f2f4f6;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .investment-spinner {
   width: 30px;
   height: 30px;

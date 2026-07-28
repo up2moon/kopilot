@@ -15,6 +15,8 @@ async function requestJson(url, token) {
   if (!response.ok) {
     const error = new Error(data?.message || '투자효과 데이터를 불러오지 못했습니다.')
     error.code = data?.code
+    error.meta = data?.meta
+    error.debug = data?.debug
     throw error
   }
 

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getInvestmentEffectSimulation, searchInvestmentAssets } from '../services/investment.js'
 import './InvestmentEffectPage.css'
-const isLocalDevelopment = import.meta.env.DEV
+
+const isDeveloperMode =
+  import.meta.env.DEV || import.meta.env.VITE_INVESTMENT_DEBUG_ERRORS === 'true'
 
 function formatWon(value) {
   const number = Number(value) || 0
@@ -86,6 +88,7 @@ export default function InvestmentEffectPage({ token }) {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
   const [errorCode, setErrorCode] = useState('')
+  const [errorDebug, setErrorDebug] = useState(null)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
@@ -97,17 +100,10 @@ export default function InvestmentEffectPage({ token }) {
     async function loadSimulation() {
       if (!token || !selectedMonth) return
 
-          if (isLocalDevelopment) {
-      setIsLoading(false)
-      setData(null)
-      setErrorCode('CHECK_API_DISABLED')
-      setErrorMessage('로컬 개발 환경에서는 시세 조회를 실행하지 않습니다.')
-      return
-          }
-      
       setIsLoading(true)
       setErrorMessage('')
       setErrorCode('')
+      setErrorDebug(null)
       try {
         const result = await getInvestmentEffectSimulation(token, {
           month: selectedMonth,
@@ -121,6 +117,7 @@ export default function InvestmentEffectPage({ token }) {
         if (!ignore) {
           setErrorMessage(err.message)
           setErrorCode(err.code || '')
+          setErrorDebug(err.debug || null)
           setData(null)
         }
       } finally {
@@ -241,6 +238,12 @@ export default function InvestmentEffectPage({ token }) {
           )}
           {errorCode === 'CURRENT_PRICE_MISSING' && (
             <span>현재가 동기화 후 다시 계산해주세요. 기준일 가격만으로 결과를 만들지 않습니다.</span>
+          )}
+          {isDeveloperMode && errorDebug && (
+            <details className="investment-error-debug">
+              <summary>실패 상세</summary>
+              <pre>{JSON.stringify(errorDebug, null, 2)}</pre>
+            </details>
           )}
         </div>
       ) : (

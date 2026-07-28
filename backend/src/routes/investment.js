@@ -11,9 +11,8 @@ import {
   defaultBenchmarkCodes,
   enablePriceSync,
   getAssetByCode,
-  getLatestStoredPrice,
-  getStoredPrice,
-  refreshInvestmentAssetPrice,
+  getOrFetchLatestStoredPrice,
+  getOrFetchStoredPrice,
   syncKoscomBasePrices,
   searchInvestmentAssets,
   syncKoscomClosingPrices,
@@ -229,41 +228,57 @@ function isKoscomPriceFetchError(error) {
   ].includes(error?.code);
 }
 
-function shouldRefreshKoscomPriceOnRead() {
-  if (process.env.KOSCOM_LIVE_REFRESH_ON_READ !== undefined) {
-    return process.env.KOSCOM_LIVE_REFRESH_ON_READ === "true";
+function shouldExposeInvestmentDebug() {
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.INVESTMENT_DEBUG_ERRORS === "true"
+  );
+}
+
+function serializeInvestmentError(error, depth = 0) {
+  if (!error || depth > 2) {
+    return null;
   }
 
-  return process.env.NODE_ENV !== "production";
+  const details = {
+    code: error.code || null,
+    message: error.message || String(error),
+    statusCode: error.statusCode || null,
+    meta: error.meta || null,
+  };
+
+  if (error.cause && error.cause !== error) {
+    details.cause = serializeInvestmentError(error.cause, depth + 1);
+  }
+
+  return details;
+}
+
+function getInvestmentDebugPayload(error) {
+  return shouldExposeInvestmentDebug()
+    ? {
+        debug: serializeInvestmentError(error),
+      }
+    : {};
 }
 
 async function getLatestPrice(asset, assumedBuyDate) {
-  let latestPrice = await getLatestStoredPrice(asset.assetCode);
+  let latestPrice = null;
 
-  if (shouldRefreshKoscomPriceOnRead()) {
-    try {
-      await refreshInvestmentAssetPrice(asset.assetCode);
-      const refreshedPrice = await getLatestStoredPrice(asset.assetCode);
-
-      if (refreshedPrice) {
-        latestPrice = refreshedPrice;
-      }
-    } catch (error) {
-      if (!isKoscomPriceFetchError(error)) {
-        throw error;
-      }
-
-      if (!latestPrice || latestPrice.trade_date <= assumedBuyDate) {
-        throw createCurrentPriceMissingError(asset, assumedBuyDate, latestPrice);
-      }
-
-      console.warn("Koscom current price refresh failed; using stored latest price", {
-        assetCode: asset.assetCode,
-        latestTradeDate: latestPrice.trade_date,
-        code: error.code,
-        meta: error.meta,
-      });
+  try {
+    latestPrice = await getOrFetchLatestStoredPrice(asset.assetCode);
+  } catch (error) {
+    if (!isKoscomPriceFetchError(error)) {
+      throw error;
     }
+
+    const missingError = createCurrentPriceMissingError(
+      asset,
+      assumedBuyDate,
+      latestPrice,
+    );
+    missingError.cause = error;
+    throw missingError;
   }
 
   if (!latestPrice) {
@@ -279,26 +294,24 @@ async function getLatestPrice(asset, assumedBuyDate) {
 
 async function calculateMarketSimulation(asset, investmentAmount, month) {
   const assumedBuyDate = getFirstTradingDate(month);
-  let basePrice = await getStoredPrice(asset.assetCode, assumedBuyDate);
+  let basePrice = null;
 
-  if (!basePrice && shouldRefreshKoscomPriceOnRead()) {
-    try {
-      await refreshInvestmentAssetPrice(asset.assetCode, assumedBuyDate);
-    } catch (error) {
-      if (!isKoscomPriceFetchError(error)) {
-        throw error;
-      }
-
-      console.warn("Koscom base price refresh failed", {
-        assetCode: asset.assetCode,
-        tradeDate: assumedBuyDate,
-        code: error.code,
-        meta: error.meta,
-      });
-      throw createPriceHistoryMissingError(asset, assumedBuyDate);
+  try {
+    basePrice = await getOrFetchStoredPrice(asset.assetCode, assumedBuyDate);
+  } catch (error) {
+    if (!isKoscomPriceFetchError(error)) {
+      throw error;
     }
 
-    basePrice = await getStoredPrice(asset.assetCode, assumedBuyDate);
+    console.warn("Koscom base price fallback failed", {
+      assetCode: asset.assetCode,
+      tradeDate: assumedBuyDate,
+      code: error.code,
+      meta: error.meta,
+    });
+    const missingError = createPriceHistoryMissingError(asset, assumedBuyDate);
+    missingError.cause = error;
+    throw missingError;
   }
 
   if (!basePrice) {
@@ -401,12 +414,7 @@ router.get("/quotes", requireAuth, async (req, res) => {
     const items = await Promise.all(
       codes.map(async (assetCode) => {
         const asset = await resolveAsset(assetCode);
-        let latestPrice = await getLatestStoredPrice(assetCode);
-
-        if (!latestPrice && shouldRefreshKoscomPriceOnRead()) {
-          await refreshInvestmentAssetPrice(assetCode);
-          latestPrice = await getLatestStoredPrice(assetCode);
-        }
+        const latestPrice = await getOrFetchLatestStoredPrice(assetCode);
 
         if (!latestPrice) {
           throw createPriceHistoryMissingError(asset, "LATEST");
@@ -532,10 +540,19 @@ export async function simulationHandler(req, res) {
 }
 
 function handleInvestmentError(res, error, fallbackMessage) {
+  if (error.code === "CHECK_API_DISABLED") {
+    return res.status(503).json({
+      code: "CHECK_API_DISABLED",
+      message: error.message,
+      ...getInvestmentDebugPayload(error),
+    });
+  }
+
   if (error.statusCode === 503 || error.code === "KOSCOM_CONFIG_MISSING") {
     return res.status(503).json({
       code: "KOSCOM_CONFIG_MISSING",
       message: "투자효과 시세 조회 설정이 아직 완료되지 않았습니다.",
+      ...getInvestmentDebugPayload(error),
     });
   }
 
@@ -544,6 +561,7 @@ function handleInvestmentError(res, error, fallbackMessage) {
       code: "PRICE_HISTORY_MISSING",
       message: error.message,
       meta: error.meta,
+      ...getInvestmentDebugPayload(error),
     });
   }
 
@@ -552,6 +570,7 @@ function handleInvestmentError(res, error, fallbackMessage) {
       code: "CURRENT_PRICE_MISSING",
       message: error.message,
       meta: error.meta,
+      ...getInvestmentDebugPayload(error),
     });
   }
 
@@ -560,6 +579,7 @@ function handleInvestmentError(res, error, fallbackMessage) {
       code: error.code,
       message: error.message,
       meta: error.meta,
+      ...getInvestmentDebugPayload(error),
     });
   }
 
@@ -570,6 +590,7 @@ function handleInvestmentError(res, error, fallbackMessage) {
       code: error.code,
       message: error.message || "코스콤 CHECK API 시세 응답을 처리하지 못했습니다.",
       meta: error.meta,
+      ...getInvestmentDebugPayload(error),
     });
   }
 
@@ -578,6 +599,7 @@ function handleInvestmentError(res, error, fallbackMessage) {
   return res.status(error.statusCode || 502).json({
     code: error.code || "KOSCOM_REQUEST_FAILED",
     message: fallbackMessage,
+    ...getInvestmentDebugPayload(error),
   });
 }
 

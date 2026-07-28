@@ -347,6 +347,22 @@ export const InvestmentAsset = sequelize.define(
   },
 );
 
+export const ExternalApiLock = sequelize.define(
+  "ExternalApiLock",
+  {
+    lock_name: {
+      type: DataTypes.STRING(80),
+      allowNull: false,
+      primaryKey: true,
+    },
+  },
+  {
+    tableName: "external_api_lock",
+    underscored: true,
+    timestamps: false,
+  },
+);
+
 export const InvestmentPrice = sequelize.define(
   "InvestmentPrice",
   {

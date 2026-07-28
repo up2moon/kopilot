@@ -1,6 +1,8 @@
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 
+import { sequelize } from "../db.js";
 import {
+  ExternalApiLock,
   InvestmentAsset,
   InvestmentPrice,
 } from "../models/index.js";
@@ -114,6 +116,80 @@ function normalizeAssetCodes(assetCodes) {
 
 function isEnabled(value) {
   return value === true || String(value).toLowerCase() === "true";
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function withKoscomPriceRequestLock(task) {
+  const lockTimeoutSeconds = Math.min(
+    Math.max(Number(process.env.KOSCOM_DB_LOCK_TIMEOUT_SECONDS) || 10, 1),
+    30,
+  );
+
+  await ExternalApiLock.findOrCreate({
+    where: {
+      lock_name: "koscom-price-request",
+    },
+    defaults: {
+      lock_name: "koscom-price-request",
+    },
+  });
+
+  try {
+    return await sequelize.transaction(
+      {
+        isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
+      },
+      async (transaction) => {
+        await sequelize.query(
+          `SET SESSION innodb_lock_wait_timeout = ${lockTimeoutSeconds}`,
+          {
+            transaction,
+          },
+        );
+        await ExternalApiLock.findByPk("koscom-price-request", {
+          lock: transaction.LOCK.UPDATE,
+          transaction,
+        });
+
+        return task(transaction);
+      },
+    );
+  } catch (error) {
+    if (error?.original?.code === "ER_LOCK_WAIT_TIMEOUT") {
+      const lockError = new Error(
+        "코스콤 CHECK API 호출 대기 시간이 초과되었습니다.",
+      );
+      lockError.statusCode = 503;
+      lockError.code = "KOSCOM_REQUEST_LOCK_TIMEOUT";
+      lockError.cause = error;
+      throw lockError;
+    }
+
+    throw error;
+  }
+}
+
+async function runKoscomPriceRequest(task) {
+  const startedAt = Date.now();
+  const minIntervalMs = Math.max(
+    Number(process.env.KOSCOM_REQUEST_INTERVAL_MS) || 1100,
+    1000,
+  );
+
+  try {
+    return await task();
+  } finally {
+    const remainingMs = minIntervalMs - (Date.now() - startedAt);
+
+    if (remainingMs > 0) {
+      await sleep(remainingMs);
+    }
+  }
 }
 
 function getKstParts(date = new Date()) {
@@ -328,30 +404,46 @@ export async function searchInvestmentAssets({ keyword, type, market, limit }) {
   return assets.map(toAssetResponse);
 }
 
-async function upsertPrice(asset, tradeDate) {
+async function upsertPrice(asset, tradeDate, transaction = null) {
   const quote = await fetchKoscomQuote(asset.asset_code, tradeDate);
   const priceDate = quote.tradeDate || tradeDate || getKstDate();
 
-  await InvestmentPrice.upsert({
-    asset_code: asset.asset_code,
-    trade_date: priceDate,
-    close_price: quote.closePrice,
-    diff_rate: quote.diffRate,
-    raw_response: quote.raw,
-    source: "KOSCOM_CHECK",
-    synced_at: new Date(),
-  });
+  await InvestmentPrice.upsert(
+    {
+      asset_code: asset.asset_code,
+      trade_date: priceDate,
+      close_price: quote.closePrice,
+      diff_rate: quote.diffRate,
+      raw_response: quote.raw,
+      source: "KOSCOM_CHECK",
+      synced_at: new Date(),
+    },
+    {
+      transaction,
+    },
+  );
 
-  await asset.update({
-    price_sync_enabled: true,
-    last_synced_at: new Date(),
-  });
+  await asset.update(
+    {
+      price_sync_enabled: true,
+      last_synced_at: new Date(),
+    },
+    {
+      transaction,
+    },
+  );
 
   return {
     assetCode: asset.asset_code,
     tradeDate: priceDate,
     closePrice: quote.closePrice,
   };
+}
+
+async function refreshAssetPrice(asset, tradeDate = null) {
+  return withKoscomPriceRequestLock((transaction) =>
+    runKoscomPriceRequest(() => upsertPrice(asset, tradeDate, transaction)),
+  );
 }
 
 export async function enablePriceSync(assetCodes) {
@@ -388,7 +480,7 @@ export async function refreshInvestmentAssetPrice(assetCode, tradeDate = null) {
     return null;
   }
 
-  return upsertPrice(asset, tradeDate);
+  return refreshAssetPrice(asset, tradeDate);
 }
 
 async function getPriceSyncAssets(limit, assetCodes = [], { allAssets = false } = {}) {
@@ -446,7 +538,7 @@ export async function syncKoscomClosingPrices({
 
   for (const asset of assets) {
     try {
-      results.push(await upsertPrice(asset));
+      results.push(await refreshAssetPrice(asset));
     } catch (error) {
       console.error(
         `Koscom price sync failed for ${asset.asset_code}:`,
@@ -490,7 +582,7 @@ export async function syncKoscomBasePrices({
   for (const asset of assets) {
     for (const tradeDate of tradeDates) {
       try {
-        results.push(await upsertPrice(asset, tradeDate));
+        results.push(await refreshAssetPrice(asset, tradeDate));
       } catch (error) {
         const failure = {
           assetCode: asset.asset_code,
@@ -601,7 +693,9 @@ export async function syncMissingKoscomBasePrices({
 
   for (const request of missingRequests) {
     try {
-      results.push(await upsertPrice(request.asset, request.tradeDate));
+      results.push(
+        await refreshAssetPrice(request.asset, request.tradeDate),
+      );
     } catch (error) {
       const failure = {
         assetCode: request.asset.asset_code,
@@ -780,20 +874,84 @@ export async function upsertInvestmentAsset(asset) {
   return getAssetByCode(asset.assetCode);
 }
 
-export async function getStoredPrice(assetCode, tradeDate) {
+export async function getStoredPrice(assetCode, tradeDate, transaction = null) {
   return InvestmentPrice.findOne({
     where: {
       asset_code: assetCode,
       trade_date: tradeDate,
     },
+    transaction,
   });
 }
 
-export async function getLatestStoredPrice(assetCode) {
+export async function getLatestStoredPrice(assetCode, transaction = null) {
   return InvestmentPrice.findOne({
     where: {
       asset_code: assetCode,
     },
     order: [["trade_date", "DESC"]],
+    transaction,
+  });
+}
+
+export async function getOrFetchStoredPrice(assetCode, tradeDate) {
+  const storedPrice = await getStoredPrice(assetCode, tradeDate);
+
+  if (storedPrice) {
+    return storedPrice;
+  }
+
+  getKoscomCredentials();
+
+  const asset = await InvestmentAsset.findByPk(assetCode);
+
+  if (!asset) {
+    return null;
+  }
+
+  return withKoscomPriceRequestLock(async (transaction) => {
+    const recheckedPrice = await getStoredPrice(
+      assetCode,
+      tradeDate,
+      transaction,
+    );
+
+    if (recheckedPrice) {
+      return recheckedPrice;
+    }
+
+    const fetchedPrice = await runKoscomPriceRequest(() =>
+      upsertPrice(asset, tradeDate, transaction),
+    );
+
+    return getStoredPrice(assetCode, fetchedPrice.tradeDate, transaction);
+  });
+}
+
+export async function getOrFetchLatestStoredPrice(assetCode) {
+  const storedPrice = await getLatestStoredPrice(assetCode);
+
+  if (storedPrice) {
+    return storedPrice;
+  }
+
+  getKoscomCredentials();
+
+  const asset = await InvestmentAsset.findByPk(assetCode);
+
+  if (!asset) {
+    return null;
+  }
+
+  return withKoscomPriceRequestLock(async (transaction) => {
+    const recheckedPrice = await getLatestStoredPrice(assetCode, transaction);
+
+    if (recheckedPrice) {
+      return recheckedPrice;
+    }
+
+    await runKoscomPriceRequest(() => upsertPrice(asset, null, transaction));
+
+    return getLatestStoredPrice(assetCode, transaction);
   });
 }
