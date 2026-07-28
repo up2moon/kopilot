@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import TestPage from './TestPage'
 import BottomNav from './components/BottomNav'
 import FloatingChatbot from './components/FloatingChatbot'
-import DashboardPage from './pages/DashboardPage'
+import DashboardPage from './pages/dashboard/DashboardPage'
 import CoachPage from './pages/coach/CoachPage'
 import SpendingDetailPage from './pages/SpendingDetailPage'
 import AnonymousRankingPage from './pages/AnonymousRankingPage'
@@ -194,7 +194,7 @@ function App() {
     )
   } else if (route === routes.dashboard) {
     if (!auth) return null
-    screenContent = <DashboardPage auth={auth} onNavigate={navigate} onLogout={handleLogout} />
+    screenContent = <DashboardPage auth={auth} onNavigate={navigate} />
   } else if (route === routes.spending) {
     if (!auth) return null
     screenContent = (
