@@ -85,7 +85,7 @@
 .investment-hero-card strong {
   display: block;
   margin-top: 10px;
-  font-size: 32px;
+  font-size: var(--font-size-metric);
   font-weight: 900;
   line-height: 1.2;
 }

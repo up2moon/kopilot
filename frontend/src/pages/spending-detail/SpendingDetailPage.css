@@ -18,7 +18,7 @@
 
 .detail-header h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--font-size-page-title);
   font-weight: 800;
   color: #191f28;
 }
@@ -102,7 +102,7 @@
 
 .detail-card h2 {
   margin: 0 0 14px;
-  font-size: 17px;
+  font-size: var(--font-size-section-title);
   font-weight: 700;
   color: #191f28;
 }
@@ -117,7 +117,7 @@
 }
 
 .summary-amount {
-  font-size: 28px;
+  font-size: var(--font-size-metric);
   font-weight: 800;
   color: #191f28;
   margin: 6px 0 12px;

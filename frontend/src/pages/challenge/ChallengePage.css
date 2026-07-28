@@ -46,11 +46,23 @@
   color: #191f28;
   font-size: 24px;
   letter-spacing: -0.8px;
+.today-challenge-card h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: -1px;
 }
 
 .challenge-week-summary p {
   margin: 2px 0 0;
   color: #6b7684;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.today-challenge-saving {
+  margin: 12px 0 0;
+  color: #00a661;
   font-size: 14px;
 }
 
@@ -91,6 +103,36 @@
   transition: width 0.25s ease;
 }
 
+.challenge-result-notice,
+.challenge-verify-message {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+.challenge-result-notice.success { color: #00a661; }
+.challenge-result-notice.fail,
+.challenge-verify-message { color: #e5484d; }
+
+.weekly-challenge-section {
+  margin-top: 42px;
+}
+
+.weekly-challenge-section h2 {
+  margin: 0 0 18px;
+  font-size: var(--font-size-section-title);
+  letter-spacing: -0.6px;
+}
+
+.weekly-challenge-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.weekly-challenge-heading span { color: #6b7684; font-size: 13px; font-weight: 700; }
+.weekly-progress-track { margin: -8px 0 18px; }
+
 .weekly-challenge-list {
   display: grid;
   gap: 14px;
@@ -119,8 +161,8 @@
   border-radius: 8px;
   background: #e8f2ff;
   color: #3182f6;
-  font-size: 12px;
-  font-weight: 900;
+  font-size: var(--font-size-section-title);
+  font-weight: 800;
 }
 
 .challenge-category {
@@ -145,6 +187,10 @@
   font-weight: 700;
   line-height: 1.65;
   letter-spacing: -0.25px;
+.challenge-item-copy strong {
+  font-size: var(--font-size-card-title);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
   word-break: keep-all;
 }
 

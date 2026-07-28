@@ -1,11 +1,12 @@
 .coach-page {
+  --coach-content-gutter: 20px;
   width: min(100%, 390px);
   height: 844px;
   min-height: 844px;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  padding: 24px 24px 16px;
+  padding: 20px var(--coach-content-gutter);
   background: #f7f9fc;
   box-sizing: border-box;
   color: #191f28;
@@ -16,7 +17,7 @@
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   min-height: 38px;
 }
 
@@ -32,7 +33,10 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(49, 130, 246, 0.25);
-  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
   flex-shrink: 0;
   padding: 0;
 }
@@ -59,14 +63,14 @@
 
 .coach-header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--font-size-page-title);
   font-weight: 800;
-  line-height: 26px;
+  line-height: 31px;
   text-align: left;
 }
 
 .coach-status {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 16px;
   white-space: nowrap;
@@ -90,8 +94,8 @@
   align-content: center;
   min-height: 120px;
   margin-top: 24px;
-  padding: 17px 24px 18px;
-  border-radius: 22px;
+  padding: 18px 20px;
+  border-radius: 20px;
   background: #3182f6;
   box-shadow: 0 8px 24px rgba(26, 31, 41, 0.12);
   box-sizing: border-box;
@@ -100,7 +104,7 @@
 
 .coach-insight-card span {
   color: #dcebff;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 17px;
 }
@@ -109,7 +113,7 @@
   display: block;
   margin-top: 9px;
   color: #fff;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 27px;
   white-space: pre-line;
@@ -153,7 +157,7 @@
 
 .coach-date {
   flex: 0 0 auto;
-  margin: 16px 0 20px;
+  margin: 10px 0 12px;
   color: #8b95a1;
   font-size: 12px;
   line-height: 14px;
@@ -165,8 +169,8 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 22px;
-  padding: 0 2px 18px;
+  gap: 12px;
+  padding: 0 2px 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
@@ -189,14 +193,14 @@
 
 .coach-message {
   width: fit-content;
-  max-width: 300px;
+  max-width: 290px;
   margin: 0;
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 500;
-  line-height: 22px;
+  line-height: 20px;
   text-align: left;
   word-break: keep-all;
 }
@@ -219,25 +223,25 @@
 
 .coach-suggestions {
   flex: 0 0 auto;
-  margin-bottom: 17px;
+  margin-bottom: 10px;
   text-align: left;
 }
 
 .coach-suggestion-toggle {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
   border: 1px solid #e5e8eb;
-  border-radius: 15px;
+  border-radius: 14px;
   background: #fff;
   box-shadow: 0 3px 10px rgba(26, 31, 41, 0.04);
   color: #333d4b;
   cursor: pointer;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 800;
   line-height: 18px;
   text-align: left;
@@ -290,7 +294,7 @@
   min-height: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   padding-top: 0;
   overflow: hidden;
   transform: translateY(-5px);
@@ -300,20 +304,20 @@
 }
 
 .coach-suggestion-list-shell.is-open .coach-suggestion-list {
-  padding-top: 12px;
+  padding-top: 10px;
   transform: translateY(0);
 }
 
 .coach-suggestion {
-  height: 32px;
-  padding: 0 22px;
+  height: 30px;
+  padding: 0 16px;
   border: 0;
   border-radius: 16px;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  line-height: 32px;
+  line-height: 30px;
 }
 
 .coach-suggestion:disabled {
@@ -339,7 +343,7 @@
 .coach-input-form {
   position: relative;
   flex: 0 0 auto;
-  height: 58px;
+  height: 54px;
   margin-top: auto;
 }
 
@@ -354,15 +358,15 @@
 
 .coach-input-form input {
   width: 100%;
-  height: 58px;
-  padding: 0 66px 0 21px;
+  height: 54px;
+  padding: 0 56px 0 18px;
   border: 1px solid #e5e8eb;
-  border-radius: 18px;
+  border-radius: 16px;
   background: #fff;
   box-sizing: border-box;
   color: #191f28;
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   outline: 0;
 }
@@ -374,12 +378,12 @@
 .coach-input-form button {
   position: absolute;
   top: 50%;
-  right: 20px;
-  width: 36px;
-  height: 36px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: 0;
-  border-radius: 18px;
+  border-radius: 17px;
   background: #3182f6;
   color: #fff;
   cursor: pointer;
@@ -387,7 +391,7 @@
   font-family: Inter, system-ui, sans-serif;
   font-size: 16px;
   font-weight: 800;
-  line-height: 36px;
+  line-height: 34px;
   transform: translateY(-50%);
 }
 
@@ -406,15 +410,11 @@
 
 @media (max-width: 360px) {
   .coach-page {
-    padding-inline: 18px;
-  }
-
-  .coach-header {
-    gap: 10px;
+    --coach-content-gutter: 18px;
   }
 
   .coach-header h1 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
   .coach-message {

@@ -3,7 +3,11 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at top left, rgba(49, 130, 246, 0.1), transparent 30%),
+    radial-gradient(
+      circle at top left,
+      rgba(49, 130, 246, 0.1),
+      transparent 30%
+    ),
     #eef2f7;
   padding: 24px;
 }
@@ -87,9 +91,9 @@
 .hero-copy h1 {
   margin: 0;
   color: #191f28;
-  font-size: 28px;
+  font-size: var(--font-size-hero-title);
   font-weight: 800;
-  line-height: 37px;
+  line-height: 32px;
 }
 
 .hero-copy p {
@@ -188,7 +192,7 @@
 .panel-heading h2 {
   margin: 0;
   color: #191f28;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -310,8 +314,8 @@
 }
 
 .signup-hero h1 {
-  font-size: 27px;
-  line-height: 36px;
+  font-size: var(--font-size-hero-title);
+  line-height: 32px;
 }
 
 .signup-hero p:not(.eyebrow) {
@@ -389,9 +393,9 @@
 
 .dashboard-hero h1 {
   margin: 0;
-  font-size: 29px;
+  font-size: var(--font-size-hero-title);
   font-weight: 800;
-  line-height: 38px;
+  line-height: 32px;
 }
 
 .dashboard-hero p {
@@ -542,9 +546,9 @@
 .complete-hero h1 {
   margin: 0;
   color: #191f28;
-  font-size: 28px;
+  font-size: var(--font-size-hero-title);
   font-weight: 800;
-  line-height: 37px;
+  line-height: 32px;
   letter-spacing: 0;
 }
 
@@ -559,8 +563,8 @@
 .compact-hero h1,
 .category-hero h1,
 .budget-hero h1 {
-  font-size: 26px;
-  line-height: 36px;
+  font-size: var(--font-size-hero-title);
+  line-height: 32px;
 }
 
 .category-hero,
@@ -757,9 +761,9 @@
 .mydata-complete-hero h1 {
   margin: 36px 0 0;
   color: #191f28;
-  font-size: 28px;
+  font-size: var(--font-size-hero-title);
   font-weight: 800;
-  line-height: 38px;
+  line-height: 32px;
 }
 
 .mydata-complete-hero p {
@@ -928,7 +932,7 @@
   display: block;
   margin-top: 6px;
   color: #191f28;
-  font-size: 27px;
+  font-size: var(--font-size-metric);
   font-weight: 800;
   line-height: 34px;
 }
@@ -1283,8 +1287,8 @@
   .setup-hero h1,
   .complete-hero h1,
   .dashboard-hero h1 {
-    font-size: 25px;
-    line-height: 34px;
+    font-size: var(--font-size-hero-title);
+    line-height: 32px;
   }
 
   .setup-topbar {
@@ -1389,7 +1393,7 @@
 .terms-modal-header h2 {
   margin: 0;
   color: #191f28;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.3;
 }
@@ -1488,17 +1492,17 @@
   flex-shrink: 0;
 }
 
-input[type='checkbox'] {
+input[type="checkbox"] {
   display: none;
 }
 
-input[type='checkbox']:checked + .checkbox-custom {
+input[type="checkbox"]:checked + .checkbox-custom {
   background: #3182f6;
   border-color: #3182f6;
 }
 
-input[type='checkbox']:checked + .checkbox-custom::after {
-  content: '';
+input[type="checkbox"]:checked + .checkbox-custom::after {
+  content: "";
   position: absolute;
   left: 6px;
   top: 2px;
@@ -1547,4 +1551,3 @@ input[type='checkbox']:checked + .checkbox-custom::after {
   color: #b0b8c1;
   cursor: not-allowed;
 }
-

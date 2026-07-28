@@ -1,4 +1,11 @@
 :root {
+  --font-size-page-title: 24px;
+  --font-size-hero-title: 24px;
+  --font-size-section-title: 16px;
+  --font-size-card-title: 15px;
+  --font-size-body: 13px;
+  --font-size-caption: 11px;
+  --font-size-metric: 28px;
   font-family:
     'Noto Sans KR',
     Inter,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import arrowIcon from '../assets/icons/arrow.svg'
+import MyDataConnectionAnimation from '../components/MyDataConnectionAnimation'
 import {
   connectMyData,
   getBudgetCategories,
@@ -653,24 +654,16 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
           />
 
           <div className="mydata-complete-hero" aria-live="polite">
-            <div
-              className={`mydata-complete-icon${
-                !isProcessing && !myDataResult ? ' is-pending' : ''
-              }`}
-              aria-hidden="true"
-            >
-              {isProcessing ? (
-                <span className="loading-dots">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-              ) : myDataResult ? (
-                '✓'
-              ) : (
-                '💳'
-              )}
-            </div>
+            {isProcessing ? (
+              <MyDataConnectionAnimation />
+            ) : (
+              <div
+                className={`mydata-complete-icon${!myDataResult ? ' is-pending' : ''}`}
+                aria-hidden="true"
+              >
+                {myDataResult ? '✓' : '💳'}
+              </div>
+            )}
             <h1>
               {isProcessing ? (
                 <>
