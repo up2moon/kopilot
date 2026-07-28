@@ -139,6 +139,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 운영 배포에서는 WAS 1과 WAS 2 모두 `CHECK_API_ENABLED=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. 사용자 요청에 필요한 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. DB에 시세가 있으면 CHECK API를 호출하지 않습니다.
    - 여러 WAS의 동시 fallback은 `external_api_lock` 테이블의 MySQL row lock으로 직렬화합니다. 잠금 대기 시간은 `KOSCOM_DB_LOCK_TIMEOUT_SECONDS`로 설정하며 기본값은 10초입니다. 두 WAS가 동일한 NAT Gateway 공인 IP를 사용한다는 운영 네트워크 구성을 전제로 합니다.
    - fallback 오류 상세는 개발 환경 또는 `INVESTMENT_DEBUG_ERRORS=true`에서만 API 응답의 `debug` 필드로 제공합니다. 운영 기본값은 `false`이며 인증키나 요청 credential은 상세 응답에 포함하지 않습니다.
+   - 로컬 `compose.dev.yml`은 `CHECK_API_ENABLED=false`가 기본값입니다. 로컬 화면은 백엔드의 `CHECK_API_DISABLED` 오류와 개발자 상세를 표시할 수 있지만 실제 CHECK API는 호출하지 않아 운영 인증키의 기준 IP를 변경하지 않습니다.
    - 정기 동기화 스케줄러는 중복 배치를 막기 위해 WAS 1만 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 이 설정은 사용자 요청의 DB miss fallback을 비활성화하지 않습니다.
    - 모든 종목의 최신 종가를 매일 적재하려면 `KOSCOM_PRICE_SYNC_ALL_ASSETS=true`를 사용합니다. 기본값은 호출량 제어를 위해 `false`이며, 운영에서는 WAS 1에서만 실행해야 합니다.
    - 스케줄러는 최신 종가와 함께 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 기준가도 적재합니다. 기본값은 3개월이며, `KOSCOM_BASE_PRICE_SYNC_LIMIT`로 기준가 백필 대상 자산 수를 제한합니다.
