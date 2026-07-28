@@ -456,17 +456,43 @@ function toCompactDate(date) {
 
 export async function fetchKoscomQuote(assetCode, tradeDate = null) {
   const compactDate = tradeDate ? toCompactDate(tradeDate) : null;
-  const payload = compactDate
-    ? await callKoscom(historyQuotePath, {
-        data_list: "F12506,F16013,F15001,F15004",
-        jcode: assetCode,
-        sdate: compactDate,
-        edate: compactDate,
-      })
-    : await callKoscom(basicQuotePath, {
-        data_list: "F16013,F16002,F15001,F15004",
-        jcode: assetCode,
-      });
+  const quoteType = compactDate ? "HISTORICAL_CLOSE" : "CURRENT";
+  const path = compactDate ? historyQuotePath : basicQuotePath;
+
+  console.log("Koscom quote request started", {
+    assetCode,
+    quoteType,
+    path,
+    tradeDate,
+  });
+
+  let payload;
+
+  try {
+    payload = compactDate
+      ? await callKoscom(path, {
+          data_list: "F12506,F16013,F15001,F15004",
+          jcode: assetCode,
+          sdate: compactDate,
+          edate: compactDate,
+        })
+      : await callKoscom(path, {
+          data_list: "F16013,F16002,F15001,F15004",
+          jcode: assetCode,
+        });
+  } catch (error) {
+    console.error("Koscom quote request failed", {
+      assetCode,
+      quoteType,
+      path,
+      tradeDate,
+      code: error.code || null,
+      message: error.message,
+      meta: error.meta || null,
+    });
+    throw error;
+  }
+
   const records = getRecords(payload);
   const quote = normalizeKoscomQuote(records[0] || payload);
 
@@ -481,6 +507,14 @@ export async function fetchKoscomQuote(assetCode, tradeDate = null) {
     };
     throw error;
   }
+
+  console.log("Koscom quote request completed", {
+    assetCode,
+    quoteType,
+    path,
+    requestedTradeDate: tradeDate,
+    responseTradeDate: quote.tradeDate,
+  });
 
   return quote;
 }

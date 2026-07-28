@@ -415,7 +415,9 @@ async function upsertPrice(asset, tradeDate, transaction = null) {
       close_price: quote.closePrice,
       diff_rate: quote.diffRate,
       raw_response: quote.raw,
-      source: "KOSCOM_CHECK",
+      source: tradeDate
+        ? "KOSCOM_CHECK_HISTORY"
+        : "KOSCOM_CHECK_CURRENT",
       synced_at: new Date(),
     },
     {
@@ -957,21 +959,39 @@ export async function getOrFetchStoredPrice(assetCode, tradeDate) {
   }
 }
 
-export async function getOrFetchLatestStoredPrice(assetCode) {
+function isUsableCurrentPrice(price, minimumTradeDate = null) {
+  if (!price?.synced_at || getKstDate(price.synced_at) !== getKstDate()) {
+    return false;
+  }
+
+  const isCurrentQuote =
+    price.source === "KOSCOM_CHECK_CURRENT" ||
+    price.trade_date === getKstDate();
+  const isAfterMinimumDate =
+    !minimumTradeDate || price.trade_date > minimumTradeDate;
+
+  return isCurrentQuote && isAfterMinimumDate;
+}
+
+export async function getOrFetchCurrentStoredPrice(
+  assetCode,
+  minimumTradeDate = null,
+) {
   const storedPrice = await getLatestStoredPrice(assetCode);
   const syncedDate = storedPrice?.synced_at
     ? getKstDate(storedPrice.synced_at)
     : null;
 
-  if (storedPrice && syncedDate === getKstDate()) {
+  if (isUsableCurrentPrice(storedPrice, minimumTradeDate)) {
     return storedPrice;
   }
 
   console.log("Koscom price fallback started", {
     assetCode,
+    minimumTradeDate,
     storedTradeDate: storedPrice?.trade_date || null,
     storedSyncedDate: syncedDate,
-    priceType: "LATEST",
+    priceType: "CURRENT",
   });
 
   try {
@@ -989,11 +1009,8 @@ export async function getOrFetchLatestStoredPrice(assetCode) {
           assetCode,
           transaction,
         );
-        const recheckedSyncedDate = recheckedPrice?.synced_at
-          ? getKstDate(recheckedPrice.synced_at)
-          : null;
 
-        if (recheckedPrice && recheckedSyncedDate === getKstDate()) {
+        if (isUsableCurrentPrice(recheckedPrice, minimumTradeDate)) {
           return recheckedPrice;
         }
 
@@ -1007,15 +1024,17 @@ export async function getOrFetchLatestStoredPrice(assetCode) {
 
     console.log("Koscom price fallback completed", {
       assetCode,
+      minimumTradeDate,
       savedTradeDate: fetchedPrice?.trade_date || null,
-      priceType: "LATEST",
+      priceType: "CURRENT",
     });
 
     return fetchedPrice;
   } catch (error) {
     console.error("Koscom price fallback failed", {
       assetCode,
-      priceType: "LATEST",
+      minimumTradeDate,
+      priceType: "CURRENT",
       code: error.code || null,
       message: error.message,
       meta: error.meta || null,

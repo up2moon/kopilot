@@ -11,7 +11,7 @@ import {
   defaultBenchmarkCodes,
   enablePriceSync,
   getAssetByCode,
-  getOrFetchLatestStoredPrice,
+  getOrFetchCurrentStoredPrice,
   getOrFetchStoredPrice,
   syncKoscomBasePrices,
   searchInvestmentAssets,
@@ -266,7 +266,10 @@ async function getLatestPrice(asset, assumedBuyDate) {
   let latestPrice = null;
 
   try {
-    latestPrice = await getOrFetchLatestStoredPrice(asset.assetCode);
+    latestPrice = await getOrFetchCurrentStoredPrice(
+      asset.assetCode,
+      assumedBuyDate,
+    );
   } catch (error) {
     if (!isKoscomPriceFetchError(error)) {
       throw error;
@@ -414,7 +417,7 @@ router.get("/quotes", requireAuth, async (req, res) => {
     const items = await Promise.all(
       codes.map(async (assetCode) => {
         const asset = await resolveAsset(assetCode);
-        const latestPrice = await getOrFetchLatestStoredPrice(assetCode);
+        const latestPrice = await getOrFetchCurrentStoredPrice(assetCode);
 
         if (!latestPrice) {
           throw createPriceHistoryMissingError(asset, "LATEST");
