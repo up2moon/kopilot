@@ -1,3 +1,4 @@
+import chatBubbleIcon from '../assets/icons/chat_bubble.svg'
 import './FloatingChatbot.css'
 
 export default function FloatingChatbot({ onNavigate }) {
@@ -9,9 +10,7 @@ export default function FloatingChatbot({ onNavigate }) {
       aria-label="AI 절약 챗봇 열기"
       title="AI 절약 코치와 대화하기"
     >
-      <span className="chatbot-speech-icon" aria-hidden="true">
-        💬
-      </span>
+      <img className="chatbot-speech-icon" src={chatBubbleIcon} alt="" aria-hidden="true" />
     </button>
   )
 }

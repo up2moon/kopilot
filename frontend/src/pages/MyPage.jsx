@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import lockIcon from '../assets/icons/lock.svg'
+import logoutIcon from '../assets/icons/logout.svg'
+import notificationsIcon from '../assets/icons/notifications.svg'
+import arrowIcon from '../assets/icons/arrow.svg'
 import './MyPage.css'
 
 // 알림 설정은 백엔드 영향이 없는 UI 전용 토글이라(BACK.md 방침) 값을 localStorage에만 저장한다.
@@ -72,7 +76,7 @@ export default function MyPage({
     {
       id: 'mydata',
       type: 'action',
-      icon: '🔒',
+      icon: lockIcon,
       label: '마이데이터 연결 관리',
       status: myDataStatus,
       statusTone: isConnected ? 'on' : 'off',
@@ -82,7 +86,7 @@ export default function MyPage({
     {
       id: 'notification',
       type: 'toggle',
-      icon: '🔔',
+      icon: notificationsIcon,
       label: '알림 설정',
       checked: notificationsOn,
       onClick: toggleNotifications,
@@ -90,7 +94,7 @@ export default function MyPage({
     {
       id: 'logout',
       type: 'action',
-      icon: '🚪',
+      icon: logoutIcon,
       label: '로그아웃',
       onClick: onLogout,
     },
@@ -130,9 +134,12 @@ export default function MyPage({
                 role={isToggle ? 'switch' : undefined}
                 aria-checked={isToggle ? item.checked : undefined}
               >
-                <span className="mypage-setting-icon" aria-hidden="true">
-                  {item.icon}
-                </span>
+                <img
+                  className="mypage-setting-icon"
+                  src={item.icon}
+                  alt=""
+                  aria-hidden="true"
+                />
                 <span className="mypage-setting-label">{item.label}</span>
 
                 {isToggle ? (
@@ -149,9 +156,12 @@ export default function MyPage({
                         {item.status}
                       </span>
                     )}
-                    <span className="mypage-setting-chevron" aria-hidden="true">
-                      &gt;
-                    </span>
+                    <img
+                      className="mypage-setting-chevron"
+                      src={arrowIcon}
+                      alt=""
+                      aria-hidden="true"
+                    />
                   </>
                 )}
               </button>

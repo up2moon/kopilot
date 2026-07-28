@@ -106,7 +106,9 @@
 }
 
 .mypage-setting-icon {
-  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -132,9 +134,10 @@
 }
 
 .mypage-setting-chevron {
-  font-size: 16px;
-  font-weight: 600;
-  color: #b0b8c1;
+  display: block;
+  width: 18px;
+  height: 18px;
+  opacity: 0.32;
   flex-shrink: 0;
 }
 

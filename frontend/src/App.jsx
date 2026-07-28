@@ -9,6 +9,7 @@ import AnonymousRankingPage from './pages/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/InvestmentEffectPage'
 import MyPage from './pages/MyPage'
 import ChallengePage from './pages/ChallengePage'
+import arrowIcon from './assets/icons/arrow.svg'
 import {
   clearAuth,
   getStoredAuth,
@@ -264,8 +265,8 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="phone-frame" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <section className="phone-frame">
+        <div className={`app-scroll-area${showNavAndChatbot ? ' has-bottom-nav' : ''}`}>
           {screenContent}
         </div>
         {showNavAndChatbot && (
@@ -291,7 +292,7 @@ function SubPageScreen({ title, description, onBack, onLogout, user, token }) {
             aria-label="뒤로가기"
             style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}
           >
-            &lt;
+            <img className="arrow-icon arrow-icon-back" src={arrowIcon} alt="" aria-hidden="true" />
           </button>
         )}
         <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>{title}</h1>
@@ -462,7 +463,7 @@ function SetupTopBar({ step, title = '초기 설정', onBack }) {
     <header className="setup-topbar">
       {onBack ? (
         <button className="back-button" type="button" onClick={onBack} aria-label="이전">
-          &lt;
+          <img className="arrow-icon arrow-icon-back" src={arrowIcon} alt="" aria-hidden="true" />
         </button>
       ) : (
         <div className="setup-brand">
