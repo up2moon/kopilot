@@ -1,4 +1,5 @@
 .investment-month-picker {
+  position: relative;
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -18,9 +19,13 @@
   font-weight: 800;
 }
 
-.investment-month-picker input {
+.investment-month-trigger {
   min-width: 138px;
   height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 1px solid #e5e8eb;
   border-radius: 12px;
   background: #f7f9fc;
@@ -29,6 +34,78 @@
   font-size: 13px;
   font-weight: 800;
   padding: 0 10px;
+  cursor: pointer;
+}
+
+.investment-month-trigger strong {
+  font-size: 13px;
+}
+
+.investment-month-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(280px, calc(100vw - 40px));
+  padding: 16px;
+  border: 1px solid #dbe3ee;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 16px 38px rgba(25, 31, 40, 0.16);
+}
+
+.investment-month-popover-head {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.investment-month-popover-head strong {
+  color: #191f28;
+  font-size: 15px;
+  text-align: center;
+}
+
+.investment-month-popover-head button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: #f2f4f6;
+  color: #4e5968;
+  font: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.investment-month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.investment-month-grid button {
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #f7f9fc;
+  color: #4e5968;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.investment-month-grid button:hover {
+  border-color: #cfe3ff;
+  background: #eef6ff;
+}
+
+.investment-month-grid button.is-selected {
+  border-color: #3182f6;
+  background: #3182f6;
+  color: #ffffff;
 }
 
 .investment-category-tabs {

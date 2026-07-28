@@ -1,20 +1,7 @@
 import { useEffect, useState } from 'react'
 import { categoryOptions } from '../constants'
 
-function formatYearMonthInput(value) {
-  const digits = String(value).replace(/\D/g, '').slice(0, 6)
-
-  return digits.length > 4
-    ? `${digits.slice(0, 4)}-${digits.slice(4)}`
-    : digits
-}
-
-function isValidYearMonth(value) {
-  if (!/^\d{4}-\d{2}$/.test(value)) return false
-
-  const month = Number(value.slice(5, 7))
-  return month >= 1 && month <= 12
-}
+const monthLabels = Array.from({ length: 12 }, (_, index) => `${index + 1}월`)
 
 export default function InvestmentFilters({
   selectedCategory,
@@ -22,36 +9,81 @@ export default function InvestmentFilters({
   onCategoryChange,
   onMonthChange,
 }) {
-  const [monthInput, setMonthInput] = useState(selectedMonth)
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
+  const [pickerYear, setPickerYear] = useState(
+    Number(selectedMonth.slice(0, 4)),
+  )
 
   useEffect(() => {
-    setMonthInput(selectedMonth)
+    setPickerYear(Number(selectedMonth.slice(0, 4)))
   }, [selectedMonth])
 
-  const handleMonthInput = (event) => {
-    const nextValue = formatYearMonthInput(event.target.value)
+  const selectMonth = (monthIndex) => {
+    const month = String(monthIndex + 1).padStart(2, '0')
 
-    setMonthInput(nextValue)
-    if (isValidYearMonth(nextValue)) {
-      onMonthChange(nextValue)
-    }
+    onMonthChange(`${pickerYear}-${month}`)
+    setIsMonthPickerOpen(false)
   }
 
   return (
     <>
-      <label className="investment-month-picker">
+      <div className="investment-month-picker">
         <span>조회 연월</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={monthInput}
-          onChange={handleMonthInput}
-          placeholder="YYYY-MM"
-          maxLength={7}
-          pattern="[0-9]{4}-[0-9]{2}"
-          aria-label="조회 연월"
-        />
-      </label>
+        <button
+          className="investment-month-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={isMonthPickerOpen}
+          onClick={() => setIsMonthPickerOpen((current) => !current)}
+        >
+          <span aria-hidden="true">📅</span>
+          <strong>{selectedMonth}</strong>
+        </button>
+
+        {isMonthPickerOpen ? (
+          <div
+            className="investment-month-popover"
+            role="dialog"
+            aria-label="조회 연월 선택"
+          >
+            <div className="investment-month-popover-head">
+              <button
+                type="button"
+                aria-label="이전 연도"
+                onClick={() => setPickerYear((year) => year - 1)}
+              >
+                ‹
+              </button>
+              <strong>{pickerYear}년</strong>
+              <button
+                type="button"
+                aria-label="다음 연도"
+                onClick={() => setPickerYear((year) => year + 1)}
+              >
+                ›
+              </button>
+            </div>
+            <div className="investment-month-grid">
+              {monthLabels.map((label, monthIndex) => {
+                const value = `${pickerYear}-${String(monthIndex + 1).padStart(2, '0')}`
+                const isSelected = value === selectedMonth
+
+                return (
+                  <button
+                    type="button"
+                    key={value}
+                    className={isSelected ? 'is-selected' : ''}
+                    aria-pressed={isSelected}
+                    onClick={() => selectMonth(monthIndex)}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       <div
         className="investment-category-tabs"
