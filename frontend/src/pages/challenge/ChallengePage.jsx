@@ -1,6 +1,6 @@
 import NavigationPageLayout from '../../components/NavigationPageLayout'
 import ChallengeStateCard from './components/ChallengeStateCard'
-import TodayChallengeCard from './components/TodayChallengeCard'
+import ChallengeConfetti from './components/ChallengeConfetti'
 import WeeklyChallengeSection from './components/WeeklyChallengeSection'
 import useChallenges from './hooks/useChallenges'
 import './ChallengePage.css'
@@ -11,20 +11,28 @@ export default function ChallengePage({ token }) {
     loading,
     error,
     verifyMessage,
-    verifyingChallengeId,
+    verifying,
+    verificationResult,
+    celebrationKey,
     loadChallenges,
     verify,
   } = useChallenges(token)
 
   const hasStateCard =
-    loading || Boolean(error) || data?.onboardingRequired || !data?.todayChallenge
+    loading
+    || Boolean(error)
+    || data?.onboardingRequired
+    || !data?.weeklyChallenges?.length
 
   return (
     <NavigationPageLayout
       className="challenge-page"
       title="챌린지"
-      content="AI가 이번 주 수행할 절약 미션을 배정해요."
+      content="지난 소비를 살펴보고, 이번 주에 도전할 미션 5개를 준비했어요."
     >
+      {celebrationKey > 0 && (
+        <ChallengeConfetti key={celebrationKey} />
+      )}
       {hasStateCard ? (
         <ChallengeStateCard
           data={data}
@@ -33,16 +41,18 @@ export default function ChallengePage({ token }) {
           onRetry={loadChallenges}
         />
       ) : (
-        <>
-          <TodayChallengeCard challenge={data.todayChallenge} />
-          <WeeklyChallengeSection
-            challenges={data.weeklyChallenges}
-            progress={data.weeklyProgress}
-            verifyMessage={verifyMessage}
-            verifyingChallengeId={verifyingChallengeId}
-            onVerify={verify}
-          />
-        </>
+        <WeeklyChallengeSection
+          canVerify={data.canVerify}
+          challenges={data.weeklyChallenges}
+          progress={data.weeklyProgress}
+          verificationOpensAt={data.verificationOpensAt}
+          verificationResult={verificationResult}
+          verifyMessage={verifyMessage}
+          verifying={verifying}
+          weekEndDate={data.weekEndDate}
+          weekStartDate={data.weekStartDate}
+          onVerify={verify}
+        />
       )}
     </NavigationPageLayout>
   )

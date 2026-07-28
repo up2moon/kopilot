@@ -36,7 +36,7 @@ export default function ChallengeStateCard({
     )
   }
 
-  if (!data?.todayChallenge) {
+  if (!data?.weeklyChallenges?.length) {
     return (
       <div className="challenge-state-card">
         <strong>이번 주 미션을 준비하고 있어요.</strong>

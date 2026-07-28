@@ -232,12 +232,42 @@ export const AiChallenge = sequelize.define(
       type: DataTypes.DATEONLY,
       allowNull: false,
     },
+    week_start_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    sequence: {
+      type: DataTypes.TINYINT.UNSIGNED,
+      allowNull: false,
+    },
     expense_category_id: {
       type: DataTypes.BIGINT,
       allowNull: true,
     },
     challenge_type: {
-      type: DataTypes.ENUM("NO_SPEND", "MAX_SPEND"),
+      type: DataTypes.ENUM("NO_SPEND", "MAX_SPEND", "MAX_COUNT"),
+      allowNull: true,
+    },
+    baseline_period_start: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    baseline_period_end: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    baseline_count: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    baseline_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    target_count: {
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
     target_amount: {
@@ -299,7 +329,12 @@ export const AiChallenge = sequelize.define(
         fields: ["user_id", "challenge_date"],
       },
       {
-        fields: ["user_id", "start_date", "status"],
+        unique: true,
+        name: "ai_challenge_user_week_sequence",
+        fields: ["user_id", "week_start_date", "sequence"],
+      },
+      {
+        fields: ["user_id", "week_start_date", "status"],
       },
     ],
   },

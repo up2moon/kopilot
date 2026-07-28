@@ -14,8 +14,8 @@ export async function getWeeklyChallenges(token) {
   return data
 }
 
-export async function verifyChallenge(token, challengeId) {
-  const response = await fetch(`/api/users/me/challenges/${challengeId}/verify`, {
+export async function verifyWeeklyChallenges(token) {
+  const response = await fetch('/api/users/me/challenges/verify', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   })
