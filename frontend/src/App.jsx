@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import TestPage from './TestPage'
 import BottomNav from './components/BottomNav'
 import FloatingChatbot from './components/FloatingChatbot'
-import DashboardPage from './pages/DashboardPage'
-import CoachPage from './pages/CoachPage'
-import SpendingDetailPage from './pages/SpendingDetailPage'
-import AnonymousRankingPage from './pages/AnonymousRankingPage'
-import InvestmentEffectPage from './pages/InvestmentEffectPage'
-import MyPage from './pages/MyPage'
-import ChallengePage from './pages/ChallengePage'
+import DashboardPage from './pages/dashboard/DashboardPage'
+import CoachPage from './pages/coach/CoachPage'
+import SpendingDetailPage from './pages/spending-detail/SpendingDetailPage'
+import AnonymousRankingPage from './pages/anonymous-ranking/AnonymousRankingPage'
+import InvestmentEffectPage from './pages/investment-effect/InvestmentEffectPage'
+import MyPage from './pages/my/MyPage'
+import ChallengePage from './pages/challenge/ChallengePage'
 import FirstLoginPage from './pages/FirstLoginPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -194,7 +194,7 @@ function App() {
     )
   } else if (route === routes.dashboard) {
     if (!auth) return null
-    screenContent = <DashboardPage auth={auth} onNavigate={navigate} onLogout={handleLogout} />
+    screenContent = <DashboardPage auth={auth} onNavigate={navigate} />
   } else if (route === routes.spending) {
     if (!auth) return null
     screenContent = (
@@ -210,12 +210,7 @@ function App() {
     )
   } else if (route === routes.ranking) {
     if (!auth) return null
-    screenContent = (
-      <AnonymousRankingPage
-        token={auth.accessToken}
-        onNavigate={navigate}
-      />
-    )
+    screenContent = <AnonymousRankingPage token={auth.accessToken} />
   } else if (route === routes.challenge) {
     if (!auth) return null
     screenContent = <ChallengePage token={auth.accessToken} />
