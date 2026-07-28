@@ -161,7 +161,7 @@
   font-size: var(--font-size-card-title);
   line-height: 1.4;
   overflow-wrap: anywhere;
-  word-break: keep-all;
+  word-break: break-all;
 }
 
 .challenge-item-copy small {

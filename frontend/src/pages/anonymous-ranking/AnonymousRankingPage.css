@@ -41,6 +41,12 @@
   color: #1b64da;
 }
 
+.notice-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
 .dna-card {
   margin-bottom: 20px;
   padding: 18px;
