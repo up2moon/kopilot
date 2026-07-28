@@ -5,7 +5,7 @@ import FloatingChatbot from './components/FloatingChatbot'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import CoachPage from './pages/coach/CoachPage'
 import SpendingDetailPage from './pages/spending-detail/SpendingDetailPage'
-import AnonymousRankingPage from './pages/AnonymousRankingPage'
+import AnonymousRankingPage from './pages/anonymous-ranking/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/investment-effect/InvestmentEffectPage'
 import MyPage from './pages/my/MyPage'
 import ChallengePage from './pages/challenge/ChallengePage'
@@ -210,12 +210,7 @@ function App() {
     )
   } else if (route === routes.ranking) {
     if (!auth) return null
-    screenContent = (
-      <AnonymousRankingPage
-        token={auth.accessToken}
-        onNavigate={navigate}
-      />
-    )
+    screenContent = <AnonymousRankingPage token={auth.accessToken} />
   } else if (route === routes.challenge) {
     if (!auth) return null
     screenContent = <ChallengePage token={auth.accessToken} />
