@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import arrowIcon from '../assets/icons/arrow.svg'
 import {
+  connectMyData,
   getBudgetCategories,
   getTransactions,
   saveBudgets,
@@ -170,6 +171,192 @@ function FeatureList({ title, items }) {
   )
 }
 
+function TermsAgreementModal({ isOpen, onClose, onConfirm }) {
+  const [agreements, setAgreements] = useState({
+    privacyCollection: false,
+    privacyThirdParty: false,
+    mydataService: false,
+  })
+  const [expandedSection, setExpandedSection] = useState(null)
+
+  const isAllChecked =
+    agreements.privacyCollection &&
+    agreements.privacyThirdParty &&
+    agreements.mydataService
+
+  const handleToggleAll = () => {
+    const nextState = !isAllChecked
+    setAgreements({
+      privacyCollection: nextState,
+      privacyThirdParty: nextState,
+      mydataService: nextState,
+    })
+  }
+
+  const handleToggle = (key) => {
+    setAgreements((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
+
+  const toggleExpand = (section) => {
+    setExpandedSection((prev) => (prev === section ? null : section))
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="terms-modal-overlay" onClick={onClose}>
+      <div className="terms-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="terms-modal-header">
+          <h2>개인정보 및 서비스 이용 동의</h2>
+          <button
+            type="button"
+            className="terms-modal-close"
+            onClick={onClose}
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="terms-modal-sub">
+          마이데이터 연동 및 결제내역 수집을 위해 필수 약관에 동의해주세요.
+        </p>
+
+        <div className="terms-list">
+          <label className="terms-item terms-all">
+            <input
+              type="checkbox"
+              checked={isAllChecked}
+              onChange={handleToggleAll}
+            />
+            <span className="checkbox-custom" />
+            <strong>전체 동의하기</strong>
+          </label>
+
+          <hr className="terms-divider" />
+
+          {/* 1. 개인정보 수집·이용 동의 */}
+          <div className="terms-item-wrapper">
+            <div className="terms-item">
+              <label className="terms-label">
+                <input
+                  type="checkbox"
+                  checked={agreements.privacyCollection}
+                  onChange={() => handleToggle('privacyCollection')}
+                />
+                <span className="checkbox-custom" />
+                <span className="terms-badge">필수</span>
+                <span className="terms-text">개인정보 수집·이용 동의</span>
+              </label>
+              <button
+                type="button"
+                className="terms-detail-btn"
+                onClick={() => toggleExpand('privacyCollection')}
+              >
+                {expandedSection === 'privacyCollection' ? '접기 ▲' : '보기 ▼'}
+              </button>
+            </div>
+            {expandedSection === 'privacyCollection' && (
+              <div className="terms-detail-box">
+                <p>
+                  <strong>수집 및 이용 목적:</strong> Kospay 서비스 내 카드 결제 내역 분석, 카테고리 자동 분류 및 소비 인사이트 제공
+                </p>
+                <p>
+                  <strong>수집 항목:</strong> 카드 승인 일시, 가맹점명, 결제 금액, 승인 상태
+                </p>
+                <p>
+                  <strong>보유 및 이용 기간:</strong> 회원 탈퇴 시 또는 동의 철회 시까지
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 2. 개인정보 제3자 제공 동의 */}
+          <div className="terms-item-wrapper">
+            <div className="terms-item">
+              <label className="terms-label">
+                <input
+                  type="checkbox"
+                  checked={agreements.privacyThirdParty}
+                  onChange={() => handleToggle('privacyThirdParty')}
+                />
+                <span className="checkbox-custom" />
+                <span className="terms-badge">필수</span>
+                <span className="terms-text">개인정보 제3자 제공 동의</span>
+              </label>
+              <button
+                type="button"
+                className="terms-detail-btn"
+                onClick={() => toggleExpand('privacyThirdParty')}
+              >
+                {expandedSection === 'privacyThirdParty' ? '접기 ▲' : '보기 ▼'}
+              </button>
+            </div>
+            {expandedSection === 'privacyThirdParty' && (
+              <div className="terms-detail-box">
+                <p>
+                  <strong>제공받는 자:</strong> KoPilot AI 분석 및 챌린지 모듈
+                </p>
+                <p>
+                  <strong>제공 목적:</strong> AI 절약 코치 추천 메시지 생성, 카테고리별 예산 추천 및 주간 챌린지 미션 검증
+                </p>
+                <p>
+                  <strong>제공 항목:</strong> 거래내역(승인일시, 금액, 가맹점명)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 3. 마이데이터 서비스 이용 동의 */}
+          <div className="terms-item-wrapper">
+            <div className="terms-item">
+              <label className="terms-label">
+                <input
+                  type="checkbox"
+                  checked={agreements.mydataService}
+                  onChange={() => handleToggle('mydataService')}
+                />
+                <span className="checkbox-custom" />
+                <span className="terms-badge">필수</span>
+                <span className="terms-text">마이데이터 서비스 이용 동의</span>
+              </label>
+              <button
+                type="button"
+                className="terms-detail-btn"
+                onClick={() => toggleExpand('mydataService')}
+              >
+                {expandedSection === 'mydataService' ? '접기 ▲' : '보기 ▼'}
+              </button>
+            </div>
+            {expandedSection === 'mydataService' && (
+              <div className="terms-detail-box">
+                <p>
+                  <strong>서비스 내용:</strong> 신용정보주체의 전송요구권 행사에 따른 마이데이터 자산 및 결제 정보 통합 조회
+                </p>
+                <p>
+                  <strong>동의 영향:</strong> 동의 시 최근 결제내역 데이터가 연동되어 맞춤형 소비 분석 기능을 이용할 수 있습니다.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="primary-button terms-confirm-btn"
+          disabled={!isAllChecked}
+          onClick={onConfirm}
+        >
+          동의하고 연동하기
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate }) {
   const token = auth.accessToken
   const [step, setStep] = useState(
@@ -185,6 +372,7 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
   const [errorMessage, setErrorMessage] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [autoConnectStarted, setAutoConnectStarted] = useState(false)
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -292,9 +480,9 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
       !autoConnectStarted
     ) {
       setAutoConnectStarted(true)
-      handleConnect()
+      setIsTermsModalOpen(true)
     }
-  }, [autoConnectStarted, currentRoute, errorMessage, handleConnect, isProcessing, myDataResult, step])
+  }, [autoConnectStarted, currentRoute, errorMessage, isProcessing, myDataResult, step])
 
   const toggleCategory = (category) => {
     setSelectedCategories((current) =>
@@ -352,6 +540,15 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
 
   return (
     <div className={`first-login-screen first-login-step-${step}`}>
+      <TermsAgreementModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onConfirm={() => {
+          setIsTermsModalOpen(false)
+          handleConnect()
+        }}
+      />
+
       {step === 1 ? (
         <>
           <SetupTopBar step={1} />
@@ -429,7 +626,12 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
           {errorMessage ? <p className="form-message">{errorMessage}</p> : null}
 
           <div className="setup-actions">
-            <button className="primary-button" type="button" onClick={handleConnect} disabled={isProcessing}>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => setIsTermsModalOpen(true)}
+              disabled={isProcessing}
+            >
               마이데이터 연동하기
             </button>
             <button className="secondary-button" type="button" onClick={handleSkipGoals} disabled={isProcessing}>
@@ -451,15 +653,22 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
           />
 
           <div className="mydata-complete-hero" aria-live="polite">
-            <div className="mydata-complete-icon" aria-hidden="true">
+            <div
+              className={`mydata-complete-icon${
+                !isProcessing && !myDataResult ? ' is-pending' : ''
+              }`}
+              aria-hidden="true"
+            >
               {isProcessing ? (
                 <span className="loading-dots">
                   <span />
                   <span />
                   <span />
                 </span>
-              ) : (
+              ) : myDataResult ? (
                 '✓'
+              ) : (
+                '💳'
               )}
             </div>
             <h1>
@@ -469,38 +678,61 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
                   <br />
                   처리하고 있어요
                 </>
-              ) : (
+              ) : myDataResult ? (
                 <>
                   마이데이터 연동이
                   <br />
                   완료되었어요
                 </>
+              ) : (
+                <>
+                  마이데이터 연동을
+                  <br />
+                  진행해주세요
+                </>
               )}
             </h1>
-            <p>{isProcessing ? '잠시만 기다려주세요.' : '이제 소비 카테고리를 추가해요.'}</p>
+            <p>
+              {isProcessing
+                ? '잠시만 기다려주세요. 금융기관과 연결하고 있어요.'
+                : myDataResult
+                ? '카드 결제 내역이 성공적으로 연결되었습니다.'
+                : '개인정보 및 서비스 이용 동의 후 마이데이터를 연동합니다.'}
+            </p>
             {!isProcessing && errorMessage ? <p className="form-message">{errorMessage}</p> : null}
           </div>
 
           <div className="mydata-connect-actions">
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => {
-                if (myDataResult || budgetSeed) {
+            {myDataResult ? (
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
                   setStep(4)
                   onNavigate(routes.firstLogin)
-                  return
-                }
+                }}
+              >
+                확인
+              </button>
+            ) : isProcessing ? (
+              <button className="primary-button" type="button" disabled>
+                처리 중
+              </button>
+            ) : (
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => setIsTermsModalOpen(true)}
+              >
+                동의 및 연동하기
+              </button>
+            )}
 
-                handleConnect()
-              }}
-              disabled={isProcessing}
-            >
-              {isProcessing ? '생성 중' : '소비 카테고리 추가하기'}
-            </button>
-            <button className="secondary-button" type="button" onClick={handleSkipGoals} disabled={isProcessing}>
-              나중에 하기
-            </button>
+            {!myDataResult && !isProcessing ? (
+              <button className="secondary-button" type="button" onClick={handleSkipGoals}>
+                나중에 하기
+              </button>
+            ) : null}
           </div>
         </>
       ) : null}
