@@ -8,6 +8,8 @@
   padding-bottom: env(safe-area-inset-bottom);
   background: #ffffff;
   border-top: 1px solid #f2f4f6;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -3px 12px rgba(25, 31, 40, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -40,7 +42,7 @@
 }
 
 .bottom-nav-item.is-active {
-  color: #3182f6;
+  color: #ed6d1f;
   font-weight: 700;
 }
 
@@ -53,6 +55,12 @@
   width: 24px;
   height: 24px;
   object-fit: contain;
+  transition: filter 0.15s ease;
+}
+
+.bottom-nav-item.is-active .bottom-nav-icon-img {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(99%) saturate(1664%)
+    hue-rotate(348deg) brightness(96%) contrast(94%);
 }
 
 .bottom-nav-label {
@@ -64,7 +72,7 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3182f6;
+  background: #ed6d1f;
   position: absolute;
   bottom: 4px;
 }

@@ -156,7 +156,7 @@
   line-height: 1.65;
   letter-spacing: -0.25px;
   overflow-wrap: anywhere;
-  word-break: keep-all;
+  word-break: break-all;
 }
 
 .challenge-target-row {
