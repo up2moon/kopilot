@@ -213,6 +213,23 @@
   line-height: 1.4;
 }
 
+.investment-asset-list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.investment-asset-list-heading > span {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e8f2ff;
+  color: #3182f6;
+  font-size: 10px;
+  font-weight: 900;
+}
+
 .investment-search-input {
   height: 44px;
   display: flex;
@@ -255,6 +272,20 @@
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d6db transparent;
+}
+
+.investment-search-results::-webkit-scrollbar {
+  width: 5px;
+}
+
+.investment-search-results::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d1d6db;
 }
 
 .investment-search-results button {

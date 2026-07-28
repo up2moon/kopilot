@@ -364,12 +364,10 @@ export async function searchInvestmentAssets({ keyword, type, market, limit }) {
   await ensureAssetMasters();
 
   const normalizedKeyword = String(keyword || "").trim();
-  if (!normalizedKeyword) {
-    return [];
-  }
+  const where = {};
 
-  const where = {
-    [Op.or]: [
+  if (normalizedKeyword) {
+    where[Op.or] = [
       {
         label: {
           [Op.like]: `%${normalizedKeyword}%`,
@@ -380,8 +378,8 @@ export async function searchInvestmentAssets({ keyword, type, market, limit }) {
           [Op.like]: `%${normalizedKeyword}%`,
         },
       },
-    ],
-  };
+    ];
+  }
 
   if (type) {
     where.asset_type = String(type).toUpperCase();

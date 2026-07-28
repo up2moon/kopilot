@@ -3,17 +3,21 @@ import { getAssetKey } from '../utils/formatters'
 export default function AssetSearchCard({
   searchKeyword,
   searchResults,
+  totalAssetCount,
   isSearching,
   searchError,
   setSearchKeyword,
   onSelectAsset,
 }) {
-  const hasSearchKeyword = searchKeyword.trim().length >= 2
-
   return (
     <section className="investment-search-card">
-      <h2>궁금한 주식·ETF 검색</h2>
-      <p>선택한 소비액을 이 종목에 투자했다면 현재 얼마인지 계산해요.</p>
+      <div className="investment-asset-list-heading">
+        <div>
+          <h2>궁금한 주식·ETF</h2>
+          <p>기본 목록에서 고르거나 전체 종목을 검색할 수 있어요.</p>
+        </div>
+        <span>{isSearching ? '불러오는 중' : `${totalAssetCount}개`}</span>
+      </div>
 
       <label className="investment-search-input">
         <span aria-hidden="true">🔍</span>
@@ -21,22 +25,21 @@ export default function AssetSearchCard({
           type="search"
           value={searchKeyword}
           onChange={(event) => setSearchKeyword(event.target.value)}
-          placeholder="삼성전자, KOSPI ETF 검색"
+          placeholder="종목명 또는 종목 코드 검색"
         />
       </label>
 
       {isSearching && (
-        <div className="investment-search-note">검색 중...</div>
+        <div className="investment-search-note">종목 목록을 불러오는 중...</div>
       )}
       {searchError && (
         <div className="investment-search-note is-error">{searchError}</div>
       )}
       {!isSearching &&
         !searchError &&
-        hasSearchKeyword &&
         searchResults.length === 0 && (
           <div className="investment-search-note">
-            검색 결과가 없어요. 종목 마스터 동기화 후 다시 검색해주세요.
+            전체 종목에서 일치하는 검색 결과가 없어요.
           </div>
         )}
       {searchResults.length > 0 && (
@@ -50,7 +53,7 @@ export default function AssetSearchCard({
               <span>{asset.icon || '📊'}</span>
               <strong>{asset.label}</strong>
               <small>{asset.assetCode}</small>
-              <em>계산하기</em>
+              <em>선택</em>
             </button>
           ))}
         </div>

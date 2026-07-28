@@ -46,7 +46,7 @@
 - `GET /api/users/me/challenges/:challengeId/progress`: 대상 챌린지의 미션 날짜 거래금액·건수, 진행률, 다음 날 00:00 인증 가능 여부를 반환합니다.
 - `POST /api/users/me/challenges/:challengeId/verify`: 미션 다음 날 00:00부터 전날 전체 거래내역으로 즉시 성공·실패를 판정합니다. 성공 시 포인트도 같은 트랜잭션에서 지급합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee&month=YYYY-MM&assetCodes=005930,360750`: 사용자의 월별 카테고리 소비액을 투자 원금으로 보고, DB에 저장된 코스콤 종가(`investment_price`)를 사용해 주요 지수 ETF, 사용자가 검색 선택한 종목, 정기예금/CMA 시뮬레이션 평가액 결과를 반환합니다. 선택 월 첫 거래일 종가가 DB에 없으면 mock 보정 없이 `PRICE_HISTORY_MISSING`을 반환합니다.
-- `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`)를 기반으로 사용자가 입력한 주식 또는 ETF 검색 결과를 반환합니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재한 뒤 검색합니다.
+- `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 선택적인 `keyword`로 서버 검색할 수도 있습니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
 - `POST /api/investment/sync?mode=all|prices|base-prices|missing-base-prices&limit=200&months=2026-07&assetCodes=005930&allAssets=true`: 코스콤 CHECK API 종목 마스터, 최신 종가, 선택 월 첫 거래일 기준가를 수동 동기화합니다. `missing-base-prices`는 이미 동기화 대상으로 활성화된 종목 중 최근 월 첫 거래일 기준가가 DB에 없는 항목만 보강합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
 

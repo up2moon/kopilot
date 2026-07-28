@@ -385,12 +385,6 @@ router.get("/assets/search", requireAuth, async (req, res) => {
     const market = String(req.query.market || "").trim().toUpperCase();
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
 
-    if (!keyword) {
-      return res.status(200).json({
-        items: [],
-      });
-    }
-
     const assets = await searchInvestmentAssets({
       keyword,
       type,

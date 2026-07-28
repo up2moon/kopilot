@@ -33,11 +33,10 @@ export async function getInvestmentEffectSimulation(token, { month, category = '
   return requestJson(`/api/users/me/investment-effect/simulation?${query.toString()}`, token)
 }
 
-export async function searchInvestmentAssets(token, keyword) {
-  const query = new URLSearchParams({
-    keyword,
-    limit: '8',
-  })
+export async function getInvestmentAssets(token, { keyword = '', limit = 20 } = {}) {
+  const query = new URLSearchParams({ limit: String(limit) })
+
+  if (keyword.trim()) query.set('keyword', keyword.trim())
 
   return requestJson(`/api/investment/assets/search?${query.toString()}`, token)
 }
