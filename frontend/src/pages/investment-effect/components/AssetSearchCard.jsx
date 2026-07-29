@@ -1,4 +1,4 @@
-import { getAssetKey } from '../utils/formatters'
+import { formatPrice, getAssetKey } from '../utils/formatters'
 
 export default function AssetSearchCard({
   searchKeyword,
@@ -50,10 +50,14 @@ export default function AssetSearchCard({
               key={getAssetKey(asset)}
               onClick={() => onSelectAsset(asset)}
             >
-              <span>{asset.icon || '📊'}</span>
-              <strong>{asset.label}</strong>
-              <small>{asset.assetCode}</small>
-              <em>선택</em>
+              <div>
+                <strong>{asset.label}</strong>
+                <small>{asset.assetCode}</small>
+              </div>
+              <span className="investment-search-price">
+                {formatPrice(asset.currentPrice)}
+              </span>
+              <em>보기</em>
             </button>
           ))}
         </div>

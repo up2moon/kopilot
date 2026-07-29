@@ -402,6 +402,42 @@ export async function searchInvestmentAssets({ keyword, type, market, limit }) {
   return assets.map(toAssetResponse);
 }
 
+export async function getLatestStoredPrices(assetCodes) {
+  const normalizedCodes = Array.from(
+    new Set((assetCodes || []).map((code) => String(code).trim()).filter(Boolean)),
+  );
+
+  if (normalizedCodes.length === 0) {
+    return new Map();
+  }
+
+  const prices = await InvestmentPrice.findAll({
+    where: {
+      asset_code: {
+        [Op.in]: normalizedCodes,
+      },
+    },
+    attributes: ["asset_code", "trade_date", "close_price"],
+    order: [
+      ["asset_code", "ASC"],
+      ["trade_date", "DESC"],
+    ],
+  });
+  const latestPrices = new Map();
+
+  for (const price of prices) {
+    if (!latestPrices.has(price.asset_code)) {
+      const currentPrice = Number(price.close_price);
+      latestPrices.set(
+        price.asset_code,
+        Number.isFinite(currentPrice) ? currentPrice : null,
+      );
+    }
+  }
+
+  return latestPrices;
+}
+
 async function upsertPrice(asset, tradeDate, transaction = null) {
   const quote = await fetchKoscomQuote(asset.asset_code, tradeDate);
   const priceDate = quote.tradeDate || tradeDate || getKstDate();

@@ -46,7 +46,7 @@
 - `POST /api/users/me/challenges/verify`: 프로토타입에서는 시간 제한 없이 현재 주의 미인증 미션을 서버에서 무작위 판정합니다. 최소 1개를 성공 처리하고 성공 미션별 포인트를 같은 트랜잭션에서 지급하며, 성공 개수, 예상 절약액 합계와 `showCelebration`을 반환합니다.
 - 개발 환경에서 `CHALLENGE_TEST_NOW`에 타임존 오프셋을 포함한 ISO 8601 시각을 설정하면 챌린지 조회·생성·인증·만료만 해당 테스트 시각을 사용합니다. 예: `2026-08-01T00:01:00+09:00`. `NODE_ENV=production`에서는 설정값을 무시하고 실제 KST를 사용합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee|savings&month=YYYY-MM&assetCodes=005930,360750`: 소비 카테고리는 월별 소비액을, `savings`는 선택 월에 성공 완료된 챌린지의 예상 절약액 합계를 투자 원금으로 사용합니다. DB에 저장된 코스콤 종가(`investment_price`)를 사용해 지수 ETF, 선택 종목, 정기예금/CMA 결과를 반환하며 절약액이 없으면 `NO_SAVINGS`를 반환합니다.
-- `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 선택적인 `keyword`로 서버 검색할 수도 있습니다. DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
+- `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 선택적인 `keyword`로 서버 검색할 수도 있습니다. 각 종목은 DB에 저장된 최신 종가를 `currentPrice`로 함께 반환하고, DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
 - `POST /api/investment/sync?mode=all|prices|base-prices|missing-base-prices&limit=200&months=2026-07&assetCodes=005930&allAssets=true`: 코스콤 CHECK API 종목 마스터, 최신 종가, 선택 월 첫 거래일 기준가를 수동 동기화합니다. `missing-base-prices`는 이미 동기화 대상으로 활성화된 종목 중 최근 월 첫 거래일 기준가가 DB에 없는 항목만 보강합니다. 배포 직후 초기 적재나 로컬 검증에 사용합니다.
 

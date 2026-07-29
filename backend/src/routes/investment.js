@@ -12,6 +12,7 @@ import {
   defaultBenchmarkCodes,
   enablePriceSync,
   getAssetByCode,
+  getLatestStoredPrices,
   getOrFetchCurrentStoredPrice,
   getOrFetchStoredPrice,
   syncKoscomBasePrices,
@@ -432,10 +433,14 @@ router.get("/assets/search", requireAuth, async (req, res) => {
       market,
       limit,
     });
+    const latestPrices = await getLatestStoredPrices(
+      assets.map((asset) => asset.assetCode),
+    );
 
     return res.status(200).json({
       items: assets.map((asset) => ({
         ...asset,
+        currentPrice: latestPrices.get(asset.assetCode) ?? null,
         source: "KOSCOM_CHECK_DB",
       })),
     });
