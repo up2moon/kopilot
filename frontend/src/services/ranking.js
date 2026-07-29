@@ -34,30 +34,9 @@ export async function getTopRankings(token, limit = 20) {
   return data
 }
 
-export async function getConsumptionDna(token, { refresh = false } = {}) {
-  const query = refresh ? '?refresh=true' : ''
-  const response = await fetch(`/api/users/me/consumption-dna${query}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-  const data = await response.json()
-
-  if (!response.ok) {
-    const error = new Error(data?.message || '소비 DNA를 분석하지 못했습니다.')
-    error.code = data?.code
-    throw error
-  }
-
-  return data
-}
-
 const ranking = {
   getMyRanking,
   getTopRankings,
-  getConsumptionDna,
 }
 
 export default ranking

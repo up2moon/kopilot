@@ -35,7 +35,7 @@ export default function MyRankingCard({ ranking }) {
               </span>
               <span className="dot-divider">•</span>
               <span>
-                미션 {ranking.completedChallengesCount || 0}회 성공
+                챌린지 {ranking.completedChallengesCount || 0}회 성공
               </span>
             </div>
           </div>

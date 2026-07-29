@@ -10,8 +10,7 @@ export function getSavingBotFunctionTools() {
     {
       type: "function",
       name: CREATE_WEEKLY_CHALLENGE_TOOL,
-      description:
-        "로그인 사용자가 이번 주 절약 챌린지를 실제로 만들어 달라고 명확히 요청할 때만 호출한다. 생성 방법, 추천, 설명을 묻는 질문에는 호출하지 않는다.",
+      description: "로그인 사용자가 이번 주 절약 챌린지를 실제로 만들어 달라고 명확히 요청할 때만 호출한다. 생성 방법, 추천, 설명을 묻는 질문에는 호출하지 않는다.",
       parameters: {
         type: "object",
         properties: {},
@@ -33,19 +32,13 @@ async function createWeeklySavingChallenge(userId) {
       weekEndDate: result.weekEnd,
       challengeId: Number(result.challenge.id),
       challengeCount: result.totalCount,
-      estimatedSavingAmount: Number(
-        result.challenge.estimated_saving_amount || 0,
-      ),
+      estimatedSavingAmount: Number(result.challenge.estimated_saving_amount || 0),
       challenge: {
         id: Number(result.challenge.id),
         content: result.challenge.title,
         type: result.challenge.challenge_type,
-        targetCount: result.challenge.target_count === null
-          ? null
-          : Number(result.challenge.target_count),
-        targetAmount: result.challenge.target_amount === null
-          ? null
-          : Number(result.challenge.target_amount),
+        targetCount: result.challenge.target_count === null ? null : Number(result.challenge.target_count),
+        targetAmount: result.challenge.target_amount === null ? null : Number(result.challenge.target_amount),
         point: Number(result.challenge.point || 0),
       },
       destination: "/challenge",
@@ -55,8 +48,7 @@ async function createWeeklySavingChallenge(userId) {
   if (!result.creationAllowed) {
     return {
       status: "CREATION_CLOSED",
-      message:
-        "이번 주 새 미션 생성 기간이 끝났어요. 다음 주 월요일에 새로운 미션을 만들 수 있어요.",
+      message: "이번 주 새 챌린지 생성 기간이 끝났어요. 다음 주 월요일에 새로운 챌린지를 만들 수 있어요.",
       destination: null,
     };
   }
@@ -101,19 +93,14 @@ export async function executeSavingBotTool(name, { userId }) {
 }
 
 export function getChallengeClientAction(toolResult) {
-  if (
-    toolResult?.status !== "CREATED"
-    || toolResult.destination !== "/challenge"
-  ) {
+  if (toolResult?.status !== "CREATED" || toolResult.destination !== "/challenge") {
     return null;
   }
 
   return {
     type: "NAVIGATE",
     path: "/challenge",
-    ...(Number.isInteger(Number(toolResult.challengeId))
-      ? { highlightChallengeId: Number(toolResult.challengeId) }
-      : {}),
+    ...(Number.isInteger(Number(toolResult.challengeId)) ? { highlightChallengeId: Number(toolResult.challengeId) } : {}),
   };
 }
 

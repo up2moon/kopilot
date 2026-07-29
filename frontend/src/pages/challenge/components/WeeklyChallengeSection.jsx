@@ -39,13 +39,13 @@ export default function WeeklyChallengeSection({
         <strong>{dateRange}</strong>
         <p>
           {resolved
-            ? `${progress.successCount}/${progress.totalCount} 미션에 성공했어요`
-            : `금요일까지 ${progress.totalCount}개의 미션을 함께 진행해요`}
+            ? `${progress.successCount}/${progress.totalCount} 챌린지에 성공했어요`
+            : `금요일까지 ${progress.totalCount}개의 챌린지를 함께 진행해요`}
         </p>
       </div>
 
       <div className="weekly-challenge-heading">
-        <h2>나의 미션 {progress.totalCount}개</h2>
+        <h2>나의 챌린지 {progress.totalCount}개</h2>
         <span>
           {progress.successCount}/{progress.totalCount} 성공
         </span>
@@ -100,7 +100,7 @@ export default function WeeklyChallengeSection({
           {verifying ? (
             <>
               <span className="verify-spinner" />
-              미션 결과 확인 중
+              챌린지 결과 확인 중
             </>
           ) : resolved ? (
             '인증 완료'
@@ -109,7 +109,7 @@ export default function WeeklyChallengeSection({
           )}
         </button>
         {canVerify && !resolved && (
-          <p>이번 주 미션 결과를 바로 확인해 보세요</p>
+          <p>이번 주 챌린지 결과를 바로 확인해 보세요</p>
         )}
         {verifyMessage && (
           <p className="challenge-verify-message">{verifyMessage}</p>
@@ -119,7 +119,7 @@ export default function WeeklyChallengeSection({
       {verifying && (
         <div className="weekly-verifying-overlay" role="status" aria-live="polite">
           <span className="challenge-spinner" />
-          <strong>이번 주 미션 결과를 확인하고 있어요</strong>
+          <strong>이번 주 챌린지 결과를 확인하고 있어요</strong>
         </div>
       )}
     </section>

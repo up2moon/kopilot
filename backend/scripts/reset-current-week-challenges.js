@@ -2,8 +2,8 @@
  * 현재 주(월~금)의 AI 챌린지를 삭제해, 다음 `GET /api/users/me/challenges` 요청에서
  * 최신 생성 로직·문구로 다시 생성되도록 하는 일회성 유지보수 스크립트.
  *
- * 생성 로직이나 문구 템플릿을 바꾼 뒤, 이미 저장된 이번 주 미션을 새 버전으로
- * 교체하고 싶을 때 사용한다. 지난 주 이전 미션(이력)은 건드리지 않는다.
+ * 생성 로직이나 문구 템플릿을 바꾼 뒤, 이미 저장된 이번 주 챌린지를 새 버전으로
+ * 교체하고 싶을 때 사용한다. 지난 주 이전 챌린지(이력)은 건드리지 않는다.
  *
  * 실행: docker compose -f compose.dev.yml exec backend node scripts/reset-current-week-challenges.js
  */

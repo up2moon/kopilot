@@ -36,15 +36,15 @@
 - `GET /api/users/me/budgets/status?month=YYYY-MM`: 저장된 예산 목표, 현재 사용 금액, 남은 금액, 진행률을 반환합니다.
 - `GET /api/users/me/spending/summary?month=YYYY-MM`: 지정된 월(기본 현재 월)의 거래 내역을 백엔드에서 집계하여 소비 요약(총 금액, 전월 대비 증감률, 결제 건수, 평균 결제액), 카테고리별 금액/비율/인사이트 문구, 주차별/일자별 소비 추이 및 최고 지출 금액을 반환합니다.
 - `GET /api/users/me/spending/transactions?month=YYYY-MM&page=1&limit=6`: 해당 월의 결제 내역을 최근순으로 무한 스크롤/페이징(`page`, `limit=6` 기본) 형태로 로딩하여 반환합니다 (`items`, `pagination` 메타데이터 포함).
-- `GET /api/users/me/saving-bot/coaching`: 사용자의 마이데이터 지출 내역을 기반으로 생성된 상단 '오늘의 코칭' 카드 정보(메시지, 아낄 수 있는 금액), 코칭 연관 AI 인사말("...줄여볼까요?"), 그리고 생성된 코칭과 연관된 추천 질문 3개를 반환합니다. `이번 주 미션 만들기` 추천 질문은 `action=CREATE_WEEKLY_CHALLENGE`를 함께 반환합니다.
+- `GET /api/users/me/saving-bot/coaching`: 사용자의 마이데이터 지출 내역을 기반으로 생성된 상단 '오늘의 코칭' 카드 정보(메시지, 아낄 수 있는 금액), 코칭 연관 AI 인사말("...줄여볼까요?"), 그리고 생성된 코칭과 연관된 추천 질문 3개를 반환합니다. `이번 주 챌린지 만들기` 추천 질문은 `action=CREATE_WEEKLY_CHALLENGE`를 함께 반환합니다.
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. 선택적인 `requestedAction=CREATE_WEEKLY_CHALLENGE` 또는 명확한 자유 입력 생성 요청은 OpenAI Function Tool `create_weekly_saving_challenge`로 이번 주 챌린지 1개를 추가합니다. 성공하면 추가된 ID를 포함한 `toolResult`와 `/challenge` 이동 및 카드 강조용 `clientAction`을 반환합니다. 사용자 질문과 최종 AI 답변은 Redis에 저장하며 내부 Tool 입출력은 대화 기록에 저장하지 않습니다.
 - `GET /api/users/me/saving-bot/chat/history`: Redis에 저장된 현재 사용자의 최근 AI 절약 챗봇 대화를 반환합니다. 대화는 사용자별 List에 최대 100개까지 저장되며 마지막 대화 이후 기본 3일 동안 유지됩니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/me/reward-points`: 현재 로그인한 사용자의 챌린지 성공으로 DB `users.total_points`에 실제 적립된 리워드 포인트를 반환합니다. 랭킹의 절약액 환산 점수(`rankScore`)와 구분해 포인트 상점 잔액의 원장으로 사용합니다.
 - `GET /api/users/me/consumption-dna?month=YYYY-MM&refresh=true`: 해당 월의 마이데이터 결제 내역을 최소화해 OpenAI Responses API로 분석하고, 월별 소비 DNA 별명·요약·4개 성향 축을 저장해 반환합니다. 저장된 월간 결과는 기본적으로 재사용하며 `refresh=true`일 때 다시 분석합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
-- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 미션 전체, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 미션이 비어 있으면 기본 추천 미션을 생성하며 AI 채팅으로 추가된 미션까지 모두 반환합니다.
-- `POST /api/users/me/challenges/verify`: 프로토타입에서는 시간 제한 없이 현재 주의 미인증 미션을 서버에서 무작위 판정합니다. 최소 1개를 성공 처리하고 성공 미션별 포인트를 같은 트랜잭션에서 지급하며, 성공 개수, 예상 절약액 합계와 `showCelebration`을 반환합니다.
+- `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 챌린지 전체, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 챌린지가 비어 있으면 기본 추천 챌린지를 생성하며 AI 채팅으로 추가된 챌린지까지 모두 반환합니다.
+- `POST /api/users/me/challenges/verify`: 프로토타입에서는 시간 제한 없이 현재 주의 미인증 챌린지를 서버에서 무작위 판정합니다. 최소 1개를 성공 처리하고 성공 챌린지별 포인트를 같은 트랜잭션에서 지급하며, 성공 개수, 예상 절약액 합계와 `showCelebration`을 반환합니다.
 - 개발 환경에서 `CHALLENGE_TEST_NOW`에 타임존 오프셋을 포함한 ISO 8601 시각을 설정하면 챌린지 조회·생성·인증·만료만 해당 테스트 시각을 사용합니다. 예: `2026-08-01T00:01:00+09:00`. `NODE_ENV=production`에서는 설정값을 무시하고 실제 KST를 사용합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee|savings&month=YYYY-MM&assetCodes=005930,360750`: 소비 카테고리는 월별 소비액을, `savings`는 선택 월에 성공 완료된 챌린지의 예상 절약액 합계를 투자 원금으로 사용합니다. DB에 저장된 코스콤 종가(`investment_price`)를 사용해 지수 ETF, 선택 종목, 정기예금/CMA 결과를 반환하며 절약액이 없으면 `NO_SAVINGS`를 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 기본 목록은 대표 지수 ETF와 국내 대형주를 우선 노출하고 남은 자리를 기존 정렬 종목으로 채웁니다. 선택적인 `keyword` 검색은 전체 종목을 대상으로 합니다. 각 종목은 DB에 저장된 최신 종가와 전일 대비 등락률을 `currentPrice`, `diffRate`로 함께 반환하고, DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
@@ -59,7 +59,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
 
 1. **오늘의 코칭 & 인사말 & 추천 질문 3개 제공 (`GET /api/users/me/saving-bot/coaching`)**
    - 사용자의 마이데이터 지출 데이터(최근 2주~1개월 결제 패턴)를 기반으로 감축 가능한 지출 영역(예: 커피, 배달)과 아낄 수 있는 예상 금액을 계산하여 '오늘의 코칭' 메시지를 반환합니다.
-   - 코칭 생성 시 이와 연결되는 첫 AI 인사말(예: *"지난 2주 동안 카페 결제가 9번 있었어요. 무리하지 않는 선에서 줄여볼까요?"*)과 **오늘의 코칭 주제와 연결된 추천 질문 3개** (예: `["이번 주 미션 만들기", "구독 지출 줄이기", "배달비 분석하기"]`)를 함께 반환합니다.
+   - 코칭 생성 시 이와 연결되는 첫 AI 인사말(예: *"지난 2주 동안 카페 결제가 9번 있었어요. 무리하지 않는 선에서 줄여볼까요?"*)과 **오늘의 코칭 주제와 연결된 추천 질문 3개** (예: `["이번 주 챌린지 만들기", "구독 지출 줄이기", "배달비 분석하기"]`)를 함께 반환합니다.
    - 응답 주요 필드는 `status`, `generatedAt`, `analysisPeriod`, `coaching`, `greeting`, `suggestedQuestions`입니다. 반복 소비가 충분하지 않으면 `status=INSUFFICIENT_DATA`와 예산 관리 중심의 기본 코칭을 반환합니다.
 
 2. **RAG + ChatGPT 대화 응답 및 Scope/Guardrail 검증 (`POST /api/users/me/saving-bot/chat`)**
@@ -93,7 +93,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
 3. **랭킹 산정 모델 (절약 금액 vs 퀘스트/포인트 합산)**
    - **Gaming 이슈 방지**: 전월 지출이 극단적으로 커서 이번 달 절약 금액이 착시 현상으로 커지는 문제를 방지하기 위함.
    - **포인트 합산 방식 적용**: `랭킹 점수 = (예산 준수율 포인트) + (Daily/Weekly 절약 퀘스트 달성 포인트)`.
-   - 꾸준히 절약 미션을 수행하고 예산을 잘 준수한 사용자가 정당하게 상위 랭킹에 도달하도록 백엔드 점수 집계 로직 작성.
+   - 꾸준히 절약 챌린지를 수행하고 예산을 잘 준수한 사용자가 정당하게 상위 랭킹에 도달하도록 백엔드 점수 집계 로직 작성.
    - 랭킹 점수가 같으면 가입일 오름차순, 사용자 ID 오름차순으로 순서를 결정하며 화면 순위는 중복 없이 부여한다.
 
 ## AI 주간 챌린지 생성 시스템
@@ -103,21 +103,21 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
 1. **월요일 생성 및 DB 영속화**
    - KST 매주 월요일 00:10 이후 스케줄러가 마이데이터 연동 사용자를 대상으로 실행된다.
    - 서버가 직전 주를 우선으로 최근 30일 카테고리별 소비 통계(건수·금액·평균 결제액)를 계산해 달성 가능한 카테고리·타입·목표·예상 절약액을 확정한다. OpenAI Responses API는 실제 기준 수치와 목표를 포함한 친근한 한글 제목·설명을 생성한다.
-   - `(user_id, week_start_date, sequence)` 유니크 인덱스로 사용자별 주간 미션의 중복 저장을 막는다. AI 채팅 요청은 다음 sequence로 새 미션을 추가한다.
+   - `(user_id, week_start_date, sequence)` 유니크 인덱스로 사용자별 주간 챌린지의 중복 저장을 막는다. AI 채팅 요청은 다음 sequence로 새 챌린지를 추가한다.
    - 서버가 월요일 생성 시점을 놓치거나 사용자가 월요일 이후 가입한 경우에도, 현재 주 첫 `GET /api/users/me/challenges` 요청이 생성을 보완한다.
-   - 모든 미션은 요일을 배정하지 않고 월요일 00:00부터 토요일 00:00 직전까지 함께 수행한다.
+   - 모든 챌린지는 요일을 배정하지 않고 월요일 00:00부터 토요일 00:00 직전까지 함께 수행한다.
 
 2. **달성 가능성을 위한 카테고리·금액 규칙**
    - 최근 30일 동안 실제 소비가 있는 카테고리만 후보로 쓰고, 반복 소비(3건 이상) 카테고리를 우선한다. 소비가 없는 카테고리에는 챌린지를 배정하지 않는다.
    - `MAX_COUNT`, `MAX_SPEND`, `NO_SPEND` 중 거래내역만으로 판정 가능한 유형을 선택하고 기준값보다 완만하게 낮은 주간 목표를 만든다.
    - 문구에는 실제 기준 기간의 횟수 또는 금액과 이번 주 목표를 함께 넣고, `저번 주에는 …했어요. 이번 주에는 …해볼까요?`처럼 친근한 제안형 어조를 사용한다.
-   - 영수증·사진·자기 신고가 필요한 미션은 생성하지 않는다.
+   - 영수증·사진·자기 신고가 필요한 챌린지는 생성하지 않는다.
 
 3. **인증·최종 판정·보상**
-   - 프로토타입에서는 시간 제한 없이 인증 버튼을 활성화한다. 인증 시 미확정 미션 중 최소 1개를 서버에서 무작위 성공 처리하고 결과와 포인트를 DB에 저장해 재추첨과 중복 지급을 막는다.
+   - 프로토타입에서는 시간 제한 없이 인증 버튼을 활성화한다. 인증 시 미확정 챌린지 중 최소 1개를 서버에서 무작위 성공 처리하고 결과와 포인트를 DB에 저장해 재추첨과 중복 지급을 막는다.
    - 기준 소비 대비 목표 감축률이 20% 이하면 `EASY=50P`, 20% 초과 40% 이하면 `MEDIUM=100P`, 40% 초과면 `HARD=150P`를 지급한다. `NO_SPEND`는 기준 거래 1회면 `MEDIUM`, 2회 이상이면 `HARD`로 분류한다.
-   - 성공 시 포인트 원장과 `users.total_points`를 한 DB 트랜잭션으로 갱신한다. `PENDING_VERIFICATION`은 새 미션에서 사용하지 않는다.
-   - 성공 미션이 하나 이상이면 `showCelebration=true`를 반환해 프론트엔드가 컨페티를 한 번 재생할 수 있게 한다.
+   - 성공 시 포인트 원장과 `users.total_points`를 한 DB 트랜잭션으로 갱신한다. `PENDING_VERIFICATION`은 새 챌린지에서 사용하지 않는다.
+   - 성공 챌린지가 하나 이상이면 `showCelebration=true`를 반환해 프론트엔드가 컨페티를 한 번 재생할 수 있게 한다.
    - 랭킹 점수는 이미 적립된 `total_points`만 반영해 챌린지 포인트를 중복 합산하지 않는다.
 
 ## 투자효과 및 코스콤 CHECK API 연동 설계
@@ -156,7 +156,7 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - mock 시세나 mock 기준가는 사용하지 않습니다. 기준일 종가가 없으면 `PRICE_HISTORY_MISSING`으로 응답합니다.
 
 4. **기회비용 시뮬레이션 산출 계산식**
-   - 투자효과는 `month=YYYY-MM` 기준으로 월별 카테고리 소비액 또는 월별 챌린지 예상 절약액과 투자 가정 월을 동일하게 묶습니다. `category=savings`는 KST 기준 선택 월에 완료된 `SUCCESS` 미션의 `estimated_saving_amount` 합계를 사용합니다.
+   - 투자효과는 `month=YYYY-MM` 기준으로 월별 카테고리 소비액 또는 월별 챌린지 예상 절약액과 투자 가정 월을 동일하게 묶습니다. `category=savings`는 KST 기준 선택 월에 완료된 `SUCCESS` 챌린지의 `estimated_saving_amount` 합계를 사용합니다.
    - 기준가는 선택 월의 첫 거래일 가격을 사용합니다. 해당 월 1일이 휴장일이면 그 월의 첫 거래 가능일 가격을 사용합니다.
    - `평가 금액 = 소비 금액 × (1 + 수익률)`
    - `손익 금액 = 평가 금액 - 소비 금액` (예: `+8,400원`)

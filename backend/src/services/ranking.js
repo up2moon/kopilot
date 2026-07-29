@@ -1,6 +1,5 @@
 import { User, TransactionHistory, UserExpenseCategory, AiChallenge } from "../models/index.js";
 import { Op } from "sequelize";
-import { getConsumptionDnaMap } from "./consumptionDna.js";
 
 const ADJECTIVES = [
   "알뜰한",
@@ -141,21 +140,11 @@ export async function getTopRankings(currentUser) {
       return [Number(user.id), Number.isFinite(joinedAt) ? joinedAt : 0];
     }),
   );
-  const month = new Date().toISOString().slice(0, 7);
-  const dnaMap = await getConsumptionDnaMap(
-    allDbUsers.map((user) => Number(user.id)),
-    month,
-  ).catch(() => new Map());
-
-  const rawList = await Promise.all(allDbUsers.map((u) => getUserRankingData(u)));
-  const listWithDna = rawList.map((item) => ({
-    ...item,
-    consumptionDna: dnaMap.get(Number(item.userId)) || null,
-  }));
+  const rankingList = await Promise.all(allDbUsers.map((u) => getUserRankingData(u)));
 
   // 점수가 같으면 가입일이 빠른 사용자, 가입일까지 같으면 사용자 ID가
   // 작은 사용자를 우선해 항상 동일하고 중복 없는 순위를 만든다.
-  listWithDna.sort((a, b) => {
+  rankingList.sort((a, b) => {
     const scoreDifference = b.rankScore - a.rankScore;
 
     if (scoreDifference !== 0) return scoreDifference;
@@ -169,7 +158,7 @@ export async function getTopRankings(currentUser) {
     return Number(a.userId) - Number(b.userId);
   });
 
-  const rankedList = listWithDna.map((item, index) => ({
+  const rankedList = rankingList.map((item, index) => ({
     ...item,
     rank: index + 1,
     isMe: Number(item.userId) === Number(currentUser.id),
@@ -179,7 +168,6 @@ export async function getTopRankings(currentUser) {
   const currentUserData = await getUserRankingData(currentUser);
   const myRankInfo = rankedList.find((item) => item.isMe) || {
     ...currentUserData,
-    consumptionDna: dnaMap.get(Number(currentUser.id)) || null,
     rank: 1,
     isMe: true,
   };

@@ -302,7 +302,7 @@ function TermsAgreementModal({ isOpen, onClose, onConfirm }) {
                   <strong>제공받는 자:</strong> Kospay AI 분석 및 챌린지 모듈
                 </p>
                 <p>
-                  <strong>제공 목적:</strong> AI 절약 코치 추천 메시지 생성, 카테고리별 예산 추천 및 주간 챌린지 미션 검증
+                  <strong>제공 목적:</strong> AI 절약 코치 추천 메시지 생성, 카테고리별 예산 추천 및 주간 챌린지 검증
                 </p>
                 <p>
                   <strong>제공 항목:</strong> 거래내역(승인일시, 금액, 가맹점명)
@@ -580,7 +580,7 @@ function FirstLoginPage({ auth, currentRoute, onNavigate, onLogout, onUserUpdate
 
           <section className="challenge-mini-card">
             <strong>절약 챌린지</strong>
-            <p>처음 설정한 예산을 기준으로 이번 달 실천 미션을 제안해요.</p>
+            <p>처음 설정한 예산을 기준으로 이번 달 실천 챌린지를 제안해요.</p>
           </section>
 
           <p className="setup-notice">투자효과는 투자 권유가 아닌 참고용 시뮬레이션입니다.</p>

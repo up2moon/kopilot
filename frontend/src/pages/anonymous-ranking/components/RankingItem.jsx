@@ -41,9 +41,7 @@ export default function RankingItem({ item }) {
           {item.isMe && <span className="item-me-pill">나</span>}
         </div>
         <span className="item-sub-text">
-          {item.consumptionDna
-            ? `${item.consumptionDna.emoji} ${item.consumptionDna.nickname}`
-            : `절약 ${formatCurrency(item.savedAmount)}`}
+          절약 {formatCurrency(item.savedAmount)}
         </span>
       </div>
 

@@ -18,16 +18,12 @@ const router = express.Router();
 function toChallengeResponse(challenge, currentStats) {
   const reward = calculateChallengeDifficulty(challenge);
   const storedPoint = Number(challenge.point || 0);
-  const difficulty = challenge.status === "IN_PROGRESS"
-    ? reward.difficulty
-    : storedPoint >= 150 ? "HARD" : storedPoint >= 100 ? "MEDIUM" : "EASY";
+  const difficulty = challenge.status === "IN_PROGRESS" ? reward.difficulty : storedPoint >= 150 ? "HARD" : storedPoint >= 100 ? "MEDIUM" : "EASY";
   return {
     id: Number(challenge.id),
     sequence: Number(challenge.sequence),
     category: challenge.ExpenseCategory?.name || null,
-    content: challenge.baseline_period_start
-      ? buildMissionContent(challenge)
-      : challenge.description || challenge.title,
+    content: challenge.baseline_period_start ? buildMissionContent(challenge) : challenge.description || challenge.title,
     challengeType: challenge.challenge_type,
     baselinePeriodStart: challenge.baseline_period_start,
     baselinePeriodEnd: challenge.baseline_period_end,
@@ -62,11 +58,7 @@ router.get("/me/challenges", requireAuth, async (req, res) => {
   try {
     const result = await getOrCreateWeeklyChallenges(req.user.id, referenceDate);
     const progress = getWeeklyProgress(result.challenges);
-    const currentStats = await getWeeklyCurrentStats(
-      req.user.id,
-      result.weekStart,
-      result.challenges,
-    );
+    const currentStats = await getWeeklyCurrentStats(req.user.id, result.weekStart, result.challenges);
     return res.status(200).json({
       weekStartDate: result.weekStart,
       weekEndDate: result.weekEnd,
@@ -79,9 +71,7 @@ router.get("/me/challenges", requireAuth, async (req, res) => {
       generated: result.challenges.length > 0,
       successfulCount: progress.successCount,
       totalCount: progress.totalCount,
-      weeklyChallenges: result.challenges.map((challenge) => (
-        toChallengeResponse(challenge, currentStats.get(Number(challenge.id)))
-      )),
+      weeklyChallenges: result.challenges.map((challenge) => toChallengeResponse(challenge, currentStats.get(Number(challenge.id)))),
       weeklyProgress: progress,
     });
   } catch (error) {
@@ -104,16 +94,15 @@ router.post("/me/challenges/verify", requireAuth, async (req, res) => {
       earnedPoints: result.earnedPoints,
       successfulSavingAmount: result.successfulSavingAmount,
       showCelebration: result.showCelebration,
-      message: result.successfulCount > 0
-        ? `${result.successfulCount}/${result.totalCount} 미션 성공! ${result.earnedPoints}P와 예상 절약액 ${result.successfulSavingAmount.toLocaleString("ko-KR")}원을 얻었어요.`
-        : "이번 주에는 성공한 미션이 없어요. 다음 주에 다시 가볍게 도전해봐요.",
+      message:
+        result.successfulCount > 0
+          ? `${result.successfulCount}/${result.totalCount} 챌린지 성공! ${result.earnedPoints}P와 예상 절약액 ${result.successfulSavingAmount.toLocaleString("ko-KR")}원을 얻었어요.`
+          : "이번 주에는 성공한 챌린지가 없어요. 다음 주에 다시 가볍게 도전해봐요.",
       challenges: result.challenges.map((challenge) => ({
         challengeId: Number(challenge.id),
         status: challenge.status,
         estimatedSavingAmount: Number(challenge.estimated_saving_amount || 0),
-        message: challenge.status === "SUCCESS"
-          ? `${challenge.title} 성공!`
-          : `${challenge.title}은 아쉽게 미완료예요.`,
+        message: challenge.status === "SUCCESS" ? `${challenge.title} 성공!` : `${challenge.title}은 아쉽게 미완료예요.`,
       })),
     });
   } catch (error) {
