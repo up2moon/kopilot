@@ -2,6 +2,7 @@ import express from "express";
 
 import { requireAuth } from "../middleware/auth.js";
 import {
+  buildMissionContent,
   ChallengeError,
   calculateChallengeDifficulty,
   getChallengeClockInfo,
@@ -25,7 +26,7 @@ function toChallengeResponse(challenge, currentStats) {
     sequence: Number(challenge.sequence),
     category: challenge.ExpenseCategory?.name || null,
     content: challenge.baseline_period_start
-      ? challenge.title
+      ? buildMissionContent(challenge)
       : challenge.description || challenge.title,
     challengeType: challenge.challenge_type,
     baselinePeriodStart: challenge.baseline_period_start,

@@ -10,6 +10,7 @@ import {
   UserExpenseCategory,
 } from "../models/index.js";
 import { sequelize } from "../db.js";
+import { withKoreanObjectParticle } from "../utils/korean.js";
 
 const KOREA_TIME_ZONE = "Asia/Seoul";
 const RECENT_WINDOW_DAYS = 30;
@@ -137,7 +138,8 @@ function categoryExpression(categoryName) {
 
 function countMissionContent(categoryName, baselineCount, targetCount, label) {
   const expression = categoryExpression(categoryName);
-  return `${label}에는 ${expression.subject}를 ${baselineCount}${expression.counter} ${expression.countAction}. 이번 주에는 ${expression.subject}를 ${targetCount}${expression.counter}으로 줄여볼까요?`;
+  const subject = withKoreanObjectParticle(expression.subject);
+  return `${label}에는 ${subject} ${baselineCount}${expression.counter} ${expression.countAction}. 이번 주에는 ${subject} ${targetCount}${expression.counter}으로 줄여볼까요?`;
 }
 
 function spendMissionContent(categoryName, baselineAmount, targetAmount, label) {
@@ -146,7 +148,8 @@ function spendMissionContent(categoryName, baselineAmount, targetAmount, label) 
 
 function noSpendMissionContent(categoryName, baselineCount, label) {
   const expression = categoryExpression(categoryName);
-  return `${label}에는 ${expression.subject}를 ${baselineCount}${expression.counter} ${expression.countAction}. 이번 주에는 잠시 쉬어볼까요?`;
+  const subject = withKoreanObjectParticle(expression.subject);
+  return `${label}에는 ${subject} ${baselineCount}${expression.counter} ${expression.countAction}. 이번 주에는 잠시 쉬어볼까요?`;
 }
 
 export function calculateChallengeDifficulty(challenge) {

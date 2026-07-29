@@ -134,6 +134,13 @@ export async function getUserRankingData(user) {
  */
 export async function getTopRankings(currentUser) {
   const allDbUsers = await User.findAll().catch(() => [currentUser]);
+  const joinedAtByUserId = new Map(
+    allDbUsers.map((user) => {
+      const joinedAt = new Date(user.createdAt || user.created_at || 0).getTime();
+
+      return [Number(user.id), Number.isFinite(joinedAt) ? joinedAt : 0];
+    }),
+  );
   const month = new Date().toISOString().slice(0, 7);
   const dnaMap = await getConsumptionDnaMap(
     allDbUsers.map((user) => Number(user.id)),
@@ -146,21 +153,27 @@ export async function getTopRankings(currentUser) {
     consumptionDna: dnaMap.get(Number(item.userId)) || null,
   }));
 
-  // 랭킹 점수 기준 내림차순 정렬
-  listWithDna.sort((a, b) => b.rankScore - a.rankScore);
+  // 점수가 같으면 가입일이 빠른 사용자, 가입일까지 같으면 사용자 ID가
+  // 작은 사용자를 우선해 항상 동일하고 중복 없는 순위를 만든다.
+  listWithDna.sort((a, b) => {
+    const scoreDifference = b.rankScore - a.rankScore;
 
-  // 공동 순위(Standard Competition Ranking: 1, 1, 3 방식) 계산
-  let currentRank = 1;
-  const rankedList = listWithDna.map((item, index, arr) => {
-    if (index > 0 && item.rankScore < arr[index - 1].rankScore) {
-      currentRank = index + 1;
-    }
-    return {
-      ...item,
-      rank: currentRank,
-      isMe: item.userId === currentUser.id,
-    };
+    if (scoreDifference !== 0) return scoreDifference;
+
+    const joinedAtDifference =
+      joinedAtByUserId.get(Number(a.userId)) -
+      joinedAtByUserId.get(Number(b.userId));
+
+    if (joinedAtDifference !== 0) return joinedAtDifference;
+
+    return Number(a.userId) - Number(b.userId);
   });
+
+  const rankedList = listWithDna.map((item, index) => ({
+    ...item,
+    rank: index + 1,
+    isMe: Number(item.userId) === Number(currentUser.id),
+  }));
 
   // 내 랭킹 찾기
   const currentUserData = await getUserRankingData(currentUser);
