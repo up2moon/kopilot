@@ -143,9 +143,9 @@
 }
 
 .investment-category-tabs button.is-active {
-  border-color: #3182f6;
-  background: #e8f2ff;
-  color: #3182f6;
+  border-color: #f1a17f;
+  background: #fff0e6;
+  color: #df5b25;
 }
 
 .investment-empty-savings {

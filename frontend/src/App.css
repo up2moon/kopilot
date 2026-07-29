@@ -514,20 +514,24 @@
   margin: 0 0 9px;
   color: #3182f6;
   font-family: Inter, system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.3;
+  letter-spacing: 1.2px;
+  line-height: 16px;
 }
 
 .signup-hero h1 {
-  font-size: var(--font-size-hero-title);
-  line-height: 32px;
+  font-size: 28px;
+  font-weight: 850;
+  letter-spacing: -1px;
+  line-height: 1.3;
 }
 
 .signup-hero p:not(.eyebrow) {
-  margin-top: 16px;
-  font-size: 15px;
-  line-height: 24px;
+  margin-top: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 .signup-panel {
@@ -578,6 +582,8 @@
 }
 
 .auth-screen-signup {
+  min-height: max(100%, 844px);
+  padding: 20px 22px 28px;
   overflow: hidden;
   background:
     radial-gradient(
@@ -589,6 +595,7 @@
 }
 
 .auth-screen-login {
+  min-height: max(100%, 844px);
   overflow: hidden;
 }
 
@@ -621,6 +628,20 @@
 .auth-screen-signup .brand-header {
   position: relative;
   z-index: 1;
+  height: auto;
+  min-height: 48px;
+}
+
+.auth-screen-signup .brand-lockup {
+  gap: 9px;
+  color: #fff;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.auth-screen-signup .brand-lockup .logo-mark {
+  width: 42px;
+  height: 42px;
 }
 
 .auth-screen-signup .signup-hero .eyebrow {
@@ -1565,8 +1586,8 @@
   }
 
   .auth-screen {
-    width: min(100%, 390px);
-    min-height: 844px;
+    width: 100%;
+    min-height: 100svh;
     margin: 0 auto;
   }
 
@@ -1628,6 +1649,10 @@
   }
 
   .auth-screen-login {
+    padding-inline: 18px;
+  }
+
+  .auth-screen-signup {
     padding-inline: 18px;
   }
 

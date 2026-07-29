@@ -88,6 +88,9 @@
 
 /* My Ranking Card */
 .my-ranking-card-section {
+  position: sticky;
+  z-index: 20;
+  top: 12px;
   margin-bottom: 22px;
 }
 
@@ -249,24 +252,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 366px;
-  max-height: 366px;
-  overflow-y: auto;
-  padding-right: 4px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.ranking-list::-webkit-scrollbar {
-  width: 5px;
-}
-
-.ranking-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ranking-list::-webkit-scrollbar-thumb {
-  background: #d1d6db;
-  border-radius: 4px;
 }
 
 /* Item Base */

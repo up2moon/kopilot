@@ -5,12 +5,12 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #3182f6;
+  background: linear-gradient(145deg, #ff7137, #e94f1b);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow:
     0 0 0 1px rgba(25, 31, 40, 0.05),
-    0 8px 20px rgba(49, 130, 246, 0.35);
+    0 8px 20px rgba(217, 79, 27, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,7 +23,7 @@
   transform: scale(1.06);
   box-shadow:
     0 0 0 1px rgba(25, 31, 40, 0.05),
-    0 10px 24px rgba(49, 130, 246, 0.45);
+    0 10px 24px rgba(217, 79, 27, 0.45);
 }
 
 .floating-chatbot-btn:active {

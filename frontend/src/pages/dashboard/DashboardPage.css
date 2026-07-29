@@ -2,9 +2,12 @@
   position: relative;
   min-height: 100%;
   padding-bottom: 32px;
-  background:
-    radial-gradient(circle at 78% 16%, rgba(255, 192, 92, 0.22), transparent 24%),
-    linear-gradient(180deg, #fff8ef 0, #fffdf9 270px, #f7f9fc 470px);
+  background: linear-gradient(
+    180deg,
+    #ffe5d2 0,
+    #fff7f0 250px,
+    #f7f9fc 470px
+  );
   box-sizing: border-box;
   color: #191f28;
 }
@@ -200,7 +203,7 @@
   font-size: 17px;
   font-weight: 800;
   line-height: 1.35;
-  color: #ffffff;
+  color: #fff;
   letter-spacing: -0.3px;
   white-space: pre-line;
 }
