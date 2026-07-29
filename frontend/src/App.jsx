@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import TestPage from './TestPage'
 import BottomNav from './components/BottomNav'
-import FloatingChatbot from './components/FloatingChatbot'
-import DashboardPage from './pages/dashboard/DashboardPage'
+import HomePage from './pages/home/HomePage'
+import RoadmapPage from './pages/roadmap/RoadmapPage'
 import CoachPage from './pages/coach/CoachPage'
+import CoachDemoPage from './pages/coach-demo/CoachDemoPage'
 import SpendingDetailPage from './pages/spending-detail/SpendingDetailPage'
 import AnonymousRankingPage from './pages/anonymous-ranking/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/investment-effect/InvestmentEffectPage'
@@ -76,7 +77,11 @@ function App() {
   }
 
   useEffect(() => {
-    const isPublicRoute = route === routes.login || route === routes.signup || route === routes.test
+    const isPublicRoute =
+      route === routes.login ||
+      route === routes.signup ||
+      route === routes.test ||
+      route === routes.coachDemo
 
     if (!isPublicRoute && !auth) {
       navigate(routes.login)
@@ -175,7 +180,16 @@ function App() {
     return <TestPage />
   }
 
-  const mainTabRoutes = [routes.dashboard, routes.ranking, routes.challenge, routes.investmentEffect, routes.my]
+  if (route === routes.coachDemo) {
+    return <CoachDemoPage />
+  }
+
+  const mainTabRoutes = [
+    routes.dashboard,
+    routes.roadmap,
+    routes.coach,
+    routes.my,
+  ]
   const showNavAndChatbot = mainTabRoutes.includes(route)
 
   let screenContent = null
@@ -197,7 +211,15 @@ function App() {
     )
   } else if (route === routes.dashboard) {
     if (!auth) return null
-    screenContent = <DashboardPage auth={auth} onNavigate={navigate} />
+    screenContent = <HomePage auth={auth} onNavigate={navigate} />
+  } else if (route === routes.roadmap) {
+    if (!auth) return null
+    screenContent = (
+      <RoadmapPage
+        onNavigate={navigate}
+        token={auth.accessToken}
+      />
+    )
   } else if (route === routes.spending) {
     if (!auth) return null
     screenContent = (
@@ -266,10 +288,7 @@ function App() {
           {screenContent}
         </div>
         {showNavAndChatbot && (
-          <>
-            <FloatingChatbot onNavigate={navigate} />
-            <BottomNav currentPath={route} onNavigate={navigate} />
-          </>
+          <BottomNav currentPath={route} onNavigate={navigate} />
         )}
       </section>
     </main>

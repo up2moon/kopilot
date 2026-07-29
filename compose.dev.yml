@@ -45,7 +45,8 @@ services:
       SAVING_BOT_TRANSACTION_JSON_PATH: /app/data/payment_transactions_dummy_30.json
       CUST_ID: ${CUST_ID:-}
       AUTH_KEY: ${AUTH_KEY:-}
-      CHECK_API_ENABLED: ${CHECK_API_ENABLED:-false}
+      CHECK_API_ENABLED: ${CHECK_API_ENABLED:-true}
+      KOSCOM_PROXY_URL: ${KOSCOM_PROXY_URL:-https://kospay.p-e.kr/api/internal/koscom/check}
       KOSCOM_SYNC_DISABLED: ${KOSCOM_SYNC_DISABLED:-false}
       KOSCOM_MASTER_SYNC_ON_READ: ${KOSCOM_MASTER_SYNC_ON_READ:-true}
       KOSCOM_DB_LOCK_TIMEOUT_SECONDS: ${KOSCOM_DB_LOCK_TIMEOUT_SECONDS:-10}

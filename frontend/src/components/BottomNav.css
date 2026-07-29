@@ -42,25 +42,23 @@
 }
 
 .bottom-nav-item.is-active {
-  color: #ed6d1f;
+  color: #3182f6;
   font-weight: 700;
 }
 
 .bottom-nav-icon {
-  font-size: 20px;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 9px;
+  font-size: 19px;
+  font-weight: 800;
   line-height: 1;
 }
 
-.bottom-nav-icon-img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  transition: filter 0.15s ease;
-}
-
-.bottom-nav-item.is-active .bottom-nav-icon-img {
-  filter: brightness(0) saturate(100%) invert(46%) sepia(99%) saturate(1664%)
-    hue-rotate(348deg) brightness(96%) contrast(94%);
+.bottom-nav-item.is-active .bottom-nav-icon {
+  background: #eaf3ff;
 }
 
 .bottom-nav-label {

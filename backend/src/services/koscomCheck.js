@@ -1,4 +1,6 @@
 const koscomBaseUrl = process.env.KOSCOM_BASE_URL || "https://checkapi.koscom.co.kr";
+const defaultLocalProxyUrl =
+  "https://kospay.p-e.kr/api/internal/koscom/check";
 
 export const stockMasterPath = process.env.KOSCOM_STOCK_MASTER_PATH || "/stock/m001/code_info";
 export const etfMasterPath = process.env.KOSCOM_ETF_MASTER_PATH || "/stock/m001/code_etf_info";
@@ -34,7 +36,9 @@ async function runWithKoscomThrottle(task) {
 }
 
 function assertKoscomCheckApiEnabled() {
-  if (process.env.CHECK_API_ENABLED !== "true") {
+  // CHECK API는 로컬을 포함해 기본 활성화한다. 호출을 막아야 하는 환경에서만
+  // CHECK_API_ENABLED=false를 명시적으로 설정한다.
+  if (process.env.CHECK_API_ENABLED === "false") {
     const error = new Error("현재 환경에서는 코스콤 CHECK API 호출이 비활성화되어 있습니다.");
     error.statusCode = 503;
     error.code = "CHECK_API_DISABLED";
@@ -350,18 +354,31 @@ export function normalizeKoscomQuote(raw) {
   };
 }
 
-export async function callKoscom(path, params = {}) {
+export async function callKoscom(path, params = {}, options = {}) {
   assertKoscomCheckApiEnabled();
   const { custId, authKey } = getKoscomCredentials();
-  const url = new URL(path, koscomBaseUrl);
+  const proxyUrl =
+    process.env.KOSCOM_PROXY_URL ||
+    (process.env.NODE_ENV !== "production" ? defaultLocalProxyUrl : "");
+  const useProxy = Boolean(proxyUrl) && options.bypassProxy !== true;
+  const url = useProxy ? new URL(proxyUrl) : new URL(path, koscomBaseUrl);
   const requestPayload = {
-    cust_id: custId,
-    auth_key: authKey,
+    ...(useProxy
+      ? {
+          path,
+          params,
+        }
+      : {
+          cust_id: custId,
+          auth_key: authKey,
+        }),
   };
 
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      requestPayload[key] = value;
+  if (!useProxy) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== "") {
+        requestPayload[key] = value;
+      }
     }
   }
 
@@ -371,6 +388,12 @@ export async function callKoscom(path, params = {}) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...(useProxy
+          ? {
+              "X-Koscom-Cust-Id": custId,
+              "X-Koscom-Auth-Key": authKey,
+            }
+          : {}),
       },
       body: JSON.stringify(requestPayload),
     }),

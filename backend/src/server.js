@@ -11,6 +11,8 @@ import investmentRouter from "./routes/investment.js";
 import savingBotRouter from "./routes/savingBot.js";
 import usersRouter, { categoriesHandler } from "./routes/users.js";
 import challengesRouter from "./routes/challenges.js";
+import assetGoalsRouter from "./routes/assetGoals.js";
+import koscomProxyRouter from "./routes/koscomProxy.js";
 import { startKoscomSyncScheduler } from "./services/investmentSync.js";
 import { startChallengeFinalizationScheduler, startChallengeGenerationScheduler } from "./services/challengeService.js";
 
@@ -31,7 +33,9 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/users", savingBotRouter);
 app.use("/api/users", challengesRouter);
+app.use("/api/users", assetGoalsRouter);
 app.use("/api/investment", investmentRouter);
+app.use("/api/internal/koscom", koscomProxyRouter);
 app.get("/api/budget/categories", categoriesHandler);
 
 app.get("/api/health", (req, res) => {

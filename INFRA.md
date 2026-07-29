@@ -196,6 +196,12 @@ WAS 2
 - 외부 API 호출
 - Health Check Endpoint 제공
 
+로컬 개발 환경의 코스콤 CHECK API 호출은 IP 제한을 일관되게 유지하기 위해
+`https://kospay.p-e.kr/api/internal/koscom/check`를 경유합니다. 운영 WAS는
+허용된 CHECK 경로와 인증 헤더를 검증한 뒤 NAT Gateway의 고정 공인 IP로 실제
+요청을 전달합니다. 운영 WAS에는 `KOSCOM_PROXY_URL`을 설정하지 않아 프록시
+재귀 호출을 방지합니다.
+
 #### 배포 원칙
 
 - WAS 1, WAS 2는 동일한 애플리케이션 버전을 실행해야 한다.

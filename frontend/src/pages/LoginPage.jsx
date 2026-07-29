@@ -21,6 +21,7 @@ function createTestAccount() {
     email: `demo.${id}@example.com`,
     password,
     confirmPassword: password,
+    demoMode: true,
   }
 }
 

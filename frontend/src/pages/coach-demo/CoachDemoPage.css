@@ -1,0 +1,939 @@
+.invest-coach-shell {
+  min-height: 100vh;
+  padding: 24px;
+  color: #191f28;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(49, 130, 246, 0.13), transparent 34%),
+    #edf1f6;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.invest-coach-phone {
+  display: flex;
+  flex-direction: column;
+  width: min(390px, 100%);
+  height: min(844px, calc(100vh - 48px));
+  min-height: 650px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(24, 40, 65, 0.08);
+  border-radius: 34px;
+  background: #f7f9fc;
+  box-shadow: 0 28px 80px rgba(29, 43, 67, 0.2);
+}
+
+.invest-coach-phone button,
+.invest-coach-phone input,
+.invest-coach-phone select {
+  font: inherit;
+}
+
+.invest-coach-phone button {
+  cursor: pointer;
+}
+
+.invest-coach-header {
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  padding: 16px 17px 12px;
+  border-bottom: 1px solid #edf0f4;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+}
+
+.invest-coach-header > button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 11px;
+  color: #333d4b;
+  background: transparent;
+  font-size: 25px;
+  font-weight: 850;
+}
+
+.invest-coach-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.invest-coach-avatar,
+.mini-ai-avatar {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(145deg, #438bff, #2567e1);
+  box-shadow: 0 7px 16px rgba(49, 130, 246, 0.24);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.invest-coach-header > div > div {
+  display: grid;
+  gap: 2px;
+}
+
+.invest-coach-header strong {
+  font-size: 12px;
+}
+
+.invest-coach-header div div span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7b8491;
+  font-size: 8px;
+}
+
+.invest-coach-header i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00a878;
+  box-shadow: 0 0 0 3px rgba(0, 168, 120, 0.12);
+}
+
+.invest-coach-steps {
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 0 17px 10px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.invest-coach-steps span {
+  padding-top: 5px;
+  border-top: 3px solid #e7ebf1;
+  color: #a1a9b4;
+  font-size: 7px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.invest-coach-steps span.is-active {
+  border-color: #3182f6;
+  color: #1b64da;
+}
+
+.invest-coach-content {
+  flex: 1;
+  min-height: 0;
+  padding: 18px 16px 30px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.invest-coach-content::-webkit-scrollbar {
+  width: 0;
+}
+
+.goal-stage {
+  padding-top: 14px;
+  text-align: center;
+  animation: enter-up 0.5s ease both;
+}
+
+.ai-spark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(145deg, #4a91ff, #205bd7);
+  box-shadow: 0 13px 28px rgba(49, 130, 246, 0.27);
+  font-size: 21px;
+}
+
+.stage-eyebrow {
+  margin: 0;
+  color: #3182f6;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 1.3px;
+}
+
+.goal-stage h1 {
+  margin: 8px 0 10px;
+  font-size: 31px;
+  line-height: 1.16;
+  letter-spacing: -1.5px;
+}
+
+.goal-description {
+  margin: 0 auto;
+  color: #6b7684;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.goal-setting-card,
+.analysis-panel,
+.saving-plan-card,
+.allocation-card,
+.asset-summary-card,
+.chart-card,
+.purchase-history,
+.weekly-coach-card,
+.adjusted-plan-card {
+  overflow: hidden;
+  border: 1px solid #e0e6ee;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 9px 25px rgba(33, 49, 74, 0.07);
+}
+
+.goal-setting-card {
+  margin-top: 22px;
+  padding: 15px;
+  text-align: left;
+}
+
+.goal-setting-card label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.goal-setting-card label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #6b7684;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.goal-setting-card label > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid #dfe5ed;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.goal-setting-card input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.goal-setting-card em {
+  color: #6b7684;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.goal-setting-card select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #dfe5ed;
+  border-radius: 12px;
+  outline: 0;
+  color: #252d3a;
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.goal-required {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 13px;
+  padding: 11px;
+  border-radius: 12px;
+  color: #1b64da;
+  background: #edf5ff;
+}
+
+.goal-required span {
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.goal-required strong {
+  font-size: 13px;
+}
+
+.goal-setting-card > button,
+.allocation-card > button,
+.weekly-coach-card > button,
+.adjusted-plan-card > button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(100deg, #2368e7, #3e8cff);
+  box-shadow: 0 7px 17px rgba(49, 130, 246, 0.22);
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.simulation-notice {
+  display: block;
+  margin-top: 11px;
+  color: #9ba4b0;
+  font-size: 7px;
+}
+
+.chat-user-message {
+  width: fit-content;
+  max-width: 265px;
+  margin: 0 0 15px auto;
+  padding: 11px 13px;
+  border-radius: 17px 6px 17px 17px;
+  color: #fff;
+  background: linear-gradient(135deg, #3d8aff, #286ce8);
+  font-size: 10px;
+  font-weight: 700;
+  animation: enter-right 0.4s ease both;
+}
+
+.ai-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+  animation: enter-up 0.42s ease both;
+}
+
+.mini-ai-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+.analysis-panel {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 6px 18px 18px;
+}
+
+.analysis-panel > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.analysis-panel strong {
+  font-size: 11px;
+}
+
+.analysis-panel div span {
+  color: #8b95a1;
+  font-size: 8px;
+}
+
+.analysis-progress {
+  height: 5px;
+  margin: 13px 0 11px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #edf1f5;
+}
+
+.analysis-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3182f6, #42d0a6);
+  transition: width 0.4s ease;
+}
+
+.analysis-panel ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analysis-panel li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #9aa4b2;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.analysis-panel li > span {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 6px;
+  background: #edf1f5;
+}
+
+.analysis-panel li.is-done {
+  color: #167558;
+}
+
+.analysis-panel li.is-done > span {
+  color: #fff;
+  background: #20b486;
+}
+
+.ai-chat-bubble {
+  max-width: 275px;
+  padding: 12px 13px;
+  border: 1px solid #e3e8ef;
+  border-radius: 6px 17px 17px;
+  background: #fff;
+}
+
+.ai-chat-bubble strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ai-chat-bubble p {
+  margin: 0;
+  color: #66717f;
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+.saving-plan-card,
+.allocation-card,
+.asset-summary-card,
+.chart-card,
+.purchase-history,
+.weekly-coach-card,
+.adjusted-plan-card {
+  margin: 0 0 14px 36px;
+  animation: enter-up 0.45s ease both;
+}
+
+.saving-plan-card > header,
+.asset-summary-card > header,
+.chart-card > header,
+.purchase-history > header,
+.adjusted-plan-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px 10px;
+}
+
+.saving-plan-card header > div,
+.asset-summary-card header > div,
+.chart-card header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.saving-plan-card header span,
+.asset-summary-card header span,
+.chart-card header span,
+.purchase-history header span,
+.allocation-card header span,
+.weekly-coach-card > span,
+.adjusted-plan-card header span {
+  color: #3182f6;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.saving-plan-card header strong,
+.asset-summary-card header strong,
+.chart-card header strong,
+.purchase-history header strong,
+.allocation-card header strong {
+  font-size: 11px;
+}
+
+.saving-plan-card header em,
+.asset-summary-card header em,
+.adjusted-plan-card header em {
+  padding: 4px 6px;
+  border-radius: 99px;
+  color: #087b59;
+  background: #e9f9f3;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.saving-plan-card > button {
+  display: grid;
+  grid-template-columns: 34px 1fr auto 21px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 13px;
+  border: 0;
+  border-top: 1px solid #edf0f4;
+  background: #fff;
+  text-align: left;
+}
+
+.saving-plan-card > button.is-selected {
+  background: #f7fbff;
+}
+
+.saving-plan-card > button > span {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border-radius: 11px;
+  background: #f0f4fa;
+  font-size: 15px;
+}
+
+.saving-plan-card button > div {
+  display: grid;
+  gap: 2px;
+}
+
+.saving-plan-card button strong {
+  font-size: 9px;
+}
+
+.saving-plan-card button small {
+  color: #8b95a1;
+  font-size: 7px;
+}
+
+.saving-plan-card button em {
+  color: #00a878;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.saving-plan-card button i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #dbe2eb;
+  border-radius: 7px;
+  color: #8b95a1;
+  background: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.saving-plan-card button.is-selected i {
+  border-color: #3182f6;
+  color: #fff;
+  background: #3182f6;
+}
+
+.allocation-card {
+  padding: 14px;
+}
+
+.allocation-card header {
+  display: grid;
+  gap: 2px;
+}
+
+.allocation-visual {
+  display: flex;
+  gap: 4px;
+  height: 64px;
+  margin: 13px 0 10px;
+}
+
+.allocation-visual > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 65px;
+  padding: 10px;
+  border-radius: 12px;
+  color: #5b6573;
+  background: #edf1f5;
+  transition: flex 0.35s ease;
+}
+
+.allocation-visual > div:last-child {
+  color: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 234, 198, 0.35), transparent 35%),
+    linear-gradient(145deg, #1b4fc1, #3182f6);
+}
+
+.allocation-visual span {
+  font-size: 7px;
+}
+
+.allocation-visual strong {
+  margin-top: 2px;
+  font-size: 16px;
+}
+
+.allocation-card input[type='range'] {
+  width: 100%;
+  accent-color: #3182f6;
+}
+
+.allocation-amounts {
+  display: flex;
+  justify-content: space-between;
+  color: #66717f;
+  font-size: 7px;
+  font-weight: 750;
+}
+
+.allocation-card > small {
+  display: block;
+  margin: 10px 0;
+  color: #8b95a1;
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.asset-summary-card {
+  color: #fff;
+  border-color: #214faa;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(90, 235, 194, 0.28), transparent 34%),
+    linear-gradient(145deg, #173782, #2769df);
+}
+
+.asset-summary-card header span {
+  color: #bcd1ff;
+}
+
+.asset-summary-card header em {
+  color: #72e8c4;
+  background: rgba(114, 232, 196, 0.12);
+}
+
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 0 12px 13px;
+}
+
+.summary-metrics > div {
+  display: grid;
+  gap: 3px;
+  padding: 9px 7px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.summary-metrics span {
+  color: #c5d5f6;
+  font-size: 6px;
+}
+
+.summary-metrics strong {
+  font-size: 9px;
+}
+
+.summary-metrics .is-positive strong {
+  color: #73ebc6;
+}
+
+.summary-metrics .is-negative strong {
+  color: #ffb7a7;
+}
+
+.chart-card {
+  padding-bottom: 9px;
+}
+
+.chart-card header button {
+  padding: 6px 7px;
+  border: 1px solid #dce7f8;
+  border-radius: 8px;
+  color: #1b64da;
+  background: #eef5ff;
+  font-size: 7px;
+  font-weight: 850;
+}
+
+.chart-card header button.is-loading {
+  opacity: 0.55;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 12px;
+  padding: 2px 14px;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #6b7684;
+  font-size: 7px;
+}
+
+.chart-legend i {
+  width: 12px;
+  height: 2px;
+  background: #9aa4b2;
+}
+
+.chart-legend i.snp {
+  background: #3182f6;
+}
+
+.asset-chart {
+  display: block;
+  width: 100%;
+  height: 150px;
+}
+
+.asset-chart line {
+  stroke: #edf0f4;
+  stroke-width: 1;
+}
+
+.investment-area {
+  fill: rgba(49, 130, 246, 0.08);
+}
+
+.cash-line,
+.investment-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.cash-line {
+  stroke: #9aa4b2;
+  stroke-dasharray: 4 4;
+}
+
+.investment-line {
+  stroke: #3182f6;
+}
+
+.investment-dot {
+  fill: #fff;
+  stroke: #3182f6;
+  stroke-width: 1.4;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px 7px;
+  color: #a0a8b3;
+  font-size: 6px;
+}
+
+.chart-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 12px;
+  padding: 8px;
+  border-radius: 9px;
+  background: #f4f7fb;
+}
+
+.chart-card footer span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #2469d5;
+  font-size: 7px;
+  font-weight: 850;
+}
+
+.chart-card footer i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #16ad7b;
+}
+
+.chart-card footer small {
+  color: #7b8491;
+  font-size: 6px;
+}
+
+.purchase-history {
+  padding-bottom: 5px;
+}
+
+.purchase-history header {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.purchase-history > div {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border-top: 1px solid #edf0f4;
+}
+
+.purchase-week {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  color: #1b64da;
+  background: #eaf3ff;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.purchase-history > div > div {
+  display: grid;
+  gap: 2px;
+}
+
+.purchase-history div strong {
+  font-size: 8px;
+}
+
+.purchase-history div small {
+  color: #8b95a1;
+  font-size: 6px;
+}
+
+.purchase-history div em {
+  color: #00a878;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.weekly-coach-card,
+.adjusted-plan-card {
+  padding: 14px;
+}
+
+.weekly-coach-card > strong {
+  display: block;
+  margin: 5px 0;
+  font-size: 11px;
+}
+
+.weekly-coach-card > p {
+  margin: 0 0 11px;
+  color: #66717f;
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.adjusted-plan-card > header {
+  padding: 0 0 9px;
+}
+
+.adjusted-plan-card > div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 7px;
+  padding: 9px 0;
+  border-top: 1px solid #edf0f4;
+  font-size: 8px;
+}
+
+.adjusted-plan-card del {
+  color: #9aa4b2;
+}
+
+.adjusted-plan-card div strong {
+  color: #00a878;
+}
+
+.invest-coach-footer {
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid #e2e7ee;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+}
+
+.invest-coach-footer > div {
+  display: grid;
+  gap: 2px;
+}
+
+.invest-coach-footer span {
+  color: #8b95a1;
+  font-size: 7px;
+}
+
+.invest-coach-footer strong {
+  font-size: 11px;
+}
+
+.invest-coach-footer button {
+  flex: 1;
+  padding: 11px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: #3182f6;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes enter-right {
+  from { opacity: 0; transform: translate(9px, 7px); }
+}
+
+@media (max-width: 520px) {
+  .invest-coach-shell {
+    padding: 0;
+    background: #f7f9fc;
+  }
+
+  .invest-coach-phone {
+    width: 100%;
+    height: 100dvh;
+    min-height: 600px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invest-coach-phone *,
+  .invest-coach-phone *::before,
+  .invest-coach-phone *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

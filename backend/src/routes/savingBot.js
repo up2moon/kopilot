@@ -21,7 +21,7 @@ const router = express.Router();
 const allowedRequestedActions = new Set([CREATE_WEEKLY_CHALLENGE_ACTION]);
 
 function toSuggestedQuestion(label, index) {
-  const isChallengeCreation = label === "이번 주 미션 만들기";
+  const isChallengeCreation = label === "이번 주 챌린지 만들어줘";
 
   return {
     id: isChallengeCreation

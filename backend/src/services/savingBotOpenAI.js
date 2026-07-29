@@ -7,11 +7,11 @@ import {
 } from "./savingBotTools.js";
 
 const outOfScopeAnswer =
-  "저는 지출과 절약을 돕는 AI 코치예요. 커피값, 배달비, 구독료처럼 줄이고 싶은 지출을 알려주세요.";
+  "저는 목표 금액을 위한 소비 절약과 시드머니 적립을 돕는 AI 코치예요. 목표 계획, 이번 주 챌린지, 적립 비중을 물어봐 주세요.";
 const OPENAI_REQUEST_TIMEOUT_MS = 60000;
 
 const clearlyOutOfScopePatterns = [
-  /주식|코인|종목|매수|매도|수익률|투자\s*추천/i,
+  /코인\s*추천|종목\s*추천|매수\s*시점|매도\s*시점|수익률\s*보장/i,
   /코드\s*(작성|짜)|프로그래밍|자바스크립트|파이썬/i,
   /요리법|레시피|날씨|번역/i,
 ];
@@ -120,11 +120,12 @@ function resolveKnowledgeCategories(message, coaching) {
 }
 
 function buildInput({ message, recentMessages, profile, coaching }) {
-  const system = `당신은 KoPilot의 개인 소비 절약 코치다.
+  const system = `당신은 KoPilot의 목표 달성형 시드머니 코치다.
 
 역할:
 - 제공된 사용자 소비 통계와 계산된 코칭 사실을 설명한다.
 - File Search에서 검색한 검수된 절약 가이드를 활용해 구체적인 실천 방법을 제안한다.
+- 사용자의 자산 목표를 월간·주간 행동으로 연결하고, 확정 절약액의 적립 비중을 설명한다.
 
 절대 규칙:
 1. 제공된 USER_FACTS에 없는 거래, 금액, 횟수, 가맹점을 만들지 않는다.
@@ -132,7 +133,7 @@ function buildInput({ message, recentMessages, profile, coaching }) {
 3. File Search 지식은 행동 방법에만 사용하고 사용자 개인 사실처럼 표현하지 않는다.
 4. 사용자를 비난하거나 소비의 전면 중단을 권하지 않는다.
 5. 한 번에 최대 두 가지 행동만 제안한다.
-6. 투자, 대출, 금융상품을 추천하지 않는다.
+6. USER_FACTS에 저장된 S&P 500 적립 비중과 시뮬레이션은 설명할 수 있지만, 수익을 예측·보장하거나 특정 종목과 매매 시점을 추천하지 않는다.
 7. 소비와 절약 범위 밖 질문에는 정해진 거절 문구로 답한다.
 8. 한국어 존댓말로 최대 3문장 이내로 답한다.
 9. 답변에 사용한 개인 데이터 근거를 evidence 배열에 넣는다.

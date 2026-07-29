@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 
 import {
+  AssetGoal,
   ExpenseCategory,
   TransactionHistory,
   UserExpenseCategory,
@@ -251,6 +252,10 @@ function buildCoaching(profile) {
   const selected = candidates[0];
 
   if (!selected) {
+    const goalLabel = profile.assetGoal
+      ? `${Number(profile.assetGoal.targetAmount).toLocaleString("ko-KR")}원 목표`
+      : "시드머니 목표";
+
     return {
       category: null,
       knowledgeCategory: "budget",
@@ -262,27 +267,32 @@ function buildCoaching(profile) {
       score: 0,
       evidence: ["절약 코칭을 만들 수 있는 반복 소비 데이터가 아직 부족함"],
       message:
-        "소비 데이터가 조금 더 쌓이면\n실천하기 쉬운 절약 방법을 알려드릴게요.",
+        "소비 데이터가 조금 더 쌓이면\n목표에 맞는 챌린지를 설계해드릴게요.",
       greeting:
-        "아직 반복 소비 패턴을 판단할 데이터가 충분하지 않아요. 결제 내역이 더 쌓이면 부담 없는 목표부터 찾아드릴게요.",
+        `아직 반복 소비 패턴을 판단할 데이터가 충분하지 않아요. 결제 내역이 더 쌓이면 ${goalLabel}에 가장 효과적인 행동부터 찾아드릴게요.`,
       suggestedQuestions: [
-        "이번 달 소비 요약 보기",
-        "예산 관리 방법 알려줘",
-        "소비 기록은 어떻게 분석해?",
+        "목표 달성 계획 보여줘",
+        "이번 주 챌린지 추천해줘",
+        "소비 데이터는 어떻게 분석해?",
       ],
     };
   }
 
   const amountLabel = selected.estimatedSavingAmount.toLocaleString("ko-KR");
+  const assetGoal = profile.assetGoal;
+  const ratio = Number(assetGoal?.selectedInvestmentRatio || 0);
+  const goalGreeting = assetGoal
+    ? `${assetGoal.title} 목표를 이어가기 위해 이번 주에는 ${selected.action}부터 실행해볼게요. 성공하면 ${amountLabel}원을 시드머니로 확정하고, 설정한 ${ratio}%는 S&P 500 적립 시뮬레이션에 반영할 수 있어요.`
+    : `이번 주에는 ${selected.action}로 약 ${amountLabel}원을 시드머니로 만들어볼 수 있어요. 생활을 크게 바꾸지 않고 시작할 수 있는 행동부터 골랐어요.`;
 
   return {
     ...selected,
-    message: `${selected.action}만 실천하면\n약 ${amountLabel}원을 아낄 수 있어요.`,
-    greeting: `${selected.evidence[0]}이 있었어요. 무리하지 않는 선에서 ${selected.recommendedReductionCount}번만 줄여볼까요?`,
+    message: `${selected.action}로\n시드머니 ${amountLabel}원을 확보해요.`,
+    greeting: goalGreeting,
     suggestedQuestions: [
-      "이번 주 미션 만들기",
-      `${selected.displayTerm} 줄이는 방법 알려줘`,
-      "다른 절약 항목 찾아줘",
+      "이번 주 챌린지 만들어줘",
+      "목표 달성 속도 확인해줘",
+      "투자 비중을 조정하고 싶어",
     ],
   };
 }
@@ -290,7 +300,7 @@ function buildCoaching(profile) {
 // 사용자 예산과 거래 내역을 결합해 Saving Bot이 사용할 개인화 컨텍스트를 만든다.
 export async function getSavingBotContext(userId) {
   const period = getPeriod();
-  const [transactions, budgets] = await Promise.all([
+  const [transactions, budgets, assetGoal] = await Promise.all([
     TransactionHistory.findAll({
       where: {
         user_id: userId,
@@ -318,6 +328,13 @@ export async function getSavingBotContext(userId) {
         },
       ],
     }),
+    AssetGoal.findOne({
+      where: {
+        user_id: userId,
+        status: "ACTIVE",
+      },
+      order: [["created_at", "DESC"]],
+    }),
   ]);
   // 카테고리 이름으로 예산을 바로 조회할 수 있도록 Map으로 변환한다.
   const budgetMap = new Map(
@@ -339,6 +356,21 @@ export async function getSavingBotContext(userId) {
     totalAmount,
     paymentCount: transactions.length,
     categories,
+    assetGoal: assetGoal
+      ? {
+          goalId: Number(assetGoal.id),
+          title: assetGoal.title,
+          targetAmount: Number(assetGoal.target_amount),
+          targetDate: assetGoal.target_date,
+          selectedInvestmentRatio: Number(
+            assetGoal.selected_investment_ratio,
+          ),
+          recommendedInvestmentRatio: Number(
+            assetGoal.recommended_investment_ratio,
+          ),
+          assetCode: assetGoal.asset_code,
+        }
+      : null,
   };
 
   return {

@@ -1,0 +1,576 @@
+.roadmap-page,
+.roadmap-empty,
+.roadmap-loading {
+  min-height: 100%;
+  padding: 22px 18px 100px;
+  color: #191f28;
+  background: #f5f7fa;
+  box-sizing: border-box;
+}
+
+.roadmap-skeleton-card {
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.roadmap-skeleton-line,
+.roadmap-skeleton-chart {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #edf1f5 25%, #f8fafc 50%, #edf1f5 75%);
+  background-size: 200% 100%;
+  animation: roadmap-shimmer 1.2s infinite linear;
+}
+
+.roadmap-skeleton-line {
+  width: 100%;
+  height: 16px;
+}
+
+.roadmap-skeleton-line.short {
+  width: 38%;
+}
+
+.roadmap-skeleton-line.amount {
+  width: 68%;
+  height: 34px;
+}
+
+.roadmap-skeleton-chart {
+  height: 155px;
+}
+
+@keyframes roadmap-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.roadmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+
+.roadmap-header span,
+.goal-progress-copy > span,
+.roadmap-comparison-card header span,
+.ratio-card header span,
+.roadmap-challenge-card header span,
+.contribution-list-card header span {
+  color: #3182f6;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+
+.roadmap-header h1 {
+  margin: 4px 0 0;
+  font-size: 25px;
+  letter-spacing: -1px;
+}
+
+.roadmap-header em {
+  padding: 6px 8px;
+  border-radius: 99px;
+  color: #6b7684;
+  background: #e9edf2;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.goal-progress-card,
+.roadmap-comparison-card,
+.ratio-card,
+.roadmap-challenge-card,
+.contribution-list-card {
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid #e2e7ee;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 9px 25px rgba(32, 48, 72, 0.06);
+}
+
+.goal-progress-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 82px;
+  align-items: center;
+  padding: 19px;
+  color: #fff;
+  border-color: #235cc7;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(100, 237, 199, 0.3), transparent 34%),
+    linear-gradient(145deg, #173783, #2c73e9);
+}
+
+.goal-progress-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.goal-progress-copy > span {
+  color: #c4d6ff;
+}
+
+.goal-progress-copy > strong {
+  font-size: 24px;
+  letter-spacing: -0.8px;
+}
+
+.goal-progress-copy small {
+  color: #cbd9f7;
+  font-size: 8px;
+}
+
+.goal-progress-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: conic-gradient(#76edca calc(var(--achievement) * 1%), rgba(255,255,255,.18) 0);
+}
+
+.goal-progress-ring::before {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #2767d7;
+  content: '';
+}
+
+.goal-progress-ring strong {
+  z-index: 1;
+  font-size: 15px;
+}
+
+.goal-progress-track {
+  grid-column: 1 / -1;
+  height: 6px;
+  margin: 16px 0 10px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255,255,255,.16);
+}
+
+.goal-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #76edca, #fff);
+}
+
+.goal-progress-card p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #d4e0fa;
+  font-size: 9px;
+}
+
+.goal-progress-card p strong {
+  color: #7af0cd;
+}
+
+.roadmap-comparison-card,
+.ratio-card,
+.roadmap-challenge-card,
+.contribution-list-card {
+  padding: 16px;
+}
+
+.roadmap-comparison-card > header,
+.ratio-card > header,
+.roadmap-challenge-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.roadmap-comparison-card header > div,
+.ratio-card header > div,
+.roadmap-challenge-card header > div,
+.contribution-list-card > header {
+  display: grid;
+  gap: 3px;
+}
+
+.roadmap-comparison-card header strong,
+.ratio-card header strong,
+.roadmap-challenge-card header strong,
+.contribution-list-card header strong {
+  font-size: 13px;
+}
+
+.roadmap-comparison-card header small {
+  color: #8b95a1;
+  font-size: 8px;
+}
+
+.comparison-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+  margin: 14px 0 9px;
+}
+
+.comparison-numbers > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f4f7fb;
+}
+
+.comparison-numbers > div:last-child {
+  color: #1b64da;
+  background: #edf5ff;
+}
+
+.comparison-numbers span {
+  color: #7b8491;
+  font-size: 8px;
+}
+
+.comparison-numbers strong {
+  font-size: 13px;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7b8491;
+  font-size: 7px;
+}
+
+.chart-legend i {
+  width: 12px;
+  height: 2px;
+  background: #a1a9b5;
+}
+
+.chart-legend i.mixed {
+  background: #3182f6;
+}
+
+.roadmap-chart-svg {
+  display: block;
+  width: 100%;
+  height: 178px;
+}
+
+.roadmap-chart-svg line {
+  stroke: #edf0f4;
+  stroke-width: 1;
+}
+
+.roadmap-axis-unit {
+  fill: #8b95a1;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.roadmap-axis-label {
+  fill: #98a2b0;
+  font-size: 7px;
+}
+
+.roadmap-y-axis-label {
+  text-anchor: end;
+}
+
+.roadmap-x-axis-label {
+  font-weight: 650;
+}
+
+.roadmap-chart-svg polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.roadmap-gap-area {
+  fill: rgba(49, 130, 246, .12);
+}
+
+.cash-only-line {
+  stroke: #a1a9b5;
+  stroke-dasharray: 4 4;
+}
+
+.mixed-line {
+  stroke: #3182f6;
+  stroke-width: 2.8px !important;
+}
+
+.roadmap-delta-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -4px 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #cfe1ff;
+  border-radius: 14px;
+  color: #1559c7;
+  background: linear-gradient(135deg, #edf5ff, #e1edff);
+}
+
+.roadmap-delta-highlight > div {
+  display: grid;
+  gap: 3px;
+}
+
+.roadmap-delta-highlight span {
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.roadmap-delta-highlight strong {
+  font-size: 19px;
+  letter-spacing: -.4px;
+}
+
+.roadmap-delta-highlight .roadmap-delta-arrow {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #2878ed;
+  font-size: 18px;
+}
+
+.roadmap-chart-svg circle {
+  fill: #fff;
+  stroke: #3182f6;
+  stroke-width: 1.4;
+}
+
+.roadmap-comparison-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px;
+  border-radius: 10px;
+  background: #f4f7fb;
+}
+
+.roadmap-comparison-card footer span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #1b64da;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.roadmap-comparison-card footer i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #16ad7b;
+}
+
+.roadmap-comparison-card footer small {
+  color: #7b8491;
+  font-size: 7px;
+}
+
+.ratio-card header em {
+  padding: 5px 7px;
+  border-radius: 99px;
+  color: #087b59;
+  background: #e9f9f3;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.ratio-bars {
+  display: flex;
+  gap: 4px;
+  height: 42px;
+  margin: 14px 0 8px;
+}
+
+.ratio-bars span {
+  display: flex;
+  align-items: center;
+  min-width: 54px;
+  padding: 9px;
+  border-radius: 11px;
+  color: #5f6977;
+  background: #edf1f5;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.ratio-bars span:last-child {
+  color: #fff;
+  background: linear-gradient(120deg, #215dcf, #3d8bff);
+}
+
+.ratio-card input {
+  width: 100%;
+  accent-color: #3182f6;
+}
+
+.ratio-card > small {
+  color: #8b95a1;
+  font-size: 7px;
+}
+
+.roadmap-challenge-card header button {
+  border: 0;
+  color: #1b64da;
+  background: transparent;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.roadmap-challenge-card > div {
+  display: grid;
+  grid-template-columns: 23px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.roadmap-challenge-card > div > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  color: #fff;
+  background: #3182f6;
+  font-size: 8px;
+}
+
+.roadmap-challenge-card > div strong {
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.roadmap-challenge-card > div em {
+  color: #00a878;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.reflect-saving-button,
+.roadmap-empty button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: #3182f6;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.roadmap-challenge-card > p {
+  margin: 8px 0 0;
+  color: #6b7684;
+  font-size: 8px;
+  text-align: center;
+}
+
+.contribution-list-card > div {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid #edf0f4;
+}
+
+.contribution-list-card > div > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: #1b64da;
+  background: #edf5ff;
+  font-size: 7px;
+  font-weight: 850;
+}
+
+.contribution-list-card > div > div {
+  display: grid;
+  gap: 2px;
+}
+
+.contribution-list-card div strong {
+  font-size: 8px;
+}
+
+.contribution-list-card div small {
+  color: #8b95a1;
+  font-size: 7px;
+}
+
+.contribution-list-card div em {
+  color: #00a878;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.roadmap-disclaimer {
+  margin: 16px 8px 0;
+  color: #9aa4b2;
+  font-size: 7px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.roadmap-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.roadmap-empty > span {
+  font-size: 42px;
+}
+
+.roadmap-empty h1 {
+  margin: 14px 0 6px;
+  font-size: 21px;
+}
+
+.roadmap-empty p {
+  color: #6b7684;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.roadmap-loading {
+  display: grid;
+  place-items: center;
+  color: #6b7684;
+  font-size: 11px;
+}

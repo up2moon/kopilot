@@ -4,6 +4,7 @@ import CoachInputForm from "./components/CoachInputForm";
 import CoachSuggestions from "./components/CoachSuggestions";
 import CoachingInsightCard from "./components/CoachingInsightCard";
 import useCoachChat from "./hooks/useCoachChat";
+import AssetGoalPlanner from "./components/AssetGoalPlanner";
 import "./CoachPage.css";
 
 export default function CoachPage({ auth, onBack, onNavigate }) {
@@ -36,6 +37,11 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
         errorMessage={errorMessage}
         isLoading={isLoading}
         onBack={onBack}
+      />
+
+      <AssetGoalPlanner
+        onNavigate={onNavigate}
+        token={auth?.accessToken}
       />
 
       <CoachingInsightCard

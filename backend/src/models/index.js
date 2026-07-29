@@ -503,6 +503,137 @@ export const InvestmentPrice = sequelize.define(
   },
 );
 
+export const AssetGoal = sequelize.define(
+  "AssetGoal",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    title: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    target_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    start_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    target_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    asset_code: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+      defaultValue: "360750",
+    },
+    recommended_investment_ratio: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 50,
+    },
+    selected_investment_ratio: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 50,
+    },
+    status: {
+      type: DataTypes.ENUM("ACTIVE", "COMPLETED", "PAUSED"),
+      allowNull: false,
+      defaultValue: "ACTIVE",
+    },
+  },
+  {
+    tableName: "asset_goal",
+    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    indexes: [
+      {
+        fields: ["user_id", "status"],
+      },
+    ],
+  },
+);
+
+export const InvestmentContribution = sequelize.define(
+  "InvestmentContribution",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    goal_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    challenge_id: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+    },
+    saving_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    investment_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    cash_amount: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    asset_code: {
+      type: DataTypes.STRING(30),
+      allowNull: false,
+    },
+    price_trade_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    purchase_price: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    quantity: {
+      type: DataTypes.DECIMAL(24, 10),
+      allowNull: false,
+    },
+    contributed_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "investment_contribution",
+    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
+    indexes: [
+      {
+        fields: ["goal_id", "contributed_at"],
+      },
+      {
+        unique: true,
+        fields: ["goal_id", "challenge_id"],
+      },
+    ],
+  },
+);
+
 User.hasMany(UserExpenseCategory, {
   foreignKey: "user_id",
 });
@@ -560,6 +691,41 @@ InvestmentAsset.hasMany(InvestmentPrice, {
   sourceKey: "asset_code",
 });
 InvestmentPrice.belongsTo(InvestmentAsset, {
+  foreignKey: "asset_code",
+  targetKey: "asset_code",
+});
+
+User.hasMany(AssetGoal, {
+  foreignKey: "user_id",
+});
+AssetGoal.belongsTo(User, {
+  foreignKey: "user_id",
+});
+InvestmentAsset.hasMany(AssetGoal, {
+  foreignKey: "asset_code",
+  sourceKey: "asset_code",
+});
+AssetGoal.belongsTo(InvestmentAsset, {
+  foreignKey: "asset_code",
+  targetKey: "asset_code",
+});
+AssetGoal.hasMany(InvestmentContribution, {
+  foreignKey: "goal_id",
+});
+InvestmentContribution.belongsTo(AssetGoal, {
+  foreignKey: "goal_id",
+});
+AiChallenge.hasOne(InvestmentContribution, {
+  foreignKey: "challenge_id",
+});
+InvestmentContribution.belongsTo(AiChallenge, {
+  foreignKey: "challenge_id",
+});
+InvestmentAsset.hasMany(InvestmentContribution, {
+  foreignKey: "asset_code",
+  sourceKey: "asset_code",
+});
+InvestmentContribution.belongsTo(InvestmentAsset, {
   foreignKey: "asset_code",
   targetKey: "asset_code",
 });

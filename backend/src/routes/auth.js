@@ -4,6 +4,7 @@ import { UniqueConstraintError } from "sequelize";
 import { requireAuth } from "../middleware/auth.js";
 import { User } from "../models/index.js";
 import { hashPassword, verifyPassword } from "../services/password.js";
+import { seedDemoAccount } from "../services/demoAccountSeed.js";
 import {
   consumeRefreshToken,
   issueTokenPair,
@@ -71,6 +72,14 @@ router.post("/signup", async (req, res) => {
       mydata_connected: false,
       budget_setup_completed: false,
     });
+    if (req.body.demoMode === true) {
+      try {
+        await seedDemoAccount(user);
+      } catch (error) {
+        await user.destroy().catch(() => {});
+        throw error;
+      }
+    }
     const tokens = await issueTokenPair(user);
 
     return res.status(201).json({

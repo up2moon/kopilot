@@ -1,0 +1,257 @@
+.coach-goal-planner,
+.coach-goal-active {
+  margin-bottom: 15px;
+  overflow: hidden;
+  border: 1px solid #dce7f8;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(49,130,246,.1), transparent 35%),
+    #fff;
+  box-shadow: 0 9px 24px rgba(31, 48, 73, 0.07);
+}
+
+.coach-goal-planner {
+  padding: 16px;
+}
+
+.coach-goal-planner header {
+  display: grid;
+  gap: 3px;
+}
+
+.coach-goal-planner header > span,
+.coach-goal-active > div:first-child > span,
+.analysis-summary > span {
+  color: #3182f6;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.coach-goal-planner header > strong {
+  font-size: 15px;
+}
+
+.coach-goal-planner header p {
+  margin: 1px 0 0;
+  color: #6b7684;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.goal-planner-inputs {
+  display: grid;
+  grid-template-columns: 1.45fr .75fr;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.goal-planner-inputs label > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #7b8491;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.goal-planner-inputs label > div {
+  display: flex;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid #dfe5ed;
+  border-radius: 11px;
+  background: #f8fafc;
+}
+
+.goal-planner-inputs input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.goal-planner-inputs em {
+  color: #7b8491;
+  font-size: 8px;
+  font-style: normal;
+}
+
+.goal-planner-inputs select {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #dfe5ed;
+  border-radius: 11px;
+  outline: 0;
+  background: #f8fafc;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.monthly-goal-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 11px;
+  color: #1b64da;
+  background: #edf5ff;
+}
+
+.monthly-goal-preview span {
+  font-size: 8px;
+}
+
+.monthly-goal-preview strong {
+  font-size: 12px;
+}
+
+.coach-goal-planner > button,
+.goal-analysis-result > button,
+.coach-goal-active > button {
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: #3182f6;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.coach-goal-planner button:disabled {
+  opacity: .55;
+}
+
+.goal-analysis-result {
+  display: grid;
+  gap: 10px;
+}
+
+.analysis-summary {
+  display: grid;
+  gap: 3px;
+  padding: 11px;
+  border-radius: 12px;
+  background: #f1f8f5;
+}
+
+.analysis-summary > span {
+  color: #087b59;
+}
+
+.analysis-summary > strong {
+  font-size: 11px;
+}
+
+.analysis-summary small {
+  color: #6d7b75;
+  font-size: 7px;
+}
+
+.analysis-opportunities {
+  display: grid;
+  gap: 5px;
+}
+
+.analysis-opportunities > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 9px;
+  border: 1px solid #edf0f4;
+  border-radius: 9px;
+}
+
+.analysis-opportunities strong {
+  font-size: 8px;
+}
+
+.analysis-opportunities em {
+  color: #00a878;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.goal-ratio-control {
+  display: grid;
+  gap: 6px;
+}
+
+.goal-ratio-control > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.goal-ratio-control span strong {
+  font-size: 9px;
+}
+
+.goal-ratio-control span em {
+  color: #3182f6;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.goal-ratio-control input {
+  width: 100%;
+  accent-color: #3182f6;
+}
+
+.goal-ratio-control small {
+  color: #7b8491;
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.goal-planner-error {
+  margin: 8px 0 0;
+  color: #e14c38;
+  font-size: 8px;
+}
+
+.coach-goal-active {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 15px;
+}
+
+.coach-goal-active > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.coach-goal-active div > strong {
+  font-size: 13px;
+}
+
+.coach-goal-active div > small {
+  color: #7b8491;
+  font-size: 8px;
+}
+
+.coach-goal-ratio {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  text-align: right;
+}
+
+.coach-goal-ratio span {
+  color: #7b8491;
+  font-size: 7px;
+}
+
+.coach-goal-ratio strong {
+  color: #3182f6;
+  font-size: 16px;
+}
+
+.coach-goal-active > button {
+  grid-column: 1 / -1;
+}
