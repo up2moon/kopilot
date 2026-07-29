@@ -1,5 +1,4 @@
 export const useMockInvestment =
-  import.meta.env.DEV ||
   import.meta.env.VITE_USE_MOCK_INVESTMENT === 'true'
 
 export const mockInvestmentAssets = [
