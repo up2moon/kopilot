@@ -1,3 +1,4 @@
+import searchIcon from '../../../assets/icons/search-icon.svg'
 import { formatPrice, getAssetKey } from '../utils/formatters'
 
 export default function AssetSearchCard({
@@ -21,7 +22,7 @@ export default function AssetSearchCard({
       </div>
 
       <label className="investment-search-input">
-        <span aria-hidden="true">🔍</span>
+        <img src={searchIcon} alt="" aria-hidden="true" />
         <input
           type="search"
           value={searchKeyword}

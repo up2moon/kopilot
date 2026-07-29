@@ -1,3 +1,4 @@
+import stockIcon from '../../../assets/icons/stock-icon.svg'
 import {
   formatGain,
   formatPrice,
@@ -11,7 +12,7 @@ export default function SimulationRow({ asset }) {
     <article className="investment-result-row">
       <div className="investment-asset-left">
         <span className="investment-asset-icon" aria-hidden="true">
-          {asset.icon || '📊'}
+          <img src={stockIcon} alt="" />
         </span>
         <div>
           <strong>{asset.label}</strong>
@@ -25,6 +26,7 @@ export default function SimulationRow({ asset }) {
         </div>
       </div>
       <div className="investment-asset-right">
+        <small>예상 평가액</small>
         <strong>{formatWon(asset.estimatedValue)}</strong>
         <span className={isLoss ? 'is-loss' : 'is-gain'}>
           {formatGain(asset.estimatedGain)}
