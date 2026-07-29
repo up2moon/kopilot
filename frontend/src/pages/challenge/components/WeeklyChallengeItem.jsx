@@ -62,15 +62,17 @@ export default function WeeklyChallengeItem({ challenge, highlighted = false }) 
 
       <div className="challenge-target-row">
         <strong>{targetLabel(challenge)}</strong>
-        <span className={`challenge-reward difficulty-${challenge.difficulty.toLowerCase()}`}>
-          {difficultyLabel[challenge.difficulty]} · {challenge.point}P
-        </span>
+        <div className="challenge-item-meta">
+          <span className={`challenge-reward difficulty-${challenge.difficulty.toLowerCase()}`}>
+            {difficultyLabel[challenge.difficulty]} · {challenge.point}P
+          </span>
+          {challenge.estimatedSavingAmount > 0 && (
+            <small className="challenge-estimated-saving">
+              예상 절약 {formatWon(challenge.estimatedSavingAmount)}
+            </small>
+          )}
+        </div>
       </div>
-      {challenge.estimatedSavingAmount > 0 && (
-        <small className="challenge-estimated-saving">
-          예상 절약 {formatWon(challenge.estimatedSavingAmount)}
-        </small>
-      )}
     </article>
   )
 }

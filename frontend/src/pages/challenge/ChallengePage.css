@@ -55,7 +55,7 @@
 .challenge-week-summary {
   display: grid;
   gap: 7px;
-  padding: 26px 24px;
+  padding: 19px 20px;
   background:
     radial-gradient(circle at 92% 16%, rgba(49, 130, 246, 0.14), transparent 30%),
     #fff;
@@ -86,7 +86,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 34px;
+  margin-top: 24px;
 }
 
 .weekly-challenge-heading h2 {
@@ -104,7 +104,7 @@
 .weekly-progress-track {
   display: block;
   height: 7px;
-  margin: 12px 0 18px;
+  margin: 9px 0 13px;
   overflow: hidden;
   border-radius: 999px;
   background: #e5e8eb;
@@ -120,14 +120,14 @@
 
 .weekly-challenge-list {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .weekly-challenge-item {
   display: grid;
-  gap: 11px;
-  padding: 20px;
-  border-radius: 22px;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
   background: #fff;
   box-shadow: 0 7px 20px rgba(49, 82, 128, 0.06);
 }
@@ -198,9 +198,9 @@
 .weekly-challenge-item .challenge-content {
   margin: 0;
   color: #191f28;
-  font-size: var(--font-size-card-title);
+  font-size: var(--font-size-body);
   font-weight: 700;
-  line-height: 1.65;
+  line-height: 1.5;
   letter-spacing: -0.25px;
   overflow-wrap: anywhere;
   word-break: break-all;
@@ -211,7 +211,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding-top: 11px;
+  padding-top: 8px;
   border-top: 1px solid #f2f4f6;
   font-size: var(--font-size-caption);
 }
@@ -222,9 +222,16 @@
   line-height: 1.45;
 }
 
+.challenge-item-meta {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
 .challenge-reward {
   flex: 0 0 auto;
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-radius: 8px;
   font-weight: 800;
   white-space: nowrap;
