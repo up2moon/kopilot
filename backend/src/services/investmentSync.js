@@ -37,6 +37,22 @@ export const defaultBenchmarkCodes = defaultBenchmarkAssets.map(
   (asset) => asset.assetCode,
 );
 
+const featuredAssetCodes = [
+  "360750", // TIGER 미국S&P500
+  "069500", // KODEX 200
+  "005930", // 삼성전자
+  "000660", // SK하이닉스
+  "035420", // NAVER
+  "035720", // 카카오
+  "373220", // LG에너지솔루션
+  "207940", // 삼성바이오로직스
+  "012450", // 한화에어로스페이스
+  "105560", // KB금융
+  "055550", // 신한지주
+  "003490", // 대한항공
+  "267250", // HD현대중공업
+];
+
 function getKstDate(date = new Date()) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
@@ -387,6 +403,43 @@ export async function searchInvestmentAssets({ keyword, type, market, limit }) {
 
   if (market) {
     where.market = String(market).toUpperCase();
+  }
+
+  if (!normalizedKeyword) {
+    const featuredAssets = await InvestmentAsset.findAll({
+      where: {
+        ...where,
+        asset_code: {
+          [Op.in]: featuredAssetCodes,
+        },
+      },
+    });
+    const featuredAssetMap = new Map(
+      featuredAssets.map((asset) => [asset.asset_code, asset]),
+    );
+    const orderedFeaturedAssets = featuredAssetCodes
+      .map((assetCode) => featuredAssetMap.get(assetCode))
+      .filter(Boolean)
+      .slice(0, limit);
+    const remainingLimit = Math.max(limit - orderedFeaturedAssets.length, 0);
+    const remainingAssets = remainingLimit
+      ? await InvestmentAsset.findAll({
+          where: {
+            ...where,
+            asset_code: {
+              [Op.notIn]: featuredAssetCodes,
+            },
+          },
+          order: [
+            ["price_sync_enabled", "DESC"],
+            ["asset_type", "ASC"],
+            ["label", "ASC"],
+          ],
+          limit: remainingLimit,
+        })
+      : [];
+
+    return [...orderedFeaturedAssets, ...remainingAssets].map(toAssetResponse);
   }
 
   const assets = await InvestmentAsset.findAll({
