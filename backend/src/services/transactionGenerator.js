@@ -8,6 +8,16 @@ const categories = [
   "문화",
   "통신",
 ];
+const transactionCategoryCodes = {
+  "카페·간식": "01",
+  식비: "02",
+  배달: "03",
+  쇼핑: "04",
+  교통: "05",
+  구독: "09",
+  문화: "10",
+  통신: "11",
+};
 
 const merchantPools = {
   식비: ["한솥도시락", "김밥천국", "본죽", "역전우동", "이마트24"],
@@ -259,3 +269,7 @@ export function generateFixtureTransactions() {
 }
 
 export const expenseCategories = categories;
+
+export function getTransactionCategoryCode(category) {
+  return transactionCategoryCodes[category] || "00";
+}

@@ -36,6 +36,12 @@ function parseMessage(rawMessage) {
       role: message.role,
       content: message.content,
       createdAt: message.createdAt,
+      assetAllocation:
+        message.role === "assistant" &&
+        message.assetAllocation &&
+        typeof message.assetAllocation === "object"
+          ? message.assetAllocation
+          : null,
     };
   } catch {
     return null;
@@ -52,12 +58,20 @@ export async function saveSavingBotChatExchange(
   userId,
   userMessage,
   assistantMessage,
+  metadata = {},
 ) {
   const key = getChatHistoryKey(userId);
   const createdAt = new Date().toISOString();
   const serializedMessages = [
     JSON.stringify({ role: "user", content: userMessage, createdAt }),
-    JSON.stringify({ role: "assistant", content: assistantMessage, createdAt }),
+    JSON.stringify({
+      role: "assistant",
+      content: assistantMessage,
+      createdAt,
+      ...(metadata.assetAllocation
+        ? { assetAllocation: metadata.assetAllocation }
+        : {}),
+    }),
   ];
 
   await redisClient

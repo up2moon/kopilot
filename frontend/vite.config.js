@@ -5,8 +5,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const localApiProxyTarget =
     env.DEV_API_PROXY_TARGET || "http://localhost:3001";
-  const checkApiProxyTarget =
-    env.CHECK_API_PROXY_TARGET || "https://kospay.p-e.kr";
 
   return {
     plugins: [react()],
@@ -20,11 +18,6 @@ export default defineConfig(({ mode }) => {
         interval: 300,
       },
       proxy: {
-        "/api/investment": {
-          target: checkApiProxyTarget,
-          changeOrigin: true,
-          secure: true,
-        },
         "/api": {
           target: localApiProxyTarget,
           changeOrigin: true,

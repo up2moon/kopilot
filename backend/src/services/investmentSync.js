@@ -52,6 +52,7 @@ const featuredAssetCodes = [
   "003490", // 대한항공
   "267250", // HD현대중공업
 ];
+const minimumCompleteAssetMasterCount = 20;
 
 function getKstDate(date = new Date()) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -356,7 +357,7 @@ function shouldSyncMastersOnRead() {
 export async function ensureAssetMasters() {
   const count = await InvestmentAsset.count();
 
-  if (count > 0) {
+  if (count >= minimumCompleteAssetMasterCount) {
     return {
       skipped: true,
       count,

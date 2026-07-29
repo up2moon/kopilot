@@ -11,6 +11,10 @@ const ASSET_ALLOCATION_QUESTION = "소비 패턴으로 자산 배분 받기";
 const CHALLENGE_PATH = "/challenge";
 const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
 
+function isAssetAllocationQuestion(value) {
+  return /(소비\s*패턴).*(자산\s*배분)/.test(String(value || ""));
+}
+
 export default function useCoachChat(token, onNavigate) {
   const [coaching, setCoaching] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -111,7 +115,12 @@ export default function useCoachChat(token, onNavigate) {
           }),
         ]);
         const savedMessages = (historyResult.messages || []).map((message) =>
-          createMessage(message.role, message.content),
+          createMessage(
+            message.role,
+            message.content,
+            null,
+            message.assetAllocation || null,
+          ),
         );
 
         setCoaching(data);
@@ -171,7 +180,7 @@ export default function useCoachChat(token, onNavigate) {
     }
 
     if (
-      trimmedQuestion === ASSET_ALLOCATION_QUESTION &&
+      isAssetAllocationQuestion(trimmedQuestion) &&
       nextRequestedAction !== ANALYZE_ASSET_ALLOCATION_ACTION
     ) {
       setQuestion("");
@@ -241,6 +250,12 @@ export default function useCoachChat(token, onNavigate) {
       );
       setShowSuggestions(true);
     } catch (error) {
+      if (error.code === "ALLOCATION_AMOUNT_REQUIRED") {
+        setShowAllocationAmountForm(true);
+        setMessages((current) => current.slice(0, -1));
+        return;
+      }
+
       setErrorMessage(error.message);
       setMessages((current) => [
         ...current,
@@ -264,10 +279,15 @@ export default function useCoachChat(token, onNavigate) {
       typeof suggestion === "string"
         ? { label: suggestion, action: "ASK" }
         : suggestion;
+    const inferredAction = isAssetAllocationQuestion(
+      normalizedSuggestion.label,
+    )
+      ? ANALYZE_ASSET_ALLOCATION_ACTION
+      : normalizedSuggestion.action;
 
     setShowSuggestions(false);
     if (
-      normalizedSuggestion.action === ANALYZE_ASSET_ALLOCATION_ACTION
+      inferredAction === ANALYZE_ASSET_ALLOCATION_ACTION
     ) {
       setShowAllocationAmountForm(true);
       return;
@@ -278,8 +298,8 @@ export default function useCoachChat(token, onNavigate) {
       [
         CREATE_WEEKLY_CHALLENGE_ACTION,
         ANALYZE_ASSET_ALLOCATION_ACTION,
-      ].includes(normalizedSuggestion.action)
-        ? normalizedSuggestion.action
+      ].includes(inferredAction)
+        ? inferredAction
         : null,
     );
   };

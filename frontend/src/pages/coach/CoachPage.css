@@ -306,6 +306,7 @@
 
 .coach-allocation-asset-heading {
   min-width: 0;
+  align-items: flex-start;
   gap: 6px;
 }
 
@@ -321,10 +322,14 @@
 
 .coach-allocation-asset-heading strong {
   min-width: 0;
+  display: -webkit-box;
   overflow: hidden;
   font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 15px;
+  white-space: normal;
+  word-break: keep-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .coach-allocation-code {

@@ -1,6 +1,6 @@
 import SelectedAssetResults from './SelectedAssetResults'
 import SimulationRow from './SimulationRow'
-import { formatWon } from '../utils/formatters'
+import { formatGain, formatWon } from '../utils/formatters'
 
 export default function InvestmentResults({
   children,
@@ -14,6 +14,12 @@ export default function InvestmentResults({
   const comparisons = isRefreshing ? [] : data?.comparisons || []
   const investmentAmount =
     data?.investmentAmount ?? data?.spendingAmount ?? data?.savedAmount
+  const monthLabel = data?.month
+    ? `${Number(data.month.slice(5, 7))}월`
+    : '선택한 달'
+  const sourceLabel = isNaN(Number(investmentAmount))
+    ? '소비액'
+    : `${monthLabel} ${data?.categoryLabel || '소비'} ${formatWon(investmentAmount)}`
 
   if (data?.status === 'NO_SAVINGS') {
     return (
@@ -42,16 +48,32 @@ export default function InvestmentResults({
   return (
     <>
       <section className="investment-hero-card">
-        <span>
-          {data?.summaryText || '선택한 월 소비액을 기준으로 계산했어요.'}
-        </span>
-        <strong>{formatWon(investmentAmount)}</strong>
-        <p>
-          {primaryBenchmark
-            ? `${primaryBenchmark.label} 기준 현재 약 ${formatWon(primaryBenchmark.estimatedValue)}으로 계산돼요.`
-            : data?.assumptionText}
-        </p>
-        <small>{data?.disclaimer}</small>
+        <div className="investment-hero-basis">
+          <span>기준 금액</span>
+          <p>{sourceLabel}</p>
+        </div>
+        {primaryBenchmark ? (
+          <>
+            <p className="investment-hero-scenario">
+              이 돈을 <strong>{primaryBenchmark.label}</strong>에 투자했다면
+            </p>
+            <div className="investment-hero-value">
+              <span>지금</span>
+              <strong>{formatWon(primaryBenchmark.estimatedValue)}</strong>
+            </div>
+            <p
+              className={`investment-hero-gain${
+                Number(primaryBenchmark.estimatedGain) < 0
+                  ? ' is-loss'
+                  : ' is-gain'
+              }`}
+            >
+              원금 대비 {formatGain(primaryBenchmark.estimatedGain)}
+            </p>
+          </>
+        ) : (
+          <p className="investment-hero-scenario">{data?.assumptionText}</p>
+        )}
       </section>
 
       <section className="investment-section">

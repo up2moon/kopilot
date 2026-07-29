@@ -13,9 +13,12 @@ async function requestSavingBot(endpoint, token, options = {}) {
     : null;
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       data?.message || "AI 절약 코치 요청을 처리하지 못했습니다.",
     );
+
+    error.code = data?.code || null;
+    throw error;
   }
 
   if (!data) {

@@ -188,35 +188,79 @@
 
 .investment-hero-card {
   margin-top: 18px;
-  padding: 22px 24px 12px;
+  padding: 18px;
   border-radius: 20px;
-  background: #3182f6;
+  background: linear-gradient(145deg, #2878ee 0%, #3f8cff 100%);
   color: #fff;
   box-shadow: 0 14px 28px rgba(49, 130, 246, 0.22);
 }
 
-.investment-hero-card span,
-.investment-hero-card small {
+.investment-hero-basis span,
+.investment-hero-outcome span {
   display: block;
-  color: #d8e8ff;
-  font-size: 12px;
-  font-weight: 700;
+  color: #cfe2ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.investment-hero-basis p {
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
   line-height: 1.45;
 }
 
-.investment-hero-card strong {
-  display: block;
-  margin-top: 10px;
+.investment-hero-scenario {
+  margin: 15px 0 0;
+  color: #d8e8ff;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.investment-hero-scenario strong {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.investment-hero-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.investment-hero-value span {
+  color: #d8e8ff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.investment-hero-value strong {
+  color: #ffffff;
   font-size: var(--font-size-metric);
   font-weight: 900;
   line-height: 1.2;
 }
 
-.investment-hero-card p {
-  margin: 12px 0 4px;
-  font-size: 15px;
+.investment-hero-gain {
+  display: inline-block;
+  margin: 10px 0 0;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.45;
+}
+
+.investment-hero-gain.is-gain {
+  background: rgba(217, 255, 232, 0.2);
+  color: #dcffe9;
+}
+
+.investment-hero-gain.is-loss {
+  background: rgba(255, 224, 224, 0.2);
+  color: #ffe1e1;
 }
 
 .investment-section {

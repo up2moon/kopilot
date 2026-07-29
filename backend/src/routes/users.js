@@ -1,6 +1,7 @@
 import express from "express";
 import { Op } from "sequelize";
 
+import { sequelize } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   ExpenseCategory,
@@ -11,6 +12,7 @@ import {
   expenseCategories,
   generateFixtureTransactions,
   generateTransactionsWithOpenAI,
+  getTransactionCategoryCode,
 } from "../services/transactionGenerator.js";
 import { getTopRankings, getUserRankingData } from "../services/ranking.js";
 import { getConsumptionDna } from "../services/consumptionDna.js";
@@ -119,7 +121,7 @@ async function getCategoryMap() {
 
 async function replaceUserTransactions(userId, generatedTransactions) {
   const categoryMap = await getCategoryMap();
-  const rows = generatedTransactions.map((payment, index) => {
+  const rows = generatedTransactions.map((payment) => {
     const category = categoryMap.get(payment.category);
 
     return {
@@ -129,17 +131,20 @@ async function replaceUserTransactions(userId, generatedTransactions) {
       x_api_tran_id: payment.paymentId,
       trans_dtime: payment.approvedAt,
       merchant_name: payment.merchantName,
-      trans_category: String(index + 1).padStart(2, "0"),
+      trans_category: getTransactionCategoryCode(payment.category),
     };
   });
 
-  await TransactionHistory.destroy({
-    where: {
-      user_id: userId,
-    },
-  });
+  await sequelize.transaction(async (transaction) => {
+    await TransactionHistory.destroy({
+      where: {
+        user_id: userId,
+      },
+      transaction,
+    });
 
-  await TransactionHistory.bulkCreate(rows);
+    await TransactionHistory.bulkCreate(rows, { transaction });
+  });
 }
 
 async function getSpendingByCategory(userId, month = getCurrentMonth()) {

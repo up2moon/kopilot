@@ -56,9 +56,9 @@ async function loadRecentMessages(userId, fallbackMessages = []) {
   }
 }
 
-async function saveChatExchange(userId, message, answer) {
+async function saveChatExchange(userId, message, answer, metadata = {}) {
   try {
-    await saveSavingBotChatExchange(userId, message, answer);
+    await saveSavingBotChatExchange(userId, message, answer, metadata);
   } catch (error) {
     console.error("Saving bot chat history save failed:", error);
   }
@@ -200,7 +200,9 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
       }),
     });
 
-    await saveChatExchange(req.user.id, message, answer.answer);
+    await saveChatExchange(req.user.id, message, answer.answer, {
+      assetAllocation: answer.assetAllocation || null,
+    });
 
     return res.status(200).json(answer);
   } catch (error) {
