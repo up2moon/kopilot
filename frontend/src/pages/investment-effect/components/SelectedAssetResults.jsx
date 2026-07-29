@@ -36,9 +36,11 @@ export default function SelectedAssetResults({
           key={comparison.assetCode}
         >
           <div>
-            <span>내가 고른 종목</span>
-            <strong>
-              {comparison.label}에 투자했다면
+            <strong className="investment-selected-title">
+              <span className="investment-selected-name">
+                {comparison.label}
+              </span>
+              {'에 투자했다면'}
               <br />
               현재 약 {formatWon(comparison.estimatedValue)}
             </strong>

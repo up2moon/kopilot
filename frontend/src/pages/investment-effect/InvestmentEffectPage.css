@@ -398,26 +398,19 @@
   margin-top: 12px;
   max-height: 320px;
   overflow-y: auto;
-  padding-right: 3px;
-  scrollbar-width: thin;
-  scrollbar-color: #d1d6db transparent;
+  scrollbar-width: none;
 }
 
 .investment-search-results::-webkit-scrollbar {
-  width: 5px;
-}
-
-.investment-search-results::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: #d1d6db;
+  display: none;
 }
 
 .investment-search-results button {
   height: 50px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 36px;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
   align-items: center;
-  column-gap: 6px;
+  column-gap: 4px;
   padding: 0 10px 0 12px;
   border: 1px solid #e5e8eb;
   border-radius: 12px;
@@ -500,6 +493,21 @@
   line-height: 1.35;
 }
 
+.investment-selected-card .investment-selected-title {
+  margin-top: 0;
+}
+
+.investment-selected-card .investment-selected-name {
+  display: inline;
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: #e8f3ff;
+  color: #1b64da;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
 .investment-selected-card small {
   margin-top: 5px;
   color: #8b95a1;
@@ -515,7 +523,7 @@
 
 .investment-price-meta div {
   min-width: 0;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: 10px;
   background: #f7f9fc;
 }
@@ -527,7 +535,7 @@
 
 .investment-price-meta dt {
   color: #8b95a1;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1.3;
 }
@@ -536,7 +544,7 @@
   overflow: hidden;
   margin-top: 2px;
   color: #191f28;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1.3;
   text-overflow: ellipsis;
