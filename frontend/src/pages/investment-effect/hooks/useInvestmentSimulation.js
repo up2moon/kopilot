@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getInvestmentEffectSimulation } from '../../../services/investment.js'
+import {
+  createMockInvestmentSimulation,
+  useMockInvestment,
+} from '../data/mockInvestment.js'
 import { getCurrentMonth } from '../utils/formatters'
 
 const supportedCategories = new Set([
@@ -45,11 +49,17 @@ export default function useInvestmentSimulation(token) {
       setErrorDebug(null)
 
       try {
-        const result = await getInvestmentEffectSimulation(token, {
-          month: selectedMonth,
-          category: selectedCategory,
-          assetCodes: selectedAssets.map((asset) => asset.assetCode),
-        })
+        const result = useMockInvestment
+          ? createMockInvestmentSimulation({
+              month: selectedMonth,
+              category: selectedCategory,
+              selectedAssets,
+            })
+          : await getInvestmentEffectSimulation(token, {
+              month: selectedMonth,
+              category: selectedCategory,
+              assetCodes: selectedAssets.map((asset) => asset.assetCode),
+            })
 
         if (!ignore) {
           setData(result)

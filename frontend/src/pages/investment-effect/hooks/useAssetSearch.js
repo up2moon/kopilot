@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getInvestmentAssets } from '../../../services/investment.js'
+import {
+  mockInvestmentAssets,
+  useMockInvestment,
+} from '../data/mockInvestment.js'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -20,12 +24,13 @@ export default function useAssetSearch(token) {
       setSearchError('')
 
       try {
-        const result = await getInvestmentAssets(token, { limit: 20 })
-        const items = (result.items || []).slice(0, 20)
+        const items = useMockInvestment
+          ? mockInvestmentAssets
+          : (await getInvestmentAssets(token, { limit: 20 })).items || []
 
         if (!ignore) {
-          setDefaultAssets(items)
-          setSearchResults(items)
+          setDefaultAssets(items.slice(0, 20))
+          setSearchResults(items.slice(0, 20))
         }
       } catch (err) {
         if (!ignore) {
@@ -63,13 +68,21 @@ export default function useAssetSearch(token) {
 
     const timerId = window.setTimeout(async () => {
       try {
-        const result = await getInvestmentAssets(token, {
-          keyword,
-          limit: 20,
-        })
+        const items = useMockInvestment
+          ? mockInvestmentAssets.filter(
+              (asset) =>
+                asset.label.toLowerCase().includes(keyword.toLowerCase()) ||
+                asset.assetCode.includes(keyword),
+            )
+          : (
+              await getInvestmentAssets(token, {
+                keyword,
+                limit: 20,
+              })
+            ).items || []
 
         if (!ignore) {
-          setSearchResults((result.items || []).slice(0, 20))
+          setSearchResults(items.slice(0, 20))
         }
       } catch (err) {
         if (!ignore) {
