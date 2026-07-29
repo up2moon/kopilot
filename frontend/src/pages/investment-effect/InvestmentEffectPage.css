@@ -454,72 +454,192 @@
   text-align: right;
 }
 
-.investment-selected-list {
+.investment-selected-backdrop {
+  position: absolute;
+  z-index: 105;
+  top: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  left: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(78, 89, 104, 0.2);
+  cursor: pointer;
+  animation: investment-backdrop-in 240ms ease-out both;
+}
+
+.investment-selected-backdrop.is-closing {
+  pointer-events: none;
+  animation: investment-backdrop-out 280ms ease-in both;
+}
+
+.investment-selected-sheet {
+  position: absolute;
+  z-index: 110;
+  right: 18px;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  left: 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 14px;
-  scroll-margin-bottom: calc(76px + env(safe-area-inset-bottom));
+  pointer-events: none;
+  animation: investment-sheet-rise 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.investment-selected-sheet.is-closing {
+  pointer-events: none;
+  animation: investment-sheet-dismiss 280ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes investment-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes investment-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes investment-sheet-rise {
+  from {
+    opacity: 0;
+    transform: translateY(calc(100% + 28px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes investment-sheet-dismiss {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(100% + 28px));
+  }
 }
 
 .investment-selected-card {
+  position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid #d8e8ff;
-  border-radius: 18px;
-  background: #fff;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 24px 22px 20px;
+  border: 1px solid rgba(229, 232, 235, 0.9);
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(238, 246, 255, 0.72), transparent 44%),
+    #fff;
   box-sizing: border-box;
-  box-shadow: 0 10px 24px rgba(49, 130, 246, 0.08);
+  box-shadow:
+    0 22px 52px rgba(25, 31, 40, 0.18),
+    0 2px 8px rgba(25, 31, 40, 0.05);
+  pointer-events: auto;
+}
+
+.investment-selected-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.investment-selected-close:hover {
+  opacity: 1;
+}
+
+.investment-selected-close:active {
+  transform: scale(0.9);
+}
+
+.investment-selected-close img {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.investment-selected-card > div:first-of-type {
+  padding-right: 34px;
 }
 
 .investment-analyze-button {
-  grid-column: 1 / -1;
   width: 100%;
-  min-height: 44px;
+  min-height: 50px;
+  margin-top: 2px;
   border: 0;
-  border-radius: 13px;
-  background: #3182f6;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #3182f6, #1b64da);
   color: #fff;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
+  box-shadow: 0 9px 20px rgba(49, 130, 246, 0.24);
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .investment-analyze-button:hover {
-  background: #1b64da;
+  box-shadow: 0 12px 24px rgba(49, 130, 246, 0.3);
+  transform: translateY(-1px);
+}
+
+.investment-analyze-button:active {
+  box-shadow: 0 5px 12px rgba(49, 130, 246, 0.2);
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .investment-selected-sheet,
+  .investment-selected-sheet.is-closing,
+  .investment-selected-backdrop,
+  .investment-selected-backdrop.is-closing {
+    animation: none;
+  }
 }
 
 .investment-selected-card span,
 .investment-selected-card small {
   display: block;
   color: #3182f6;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1.35;
 }
 
 .investment-selected-card strong {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   color: #191f28;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1.35;
 }
 
 .investment-selected-card .investment-selected-title {
   margin-top: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: -0.35px;
 }
 
 .investment-selected-card .investment-selected-name {
   display: inline;
-  padding: 1px 4px;
-  border-radius: 5px;
-  background: #e8f3ff;
+  padding: 2px 6px;
+  border-radius: 7px;
+  background: #e8f2ff;
   color: #1b64da;
   font-size: inherit;
   font-weight: inherit;
@@ -527,7 +647,7 @@
 }
 
 .investment-selected-card small {
-  margin-top: 5px;
+  margin-top: 8px;
   color: #8b95a1;
   font-weight: 600;
 }
@@ -535,15 +655,16 @@
 .investment-price-meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  margin: 10px 0 0;
+  gap: 8px;
+  margin: 18px 0 0;
 }
 
 .investment-price-meta div {
   min-width: 0;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f7f9fc;
+  padding: 12px 13px;
+  border: 1px solid #eef0f2;
+  border-radius: 14px;
+  background: rgba(247, 249, 252, 0.88);
 }
 
 .investment-price-meta dt,
@@ -553,16 +674,16 @@
 
 .investment-price-meta dt {
   color: #8b95a1;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1.3;
 }
 
 .investment-price-meta dd {
   overflow: hidden;
-  margin-top: 2px;
+  margin-top: 5px;
   color: #191f28;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1.3;
   text-overflow: ellipsis;
@@ -570,18 +691,25 @@
 }
 
 .investment-selected-result {
-  flex: 0 0 68px;
-  padding-top: 20px;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: rgba(247, 249, 252, 0.9);
+  text-align: left;
 }
 
 .investment-selected-result strong {
-  font-size: 12px;
+  margin: 0;
+  font-size: 14px;
 }
 
 .investment-selected-result span {
-  margin-top: 4px;
+  margin: 0;
   color: #8b95a1;
+  font-size: 12px;
 }
 
 .investment-disclaimer {

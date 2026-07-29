@@ -96,6 +96,18 @@ export default function useInvestmentSimulation(token) {
     setSelectedAssets([asset])
   }
 
+  const clearSelectedAsset = () => {
+    setSelectedAssets([])
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            comparisons: [],
+          }
+        : current,
+    )
+  }
+
   return {
     selectedMonth,
     selectedCategory,
@@ -109,5 +121,6 @@ export default function useInvestmentSimulation(token) {
     setSelectedMonth,
     setSelectedCategory,
     selectAsset,
+    clearSelectedAsset,
   }
 }
