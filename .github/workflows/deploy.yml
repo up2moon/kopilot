@@ -165,6 +165,12 @@ env:
         --hard \
         "$GITHUB_SHA"
 
+      if [ "$service_name" = "backend" ] &&
+         [ ! -f "$PROJECT_DIR/news_agent/tools.mjs" ]; then
+        echo "news_agent/tools.mjs가 배포 커밋에 없습니다."
+        return 1
+      fi
+
       echo "===== Compose 설정 확인 ====="
 
       docker compose \
@@ -176,6 +182,19 @@ env:
       docker compose \
         -f "$COMPOSE_FILE" \
         config --services
+
+      echo "===== $service_name 이미지 사전 빌드 ====="
+
+      if ! docker compose \
+        -f "$COMPOSE_FILE" \
+        build \
+        "$service_name"; then
+
+        echo "$node_name: 이미지 빌드 실패"
+        echo "$node_name: 기존 컨테이너와 LB 등록 상태를 유지합니다."
+
+        return 1
+      fi
 
       echo "===== LB에서 타깃 제거 ====="
 
@@ -198,7 +217,7 @@ env:
         -f "$COMPOSE_FILE" \
         up \
         -d \
-        --build \
+        --no-build \
         --force-recreate \
         --no-deps \
         --wait \

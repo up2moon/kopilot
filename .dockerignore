@@ -1,0 +1,11 @@
+.git
+.github
+.env
+.env.*
+**/node_modules
+**/__pycache__
+**/*.pyc
+frontend
+kopilot-design
+news_agent/*
+!news_agent/tools.mjs
