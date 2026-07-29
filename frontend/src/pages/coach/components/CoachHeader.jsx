@@ -19,6 +19,7 @@ export default function CoachHeader({
   errorMessage,
   isLoading,
   onBack,
+  title = "AI 절약 챗봇",
 }) {
   const status = getCoachStatus(coaching, errorMessage, isLoading);
 
@@ -45,7 +46,7 @@ export default function CoachHeader({
           <polyline points="12 19 5 12 12 5" />
         </svg>
       </button>
-      <h1>AI 절약 챗봇</h1>
+      <h1>{title}</h1>
       <span className={`coach-status coach-status-${status.tone}`}>
         {status.label}
       </span>

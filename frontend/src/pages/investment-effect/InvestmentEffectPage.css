@@ -464,8 +464,8 @@
 
 .investment-selected-card {
   width: 100%;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   padding: 14px 16px;
   border: 1px solid #d8e8ff;
@@ -473,6 +473,24 @@
   background: #fff;
   box-sizing: border-box;
   box-shadow: 0 10px 24px rgba(49, 130, 246, 0.08);
+}
+
+.investment-analyze-button {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: #3182f6;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.investment-analyze-button:hover {
+  background: #1b64da;
 }
 
 .investment-selected-card span,

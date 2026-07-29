@@ -208,10 +208,15 @@ function App() {
     )
   } else if (route === routes.coach) {
     if (!auth) return null
+    const coachQuery = new URLSearchParams(window.location.search)
+    const coachBackRoute =
+      coachQuery.get('mode') === 'investment'
+        ? `/investment-effect?category=${encodeURIComponent(coachQuery.get('category') || 'savings')}&month=${encodeURIComponent(coachQuery.get('month') || '')}`
+        : routes.dashboard
     screenContent = (
       <CoachPage
         auth={auth}
-        onBack={() => navigate(routes.dashboard)}
+        onBack={() => navigate(coachBackRoute)}
         onNavigate={navigate}
       />
     )

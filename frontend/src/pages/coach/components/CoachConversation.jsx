@@ -1,3 +1,6 @@
+import InvestmentAnalysisCard from "./InvestmentAnalysisCard";
+import InvestmentAnalysisProgress from "./InvestmentAnalysisProgress";
+
 export default function CoachConversation({
   expanded,
   isSending,
@@ -15,10 +18,22 @@ export default function CoachConversation({
       <div className="coach-message-list" ref={messageListRef}>
         {messages.map((message) => (
           <div
-            className={`coach-message coach-message-${message.role}`}
+            className={`coach-message coach-message-${message.role}${
+              message.analysis || message.analysisProgress
+                ? " has-investment-analysis"
+                : ""
+            }`}
             key={message.id}
           >
             <span>{message.text}</span>
+            {message.analysis ? (
+              <InvestmentAnalysisCard analysis={message.analysis} />
+            ) : null}
+            {message.analysisProgress ? (
+              <InvestmentAnalysisProgress
+                progress={message.analysisProgress}
+              />
+            ) : null}
             {message.action ? (
               <button
                 className="coach-message-action"
