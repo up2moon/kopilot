@@ -413,11 +413,11 @@
 }
 
 .investment-search-results button {
-  height: 44px;
+  height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 44px;
+  grid-template-columns: minmax(0, 1fr) auto 36px;
   align-items: center;
-  gap: 8px;
+  column-gap: 6px;
   padding: 0 10px 0 12px;
   border: 1px solid #e5e8eb;
   border-radius: 12px;
@@ -428,13 +428,6 @@
   text-align: left;
 }
 
-.investment-search-results button > div {
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
 .investment-search-results strong {
   overflow: hidden;
   font-size: 13px;
@@ -443,18 +436,19 @@
   white-space: nowrap;
 }
 
-.investment-search-results small {
-  flex: 0 0 auto;
-  color: #8b95a1;
-  font-size: 11px;
-  font-weight: 700;
-}
-
 .investment-search-results .investment-search-price {
   color: #4e5968;
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.investment-search-results .investment-search-price.is-up {
+  color: #e5484d;
+}
+
+.investment-search-results .investment-search-price.is-down {
+  color: #3182f6;
 }
 
 .investment-search-results em {

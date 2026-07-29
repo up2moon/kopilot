@@ -438,11 +438,16 @@ router.get("/assets/search", requireAuth, async (req, res) => {
     );
 
     return res.status(200).json({
-      items: assets.map((asset) => ({
-        ...asset,
-        currentPrice: latestPrices.get(asset.assetCode) ?? null,
-        source: "KOSCOM_CHECK_DB",
-      })),
+      items: assets.map((asset) => {
+        const latestQuote = latestPrices.get(asset.assetCode);
+
+        return {
+          ...asset,
+          currentPrice: latestQuote?.currentPrice ?? null,
+          diffRate: latestQuote?.diffRate ?? null,
+          source: "KOSCOM_CHECK_DB",
+        };
+      }),
     });
   } catch (error) {
     return handleInvestmentError(res, error, "종목 검색에 실패했습니다.");

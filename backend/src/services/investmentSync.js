@@ -417,7 +417,7 @@ export async function getLatestStoredPrices(assetCodes) {
         [Op.in]: normalizedCodes,
       },
     },
-    attributes: ["asset_code", "trade_date", "close_price"],
+    attributes: ["asset_code", "trade_date", "close_price", "diff_rate"],
     order: [
       ["asset_code", "ASC"],
       ["trade_date", "DESC"],
@@ -428,10 +428,15 @@ export async function getLatestStoredPrices(assetCodes) {
   for (const price of prices) {
     if (!latestPrices.has(price.asset_code)) {
       const currentPrice = Number(price.close_price);
-      latestPrices.set(
-        price.asset_code,
-        Number.isFinite(currentPrice) ? currentPrice : null,
-      );
+      const diffRate =
+        price.diff_rate === null || price.diff_rate === undefined
+          ? null
+          : Number(price.diff_rate);
+
+      latestPrices.set(price.asset_code, {
+        currentPrice: Number.isFinite(currentPrice) ? currentPrice : null,
+        diffRate: Number.isFinite(diffRate) ? diffRate : null,
+      });
     }
   }
 

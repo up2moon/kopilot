@@ -50,11 +50,16 @@ export default function AssetSearchCard({
               key={getAssetKey(asset)}
               onClick={() => onSelectAsset(asset)}
             >
-              <div>
-                <strong>{asset.label}</strong>
-                <small>{asset.assetCode}</small>
-              </div>
-              <span className="investment-search-price">
+              <strong>{asset.label}</strong>
+              <span
+                className={`investment-search-price ${
+                  asset.diffRate > 0
+                    ? 'is-up'
+                    : asset.diffRate < 0
+                      ? 'is-down'
+                      : ''
+                }`}
+              >
                 {formatPrice(asset.currentPrice)}
               </span>
               <em>보기</em>
