@@ -7,6 +7,7 @@ import {
 
 const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
 const ANALYZE_ASSET_ALLOCATION_ACTION = "ANALYZE_ASSET_ALLOCATION";
+const ASSET_ALLOCATION_QUESTION = "소비 패턴으로 자산 배분 받기";
 const CHALLENGE_PATH = "/challenge";
 const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
 
@@ -19,16 +20,24 @@ export default function useCoachChat(token, onNavigate) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [requestedAction, setRequestedAction] = useState(null);
+  const [showAllocationAmountForm, setShowAllocationAmountForm] =
+    useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const messageListRef = useRef(null);
   const nextMessageIdRef = useRef(1);
 
-  const createMessage = useCallback((role, text, action = null) => {
+  const createMessage = useCallback((
+    role,
+    text,
+    action = null,
+    assetAllocation = null,
+  ) => {
     const message = {
       id: nextMessageIdRef.current,
       role,
       text,
       action,
+      assetAllocation,
     };
 
     nextMessageIdRef.current += 1;
@@ -150,10 +159,24 @@ export default function useCoachChat(token, onNavigate) {
     }
   }, [messages, isSending]);
 
-  const sendQuestion = async (nextQuestion, nextRequestedAction = null) => {
+  const sendQuestion = async (
+    nextQuestion,
+    nextRequestedAction = null,
+    options = {},
+  ) => {
     const trimmedQuestion = nextQuestion.trim();
 
     if (!trimmedQuestion || isSending) {
+      return;
+    }
+
+    if (
+      trimmedQuestion === ASSET_ALLOCATION_QUESTION &&
+      nextRequestedAction !== ANALYZE_ASSET_ALLOCATION_ACTION
+    ) {
+      setQuestion("");
+      setShowSuggestions(false);
+      setShowAllocationAmountForm(true);
       return;
     }
 
@@ -185,6 +208,9 @@ export default function useCoachChat(token, onNavigate) {
       ) {
         payload.requestedAction = nextRequestedAction;
       }
+      if (nextRequestedAction === ANALYZE_ASSET_ALLOCATION_ACTION) {
+        payload.allocationBaseAmount = options.allocationBaseAmount;
+      }
 
       const data = await sendSavingBotMessage(token, payload);
       const clientAction = isSafeClientAction(data.clientAction)
@@ -196,7 +222,12 @@ export default function useCoachChat(token, onNavigate) {
 
       setMessages((current) => [
         ...current,
-        createMessage("assistant", data.answer, clientAction),
+        createMessage(
+          "assistant",
+          data.answer,
+          clientAction,
+          data.assetAllocation || null,
+        ),
       ]);
       setSuggestions(
         (data.suggestedQuestions || []).map((suggestion, index) =>
@@ -235,6 +266,13 @@ export default function useCoachChat(token, onNavigate) {
         : suggestion;
 
     setShowSuggestions(false);
+    if (
+      normalizedSuggestion.action === ANALYZE_ASSET_ALLOCATION_ACTION
+    ) {
+      setShowAllocationAmountForm(true);
+      return;
+    }
+
     sendQuestion(
       normalizedSuggestion.label,
       [
@@ -243,6 +281,15 @@ export default function useCoachChat(token, onNavigate) {
       ].includes(normalizedSuggestion.action)
         ? normalizedSuggestion.action
         : null,
+    );
+  };
+
+  const submitAllocationAmount = (allocationBaseAmount) => {
+    setShowAllocationAmountForm(false);
+    sendQuestion(
+      ASSET_ALLOCATION_QUESTION,
+      ANALYZE_ASSET_ALLOCATION_ACTION,
+      { allocationBaseAmount },
     );
   };
 
@@ -259,6 +306,7 @@ export default function useCoachChat(token, onNavigate) {
     suggestions,
     question,
     showSuggestions,
+    showAllocationAmountForm,
     isLoading,
     isSending,
     loadingMessage,
@@ -268,6 +316,8 @@ export default function useCoachChat(token, onNavigate) {
     setQuestion,
     toggleSuggestions,
     selectSuggestion,
+    setShowAllocationAmountForm,
+    submitAllocationAmount,
     sendQuestion,
     handleMessageAction,
   };

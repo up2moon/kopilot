@@ -3,6 +3,7 @@ import CoachHeader from "./components/CoachHeader";
 import CoachInputForm from "./components/CoachInputForm";
 import CoachSuggestions from "./components/CoachSuggestions";
 import CoachingInsightCard from "./components/CoachingInsightCard";
+import AllocationAmountForm from "./components/AllocationAmountForm";
 import useCoachChat from "./hooks/useCoachChat";
 import "./CoachPage.css";
 
@@ -13,6 +14,7 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
     suggestions,
     question,
     showSuggestions,
+    showAllocationAmountForm,
     isLoading,
     isSending,
     loadingMessage,
@@ -22,6 +24,8 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
     setQuestion,
     toggleSuggestions,
     selectSuggestion,
+    setShowAllocationAmountForm,
+    submitAllocationAmount,
     sendQuestion,
     handleMessageAction,
   } = useCoachChat(auth?.accessToken, onNavigate);
@@ -60,6 +64,14 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
         open={hasVisibleSuggestions}
         suggestions={suggestions}
       />
+
+      {showAllocationAmountForm ? (
+        <AllocationAmountForm
+          disabled={isSending}
+          onCancel={() => setShowAllocationAmountForm(false)}
+          onSubmit={submitAllocationAmount}
+        />
+      ) : null}
 
       {errorMessage ? (
         <p className="coach-error" role="alert">

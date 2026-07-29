@@ -72,6 +72,12 @@ async function ensureWeeklyChallengeSchema() {
     ["baseline_count", { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 }],
     ["baseline_amount", { type: DataTypes.BIGINT, allowNull: false, defaultValue: 0 }],
     ["target_count", { type: DataTypes.INTEGER.UNSIGNED, allowNull: true }],
+    ["target_amount", { type: DataTypes.BIGINT, allowNull: true }],
+    ["estimated_saving_amount", { type: DataTypes.BIGINT, allowNull: false, defaultValue: 0 }],
+    ["verification_requested_at", { type: DataTypes.DATE, allowNull: true }],
+    ["completed_at", { type: DataTypes.DATE, allowNull: true }],
+    ["finalized_at", { type: DataTypes.DATE, allowNull: true }],
+    ["rewarded_at", { type: DataTypes.DATE, allowNull: true }],
   ];
 
   for (const [name, definition] of additions) {

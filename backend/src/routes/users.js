@@ -654,7 +654,7 @@ router.get("/me/spending/summary", requireAuth, async (req, res) => {
       frequentMerchants,
       trend,
       insights,
-      recentTransactions: transactions.slice(0, 5).map(toTransactionResponse),
+      recentTransactions: transactions.slice(0, 7).map(toTransactionResponse),
     });
   } catch (error) {
     console.error("Dashboard summary failed:", error);

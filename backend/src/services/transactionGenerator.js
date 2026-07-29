@@ -105,6 +105,41 @@ function extractResponseText(data) {
   return chunks.join("");
 }
 
+// 최근 30일 기본 거래를 바탕으로 이번 달부터 이전 5개월까지 월별 거래를 보강한다.
+// 기간 탭마다 서로 다른 합계와 추이가 나오도록 월·금액을 함께 분산한다.
+function expandTransactionsAcrossSixMonths(transactions) {
+  const historicalTransactions = Array.from({ length: 6 }, (_, monthIndex) => {
+    const monthsAgo = monthIndex;
+
+    return transactions.slice(0, 12).map((transaction, index) => {
+      const approvedAt = new Date();
+
+      approvedAt.setUTCDate(1);
+      approvedAt.setUTCMonth(approvedAt.getUTCMonth() - monthsAgo);
+      approvedAt.setUTCDate(2 + index * 2);
+      approvedAt.setUTCHours(8 + (index % 12), (index * 7) % 60, 0, 0);
+
+      const amountFactor = 0.82 + monthsAgo * 0.045 + (index % 3) * 0.025;
+
+      return {
+        ...transaction,
+        paymentId:
+          `H${monthsAgo}-${String(index).padStart(2, "0")}-${transaction.paymentId}`.slice(
+            0,
+            25,
+          ),
+        approvedAt: approvedAt.toISOString(),
+        amount: Math.max(
+          100,
+          Math.round((transaction.amount * amountFactor) / 100) * 100,
+        ),
+      };
+    });
+  }).flat();
+
+  return [...transactions, ...historicalTransactions];
+}
+
 export async function generateTransactionsWithOpenAI() {
   const apiKey = process.env.OPEN_AI_KEY;
 
@@ -196,7 +231,9 @@ export async function generateTransactionsWithOpenAI() {
 
   return {
     source: "openai",
-    transactions: parsed.transactions.map(normalizeTransaction),
+    transactions: expandTransactionsAcrossSixMonths(
+      parsed.transactions.map(normalizeTransaction),
+    ),
   };
 }
 
@@ -215,7 +252,10 @@ export function generateFixtureTransactions() {
     })),
   );
 
-  return { source: "fixture", transactions };
+  return {
+    source: "fixture",
+    transactions: expandTransactionsAcrossSixMonths(transactions),
+  };
 }
 
 export const expenseCategories = categories;

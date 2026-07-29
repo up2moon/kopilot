@@ -5,6 +5,7 @@ import {
   TransactionHistory,
   UserExpenseCategory,
 } from "../models/index.js";
+import { getLatestStoredPrices } from "./investmentSync.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const discretionaryCategories = new Set([
@@ -294,9 +295,107 @@ function buildCoaching(profile) {
   };
 }
 
-// 소비 변동성과 선택 지출 비중을 바탕으로 현금·S&P 500 임시 배분 기준을 만든다.
-// 투자 성향과 비상자금 정보가 없는 상태이므로 현금 비중을 최소 50%로 유지한다.
-function buildAssetAllocationGuide(profile, coaching) {
+const assetAllocationProfiles = {
+  DEFENSIVE: [
+    {
+      assetClass: "현금성",
+      productType: "CASH",
+      assetCode: null,
+      label: "CMA·MMF",
+      ratio: 40,
+      role: "예산 초과와 갑작스러운 생활비에 바로 대응",
+      hedgeAgainst: "단기 유동성 부족",
+    },
+    {
+      assetClass: "채권",
+      productType: "BOND_ETF",
+      assetCode: "114260",
+      label: "KODEX 국고채3년",
+      ratio: 25,
+      role: "국고채로 주식 하락 시 포트폴리오 변동성을 완충",
+      hedgeAgainst: "주식시장 하락",
+    },
+    {
+      assetClass: "해외주식",
+      productType: "EQUITY_ETF",
+      assetCode: "360750",
+      label: "TIGER 미국S&P500",
+      ratio: 20,
+      role: "미국 대형주 전반에 분산해 장기 성장에 참여",
+      hedgeAgainst: "국내시장 편중",
+    },
+    {
+      assetClass: "국내주식",
+      productType: "EQUITY_ETF",
+      assetCode: "069500",
+      label: "KODEX 200",
+      ratio: 5,
+      role: "원화 기반 국내 대표 기업에 분산",
+      hedgeAgainst: "달러자산 편중",
+    },
+    {
+      assetClass: "대체자산",
+      productType: "GOLD_ETF",
+      assetCode: "132030",
+      label: "KODEX 골드선물(H)",
+      ratio: 10,
+      role: "주식·채권과 다른 흐름을 활용해 충격을 분산",
+      hedgeAgainst: "인플레이션·시장 충격",
+    },
+  ],
+  BALANCED: [
+    {
+      assetClass: "현금성",
+      productType: "CASH",
+      assetCode: null,
+      label: "CMA·MMF",
+      ratio: 25,
+      role: "예산 변동과 갑작스러운 생활비에 바로 대응",
+      hedgeAgainst: "단기 유동성 부족",
+    },
+    {
+      assetClass: "채권",
+      productType: "BOND_ETF",
+      assetCode: "114260",
+      label: "KODEX 국고채3년",
+      ratio: 25,
+      role: "국고채로 주식 하락 시 포트폴리오 변동성을 완충",
+      hedgeAgainst: "주식시장 하락",
+    },
+    {
+      assetClass: "해외주식",
+      productType: "EQUITY_ETF",
+      assetCode: "360750",
+      label: "TIGER 미국S&P500",
+      ratio: 30,
+      role: "미국 대형주 전반에 분산해 장기 성장에 참여",
+      hedgeAgainst: "국내시장 편중",
+    },
+    {
+      assetClass: "국내주식",
+      productType: "EQUITY_ETF",
+      assetCode: "069500",
+      label: "KODEX 200",
+      ratio: 10,
+      role: "원화 기반 국내 대표 기업에 분산",
+      hedgeAgainst: "달러자산 편중",
+    },
+    {
+      assetClass: "대체자산",
+      productType: "GOLD_ETF",
+      assetCode: "132030",
+      label: "KODEX 골드선물(H)",
+      ratio: 10,
+      role: "주식·채권과 다른 흐름을 활용해 충격을 분산",
+      hedgeAgainst: "인플레이션·시장 충격",
+    },
+  ],
+};
+
+// 소비 변동성과 선택 지출 비중을 바탕으로 현금·채권·국내외 주식의
+// 임시 분산 배분 기준을 만든다. 투자 성향과 비상자금 정보가 없으므로
+// 공격형 배분은 제공하지 않고 방어형 또는 균형형만 제시한다.
+async function buildAssetAllocationGuide(profile, allocationBaseAmount) {
   const recentAmount = profile.categories.reduce(
     (sum, category) => sum + category.recentAmount,
     0,
@@ -317,48 +416,100 @@ function buildAssetAllocationGuide(profile, coaching) {
     profile.totalAmount > 0
       ? Math.round((discretionaryAmount / profile.totalAmount) * 1000) / 10
       : 0;
-  const overBudgetCategories = profile.categories
+  const overBudgetDetails = profile.categories
     .filter((category) => category.budgetUsageRate > 100)
-    .map((category) => category.category);
+    .map((category) => ({
+      category: category.category,
+      spentAmount: category.totalAmount,
+      budgetAmount: category.targetAmount,
+      excessAmount: Math.max(0, category.totalAmount - category.targetAmount),
+      budgetUsageRate: category.budgetUsageRate,
+    }))
+    .sort((a, b) => b.excessAmount - a.excessAmount);
+  const overBudgetCategories = overBudgetDetails.map(
+    (category) => category.category,
+  );
 
-  let cashRatio = 50;
-
-  if (
+  const riskLevel =
     spendingTrendRate === null ||
     spendingTrendRate >= 15 ||
     discretionaryShare >= 45 ||
     overBudgetCategories.length >= 2
-  ) {
-    cashRatio = 70;
-  } else if (
-    spendingTrendRate >= 5 ||
-    discretionaryShare >= 30 ||
-    overBudgetCategories.length === 1
-  ) {
-    cashRatio = 60;
-  }
+      ? "DEFENSIVE"
+      : "BALANCED";
 
-  const allocationBaseAmount = coaching.estimatedSavingAmount;
+  const profileAssets = assetAllocationProfiles[riskLevel];
+  const priceMap = await getLatestStoredPrices(
+    profileAssets.map((asset) => asset.assetCode).filter(Boolean),
+  );
+  const purchasableAssets = profileAssets
+    .filter((asset) => asset.productType !== "CASH")
+    .map((asset) => {
+      const unitPrice = priceMap.get(asset.assetCode)?.currentPrice || null;
+      const targetAmount = Math.round(
+        (allocationBaseAmount * asset.ratio) / 100,
+      );
+      const quantity =
+        unitPrice && unitPrice > 0 ? Math.floor(targetAmount / unitPrice) : 0;
+
+      return {
+        ...asset,
+        targetRatio: asset.ratio,
+        unitPrice,
+        quantity,
+        amount: quantity * (unitPrice || 0),
+      };
+    })
+    .filter((asset) => asset.quantity > 0);
+  const investedAmount = purchasableAssets.reduce(
+    (sum, asset) => sum + asset.amount,
+    0,
+  );
+  const cashProfile = profileAssets.find(
+    (asset) => asset.productType === "CASH",
+  );
+  const cashAmount = allocationBaseAmount - investedAmount;
+  const allocations = [
+    {
+      ...cashProfile,
+      targetRatio: cashProfile.ratio,
+      ratio:
+        Math.round((cashAmount / allocationBaseAmount) * 1000) / 10,
+      amount: cashAmount,
+      unitPrice: null,
+      quantity: null,
+    },
+    ...purchasableAssets.map((asset) => ({
+      ...asset,
+      ratio:
+        Math.round((asset.amount / allocationBaseAmount) * 1000) / 10,
+    })),
+  ];
 
   return {
     status: profile.paymentCount > 0 ? "AVAILABLE" : "INSUFFICIENT_DATA",
-    cashRatio,
-    sp500Ratio: 100 - cashRatio,
+    riskLevel,
+    title:
+      riskLevel === "DEFENSIVE"
+        ? "생활비 변동을 고려한 방어형 배분"
+        : "안정성과 성장을 나눈 균형형 배분",
     allocationBaseAmount,
-    cashAmount: Math.round((allocationBaseAmount * cashRatio) / 100),
-    sp500Amount: Math.round(
-      (allocationBaseAmount * (100 - cashRatio)) / 100,
-    ),
+    allocations,
+    investedAmount,
+    cashRemainderAmount: cashAmount,
     spendingTrendRate,
     discretionaryShare,
     overBudgetCategories,
+    overBudgetDetails,
+    hedgeSummary:
+      "현금으로 유동성을 확보하고, 국고채로 주식 변동성을 낮추며, 국내외 주식과 금 ETF로 시장·통화·물가 위험을 나눴습니다.",
     disclaimer:
-      "소비 패턴만 반영한 임시 배분안이며 투자 성향과 비상자금 규모를 확인한 뒤 조정해야 합니다.",
+      "참고용 예시예요. 투자 성향과 비상자금을 함께 확인하세요.",
   };
 }
 
 // 사용자 예산과 거래 내역을 결합해 Saving Bot이 사용할 개인화 컨텍스트를 만든다.
-export async function getSavingBotContext(userId) {
+export async function getSavingBotContext(userId, options = {}) {
   const period = getPeriod();
   const [transactions, budgets] = await Promise.all([
     TransactionHistory.findAll({
@@ -412,11 +563,14 @@ export async function getSavingBotContext(userId) {
   };
 
   const coaching = buildCoaching(profile);
+  const allocationBaseAmount = Number(options.allocationBaseAmount) || 0;
 
   return {
     profile,
     coaching,
-    assetAllocation: buildAssetAllocationGuide(profile, coaching),
+    assetAllocation: allocationBaseAmount
+      ? await buildAssetAllocationGuide(profile, allocationBaseAmount)
+      : null,
   };
 }
 

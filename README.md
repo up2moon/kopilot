@@ -325,8 +325,8 @@ OPENAI_SAVING_VECTOR_STORE_ID=
 # 로컬 고정 거래 데이터 사용 시 fixture로 설정
 MYDATA_TRANSACTION_SOURCE=fixture
 
-# 로컬에서는 기본적으로 코스콤 호출을 비활성화
-CHECK_API_ENABLED=false
+# 로컬 프론트의 /api 요청은 기본적으로 운영 Web/WAS로 프록시됩니다.
+# 로컬 백엔드를 직접 사용할 때만 코스콤 인증 정보를 입력하세요.
 CUST_ID=
 AUTH_KEY=
 ```

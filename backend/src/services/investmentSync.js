@@ -875,7 +875,6 @@ export async function syncKoscomInvestmentDataIfPriceTableEmpty() {
 
 export function startKoscomSyncScheduler() {
   if (process.env.KOSCOM_SYNC_DISABLED === "true") {
-    console.log("Koscom investment sync scheduler disabled");
     return;
   }
 

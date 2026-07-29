@@ -1,4 +1,5 @@
 import express from "express";
+import { timingSafeEqual } from "node:crypto";
 import { Op } from "sequelize";
 
 import { requireAuth } from "../middleware/auth.js";
@@ -22,8 +23,35 @@ import {
   syncMissingKoscomBasePrices,
   upsertInvestmentAsset,
 } from "../services/investmentSync.js";
+import {
+  basicQuotePath,
+  callKoscom,
+  etfMasterPath,
+  historyQuotePath,
+  stockMasterPath,
+} from "../services/koscomCheck.js";
 
 const router = express.Router();
+const allowedKoscomProxyPaths = new Set([
+  stockMasterPath,
+  etfMasterPath,
+  basicQuotePath,
+  historyQuotePath,
+]);
+
+function safeCredentialEquals(received, expected) {
+  if (!received || !expected) {
+    return false;
+  }
+
+  const receivedBuffer = Buffer.from(String(received));
+  const expectedBuffer = Buffer.from(String(expected));
+
+  return (
+    receivedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(receivedBuffer, expectedBuffer)
+  );
+}
 
 const benchmarkFallbacks = new Map(
   defaultBenchmarkAssets.map((asset) => [asset.assetCode, asset]),
@@ -420,6 +448,48 @@ function calculateDepositSimulation(investmentAmount, month) {
   };
 }
 
+router.post("/check-proxy", async (req, res) => {
+  if (process.env.NODE_ENV !== "production") {
+    return res.status(404).json({ message: "Not Found" });
+  }
+
+  const authorized =
+    safeCredentialEquals(req.get("X-Koscom-Cust-Id"), process.env.CUST_ID) &&
+    safeCredentialEquals(req.get("X-Koscom-Auth-Key"), process.env.AUTH_KEY);
+
+  if (!authorized) {
+    return res.status(401).json({
+      message: "CHECK 프록시 인증에 실패했습니다.",
+      code: "KOSCOM_PROXY_UNAUTHORIZED",
+    });
+  }
+
+  const path = typeof req.body?.path === "string" ? req.body.path : "";
+  const params =
+    req.body?.params &&
+    typeof req.body.params === "object" &&
+    !Array.isArray(req.body.params)
+      ? req.body.params
+      : {};
+
+  if (!allowedKoscomProxyPaths.has(path)) {
+    return res.status(400).json({
+      message: "허용되지 않은 CHECK API 경로입니다.",
+      code: "KOSCOM_PROXY_PATH_NOT_ALLOWED",
+    });
+  }
+
+  try {
+    return res.status(200).json(await callKoscom(path, params));
+  } catch (error) {
+    return handleInvestmentError(
+      res,
+      error,
+      "운영 CHECK API 프록시 호출에 실패했습니다.",
+    );
+  }
+});
+
 router.get("/assets/search", requireAuth, async (req, res) => {
   try {
     const keyword = String(req.query.keyword || "").trim();
@@ -607,14 +677,6 @@ export async function simulationHandler(req, res) {
 }
 
 function handleInvestmentError(res, error, fallbackMessage) {
-  if (error.code === "CHECK_API_DISABLED") {
-    return res.status(503).json({
-      code: "CHECK_API_DISABLED",
-      message: error.message,
-      ...getInvestmentDebugPayload(error),
-    });
-  }
-
   if (error.statusCode === 503 || error.code === "KOSCOM_CONFIG_MISSING") {
     return res.status(503).json({
       code: "KOSCOM_CONFIG_MISSING",

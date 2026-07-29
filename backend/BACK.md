@@ -27,7 +27,7 @@
 - `POST /api/auth/logout`: 전달된 refresh token을 Redis에서 폐기합니다.
 - `GET /api/auth/me`: `Authorization: Bearer <accessToken>`으로 현재 사용자 정보를 반환합니다.
 - `GET /api/users/me/onboarding-status`: 현재 사용자의 첫 로그인 초기 설정, 마이데이터, 예산 설정 상태와 저장된 거래/예산 개수를 반환합니다.
-- `POST /api/users/me/mydata/connect`: 기본값은 `OPEN_AI_KEY` 기반 OpenAI Responses API로 최근 1개월 합성 `transaction_history`를 생성하고 `myDataConnected=true`로 저장합니다. 개발에서 `MYDATA_TRANSACTION_SOURCE=fixture`를 설정하면 AI 호출 대신 고정 거래 Fixture를 생성합니다.
+- `POST /api/users/me/mydata/connect`: 기본값은 `OPEN_AI_KEY` 기반 OpenAI Responses API로 기본 합성 거래를 만든 뒤 이번 달부터 이전 5개월까지 월별 거래를 보강해 `transaction_history`에 저장하고 `myDataConnected=true`로 전환합니다. 각 월에는 최소 12건이 포함되어 소비 상세의 이번 달·최근 3개월·최근 6개월 집계가 서로 달라집니다. 개발에서 `MYDATA_TRANSACTION_SOURCE=fixture`를 설정하면 AI 호출 대신 같은 기간 조건을 만족하는 고정 거래 Fixture를 생성합니다.
 - `POST /api/users/me/mydata/disconnect`: 현재 사용자의 마이데이터 연동을 해제하여 `myDataConnected=false`로 전환하고, 해당 사용자의 `transaction_history`를 모두 삭제합니다(재연동 시 `connect`로 재생성). 갱신된 사용자 정보와 `transactionCount: 0`을 반환합니다. 마이 페이지의 "마이데이터 연결 관리" 행이 이 API와 `connect`를 상태에 따라 토글 호출합니다.
 - `GET /api/budget/categories`: 선택 가능한 소비 예산 카테고리 목록을 반환합니다.
 - `POST /api/users/me/budgets`: 사용자의 카테고리별 월 예산 목표를 `user_expense_category.cost`에 저장하고 `firstLoginCompleted=true`, `budgetSetupCompleted=true` 상태로 전환합니다.
@@ -37,7 +37,7 @@
 - `GET /api/users/me/spending/summary?month=YYYY-MM`: 지정된 월(기본 현재 월)의 거래 내역을 백엔드에서 집계하여 소비 요약(총 금액, 전월 대비 증감률, 결제 건수, 평균 결제액), 카테고리별 금액/비율/인사이트 문구, 주차별/일자별 소비 추이 및 최고 지출 금액을 반환합니다.
 - `GET /api/users/me/spending/transactions?month=YYYY-MM&page=1&limit=6`: 해당 월의 결제 내역을 최근순으로 무한 스크롤/페이징(`page`, `limit=6` 기본) 형태로 로딩하여 반환합니다 (`items`, `pagination` 메타데이터 포함).
 - `GET /api/users/me/saving-bot/coaching`: 사용자의 마이데이터 지출 내역을 기반으로 생성된 상단 '오늘의 코칭' 카드 정보(메시지, 아낄 수 있는 금액), 코칭 연관 AI 인사말("...줄여볼까요?"), 그리고 생성된 코칭과 연관된 추천 질문을 반환합니다. `이번 주 챌린지 만들기`는 `action=CREATE_WEEKLY_CHALLENGE`, `소비 패턴으로 자산 배분 받기`는 `action=ANALYZE_ASSET_ALLOCATION`을 함께 반환합니다.
-- `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. `requestedAction=ANALYZE_ASSET_ALLOCATION`이면 최근 지출 증감률, 선택지출 비중, 예산 초과 카테고리를 근거로 현금과 S&P 500의 임시 배분안을 설명합니다. 선택적인 `requestedAction=CREATE_WEEKLY_CHALLENGE` 또는 명확한 자유 입력 생성 요청은 OpenAI Function Tool `create_weekly_saving_challenge`로 이번 주 챌린지 1개를 추가합니다. 성공하면 추가된 ID를 포함한 `toolResult`와 `/challenge` 이동 및 카드 강조용 `clientAction`을 반환합니다. 사용자 질문과 최종 AI 답변은 Redis에 저장하며 내부 Tool 입출력은 대화 기록에 저장하지 않습니다.
+- `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. `requestedAction=ANALYZE_ASSET_ALLOCATION`이면 `allocationBaseAmount`(정수, 10,000원 이상 10억원 이하)를 필수로 받아 최근 지출 증감률, 선택지출 비중, 예산 초과 카테고리와 초과액을 근거로 현금성 자산·국고채 ETF·해외주식 ETF·국내주식 ETF·금 ETF를 조합한 방어형 또는 균형형 임시 배분안을 `assetAllocation`으로 반환합니다. ETF별 목표금액을 저장된 최신 종가로 나누어 정수 수량만 추천하고 1주 미만 금액과 매수 잔액은 현금으로 돌립니다. 종목명·코드·실제 비중·수량·금액은 백엔드 계산값으로 고정해 AI가 임의로 바꾸지 않습니다. 선택적인 `requestedAction=CREATE_WEEKLY_CHALLENGE` 또는 명확한 자유 입력 생성 요청은 OpenAI Function Tool `create_weekly_saving_challenge`로 이번 주 챌린지 1개를 추가합니다. 성공하면 추가된 ID를 포함한 `toolResult`와 `/challenge` 이동 및 카드 강조용 `clientAction`을 반환합니다. 사용자 질문과 최종 AI 답변은 Redis에 저장하며 내부 Tool 입출력은 대화 기록에 저장하지 않습니다.
 - `GET /api/users/me/saving-bot/chat/history`: Redis에 저장된 현재 사용자의 최근 AI 절약 챗봇 대화를 반환합니다. 대화는 사용자별 List에 최대 100개까지 저장되며 마지막 대화 이후 기본 3일 동안 유지됩니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
 - `GET /api/users/me/reward-points`: 현재 로그인한 사용자의 챌린지 성공으로 DB `users.total_points`에 실제 적립된 리워드 포인트를 반환합니다. 랭킹의 절약액 환산 점수(`rankScore`)와 구분해 포인트 상점 잔액의 원장으로 사용합니다.
@@ -46,6 +46,7 @@
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 챌린지 전체, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 챌린지가 비어 있으면 기본 추천 챌린지를 생성하며 AI 채팅으로 추가된 챌린지까지 모두 반환합니다.
 - `POST /api/users/me/challenges/verify`: 프로토타입에서는 시간 제한 없이 현재 주의 미인증 챌린지를 서버에서 무작위 판정합니다. 최소 1개를 성공 처리하고 성공 챌린지별 포인트를 같은 트랜잭션에서 지급하며, 성공 개수, 예상 절약액 합계와 `showCelebration`을 반환합니다.
 - 개발 환경에서 `CHALLENGE_TEST_NOW`에 타임존 오프셋을 포함한 ISO 8601 시각을 설정하면 챌린지 조회·생성·인증·만료만 해당 테스트 시각을 사용합니다. 예: `2026-08-01T00:01:00+09:00`. `NODE_ENV=production`에서는 설정값을 무시하고 실제 KST를 사용합니다.
+- 로컬 백엔드에서 발생한 CHECK 요청은 코스콤에 직접 연결하지 않고 `https://kospay.p-e.kr/api/investment/check-proxy`를 거쳐 운영 WAS가 대신 호출합니다. 운영 프록시는 기존 CHECK 인증정보를 검증하고 사전에 허용된 CHECK 경로만 전달하여 코스콤에 보이는 호출 IP를 운영 환경으로 고정합니다. 별도의 로컬/프록시 전환 환경변수는 사용하지 않으며 `NODE_ENV=production`인 운영 WAS만 CHECK API에 직접 연결합니다.
 - `GET /api/users/me/investment-effect/simulation?category=coffee|savings&month=YYYY-MM&assetCodes=005930,360750`: 소비 카테고리는 월별 소비액을, `savings`는 선택 월에 성공 완료된 챌린지의 예상 절약액 합계를 투자 원금으로 사용합니다. DB에 저장된 코스콤 종가(`investment_price`)를 사용해 지수 ETF, 선택 종목, 정기예금/CMA 결과를 반환하며 절약액이 없으면 `NO_SAVINGS`를 반환합니다.
 - `GET /api/investment/assets/search`: DB에 적재된 코스콤 CHECK API 종목/ETF 마스터(`investment_asset`) 목록을 최대 20개 기본 반환하며, 기본 목록은 대표 지수 ETF와 국내 대형주를 우선 노출하고 남은 자리를 기존 정렬 종목으로 채웁니다. 선택적인 `keyword` 검색은 전체 종목을 대상으로 합니다. 각 종목은 DB에 저장된 최신 종가와 전일 대비 등락률을 `currentPrice`, `diffRate`로 함께 반환하고, DB가 비어 있으면 최초 요청에서 코스콤 마스터를 적재합니다.
 - `GET /api/investment/quotes`: 코스콤 CHECK API 기반 시뮬레이션 대상 자산(S&P500 ETF, KOSPI 200 ETF, 사용자가 선택한 종목 등)의 최신 저장 시세를 조회/반환합니다. 저장된 시세가 없으면 코스콤 기본 시세를 호출해 DB에 저장합니다.
@@ -141,11 +142,12 @@ AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 
    - 화면의 현재가는 `investment_price.close_price`의 최신 거래일 값을 `currentPrice`로 내려주고, 기준가는 선택 월 첫 거래일 값을 `basePrice`로 내려줍니다. 조회/동기화 시각은 `synced_at`을 `quotedAt`으로 사용합니다.
    - 백엔드는 `KOSCOM_SYNC_TIME` 환경 변수 기준 KST 매일 1회 코스콤 CHECK API를 호출합니다. 기본값은 `17:10`입니다.
    - 서버 시작 5초 후 `investment_price`가 0건이면 즉시 초기 동기화를 실행합니다. `KOSCOM_SYNC_ON_START=true`이면 가격 테이블 보유 여부와 관계없이 서버 시작 시 한 번 동기화합니다. `KOSCOM_SYNC_DISABLED=true`이면 스케줄러와 초기 동기화를 모두 끕니다.
-   - 운영 배포에서는 WAS 1과 WAS 2 모두 `CHECK_API_ENABLED=true`, `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. 사용자 요청에 필요한 기준일 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. 최신가는 당일 KST 기준으로 동기화된 행이 없거나 시뮬레이션 기준일보다 뒤의 거래일 가격이 없으면 fallback합니다. 휴장일에는 CHECK API가 반환한 직전 거래일 행의 `synced_at`을 갱신해 같은 날 중복 호출을 막습니다.
+   - 운영 배포에서는 WAS 1과 WAS 2 모두 `KOSCOM_MASTER_SYNC_ON_READ=true`로 실행합니다. CHECK API 활성화 플래그는 별도로 두지 않으며, 사용자 요청에 필요한 기준일 시세가 DB에 없으면 CHECK API로 조회하고 `investment_price`에 즉시 저장한 뒤 저장값을 반환합니다. 최신가는 당일 KST 기준으로 동기화된 행이 없거나 시뮬레이션 기준일보다 뒤의 거래일 가격이 없으면 fallback합니다. 휴장일에는 CHECK API가 반환한 직전 거래일 행의 `synced_at`을 갱신해 같은 날 중복 호출을 막습니다.
    - 여러 WAS의 동시 fallback은 `external_api_lock` 테이블의 MySQL row lock으로 직렬화합니다. 잠금 대기 시간은 `KOSCOM_DB_LOCK_TIMEOUT_SECONDS`로 설정하며 기본값은 10초입니다. 두 WAS가 동일한 NAT Gateway 공인 IP를 사용한다는 운영 네트워크 구성을 전제로 합니다.
    - fallback 오류 상세는 개발 환경 또는 `INVESTMENT_DEBUG_ERRORS=true`에서만 API 응답의 `debug` 필드로 제공합니다. 운영 기본값은 `false`이며 인증키나 요청 credential은 상세 응답에 포함하지 않습니다.
-   - 로컬 `compose.dev.yml`은 `CHECK_API_ENABLED=false`가 기본값입니다. 로컬 화면은 백엔드의 `CHECK_API_DISABLED` 오류와 개발자 상세를 표시할 수 있지만 실제 CHECK API는 호출하지 않아 운영 인증키의 기준 IP를 변경하지 않습니다.
+   - 로컬 Vite의 `/api` 요청은 기본적으로 운영 Web을 거쳐 운영 WAS로 전달합니다. 따라서 로컬 화면의 투자효과 요청도 운영 WAS가 CHECK API를 호출하고, 로컬 백엔드는 해당 요청 경로에 참여하지 않습니다.
    - 정기 동기화 스케줄러는 중복 배치를 막기 위해 WAS 1만 실행하고 WAS 2는 `KOSCOM_SYNC_DISABLED=true`로 둡니다. 이 설정은 사용자 요청의 DB miss fallback을 비활성화하지 않습니다.
+   - 로컬 개발 Compose는 운영 WAS 프록시와 불필요한 로컬 배치 실행을 분리하기 위해 `KOSCOM_SYNC_DISABLED=true`를 기본값으로 사용합니다.
    - 모든 종목의 최신 종가를 매일 적재하려면 `KOSCOM_PRICE_SYNC_ALL_ASSETS=true`를 사용합니다. 기본값은 호출량 제어를 위해 `false`이며, 운영에서는 WAS 1에서만 실행해야 합니다.
    - 스케줄러는 최신 종가와 함께 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월들의 첫 거래일 기준가도 적재합니다. 기본값은 3개월이며, `KOSCOM_BASE_PRICE_SYNC_LIMIT`로 기준가 백필 대상 자산 수를 제한합니다.
    - 10분마다 `price_sync_enabled=true` 종목 중 `KOSCOM_BASE_PRICE_BACKFILL_MONTHS` 기준 최근 월 첫 거래일 기준가가 누락된 항목을 보강합니다. 주기는 `KOSCOM_MISSING_BASE_PRICE_SYNC_INTERVAL_MS`로 조정하고, 1회 최대 보강 건수는 `KOSCOM_MISSING_BASE_PRICE_SYNC_LIMIT`로 제한합니다. 운영에서는 WAS 1만 `KOSCOM_SYNC_DISABLED=false`로 실행하고 WAS 2는 `true`로 둡니다.
@@ -192,7 +194,7 @@ OpenAI 기반 합성 거래내역 생성과 절약 챗봇은 환경 변수 `OPEN
 
 AI 절약 챗봇 대화는 Redis의 `saving-bot:chat:{userId}` List에 저장합니다. `SAVING_BOT_CHAT_TTL_SECONDS`로 마지막 대화 이후 보관 기간(기본 `259200`초, 3일)을, `SAVING_BOT_CHAT_MAX_MESSAGES`로 사용자별 최대 메시지 수(기본 100개)를 조정할 수 있습니다. 채팅 저장 실패는 AI 답변 생성을 중단시키지 않으며, Redis 조회 실패 시 요청에 포함된 최근 대화를 임시 문맥으로 사용합니다.
 
-ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: false })`를 실행해 존재하지 않는 테이블만 생성합니다. `DB_SYNC_SCHEMA=false`로 schema sync 전체를 끌 수 있고, `DB_SYNC_ALTER=true`를 명시한 경우에만 기존 테이블을 변경합니다. 운영에서는 Sequelize가 `UNIQUE` 인덱스를 반복 생성하지 않도록 `DB_SYNC_ALTER=false`로 고정하고 기존 테이블 변경은 migration으로 관리합니다.
+ORM은 Sequelize를 사용합니다. 서버 시작 시 기본값으로 `sequelize.sync({ alter: false })`를 실행해 존재하지 않는 테이블만 생성합니다. 주간 챌린지의 필수 컬럼과 인증 시각 컬럼은 기존 개발 DB 볼륨에도 안전하게 추가되도록 모델 동기화 전에 별도로 보강합니다. `DB_SYNC_SCHEMA=false`로 schema sync 전체를 끌 수 있고, `DB_SYNC_ALTER=true`를 명시한 경우에만 그 외 기존 테이블을 변경합니다. 운영에서는 Sequelize가 `UNIQUE` 인덱스를 반복 생성하지 않도록 `DB_SYNC_ALTER=false`로 고정하고 기존 테이블 변경은 migration으로 관리합니다.
 
 ## 구현 기준
 현재 백엔드는 Express 5 기반 JavaScript ES 모듈입니다. 진입점은 `backend/server.js`이며, 런타임 설정은 `PORT`, `CORS_ORIGIN` 같은 환경 변수를 사용합니다. API 변경 후에는 `GET /api/health`와 변경된 엔드포인트를 직접 호출해 응답 상태와 JSON 구조를 확인합니다.

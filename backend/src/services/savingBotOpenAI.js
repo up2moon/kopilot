@@ -131,7 +131,8 @@ function buildInput({
   requestedAction,
 }) {
   const isAssetAllocation =
-    requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION;
+    requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION ||
+    assetAllocationPattern.test(message);
   const system = `당신은 KoPilot의 개인 소비 절약 코치다.
 
 역할:
@@ -144,7 +145,7 @@ function buildInput({
 3. File Search 지식은 행동 방법에만 사용하고 사용자 개인 사실처럼 표현하지 않는다.
 4. 사용자를 비난하거나 소비의 전면 중단을 권하지 않는다.
 5. 한 번에 최대 두 가지 행동만 제안한다.
-6. 개별 종목, 대출, 금융상품을 추천하지 않는다. 단, 소비 패턴 기반 자산 배분 요청에서는 제공된 ASSET_ALLOCATION_GUIDE의 현금·S&P 500 비중만 설명할 수 있다.
+6. 개별 종목, 대출, 금융상품을 임의로 추천하지 않는다. 단, 소비 패턴 기반 자산 배분 요청에서는 ASSET_ALLOCATION_GUIDE.allocations에 제공된 자산군과 예시 상품만 설명할 수 있다.
 7. 소비와 절약 범위 밖 질문에는 정해진 거절 문구로 답한다.
 8. 한국어 존댓말로 최대 3문장 이내로 답한다.
 9. 답변에 사용한 개인 데이터 근거를 evidence 배열에 넣는다.
@@ -152,7 +153,7 @@ function buildInput({
 11. 챌린지 생성 방법, 추천 또는 설명만 묻는 질문에는 Tool을 호출하지 않는다.
 12. Tool 실행 결과의 상태, 금액, 기간을 바꾸거나 만들어내지 않는다.
 13. Tool로 챌린지를 생성했다면 challenge.content를 요약하거나 바꾸지 말고 그대로 안내한다.
-14. 자산 배분 요청이면 ASSET_ALLOCATION_GUIDE의 비중과 금액을 변경하지 말고, 소비 근거 2개와 함께 현금·S&P 500 배분을 명확히 제시한다.
+14. 자산 배분 요청이면 ASSET_ALLOCATION_GUIDE의 비중과 금액을 변경하지 말고, 소비 근거 2개와 함께 현금성·채권·국내외 주식의 분산 목적을 설명한다.
 15. 자산 배분 답변 끝에는 ASSET_ALLOCATION_GUIDE.disclaimer를 짧게 안내한다.${isAssetAllocation ? "\n16. 현재 요청은 소비 패턴 기반 자산 배분 분석이다." : ""}`;
   const context = {
     USER_FACTS: profile,
@@ -278,6 +279,29 @@ function parseStructuredAnswer(data) {
   }
 }
 
+function formatWon(amount) {
+  return `${Number(amount || 0).toLocaleString("ko-KR")}원`;
+}
+
+function buildAssetAllocationAnswer(assetAllocation) {
+  const budgetEvidence = (assetAllocation.overBudgetDetails || [])
+    .slice(0, 1)
+    .map(
+      (item) =>
+        `${item.category} 예산을 ${formatWon(item.excessAmount)} 초과했고`,
+    )
+    .join(", ");
+  const trendEvidence =
+    assetAllocation.spendingTrendRate === null
+      ? null
+      : `최근 지출이 ${Math.abs(assetAllocation.spendingTrendRate)}% ${
+          assetAllocation.spendingTrendRate >= 0 ? "늘었고" : "줄었고"
+        }`;
+  const evidence = budgetEvidence || trendEvidence || "최근 소비 변동을 고려해";
+
+  return `${evidence} 선택지출 비중이 ${assetAllocation.discretionaryShare}%여서 ${assetAllocation.title}을 제안해요.`;
+}
+
 function parseFunctionArguments(functionCall) {
   let args;
 
@@ -331,6 +355,8 @@ export async function generateSavingBotAnswer({
   requestedAction,
   executeTool,
 }) {
+  const isAssetAllocation =
+    requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION;
   const apiKey = process.env.OPEN_AI_KEY;
   const vectorStoreId = process.env.OPENAI_SAVING_VECTOR_STORE_ID;
 
@@ -343,10 +369,8 @@ export async function generateSavingBotAnswer({
 
   if (
     !vectorStoreId &&
-    ![
-      CREATE_WEEKLY_CHALLENGE_ACTION,
-      ANALYZE_ASSET_ALLOCATION_ACTION,
-    ].includes(requestedAction)
+    requestedAction !== CREATE_WEEKLY_CHALLENGE_ACTION &&
+    !isAssetAllocation
   ) {
     const error = new Error(
       "OPENAI_SAVING_VECTOR_STORE_ID is required for saving bot File Search",
@@ -394,7 +418,7 @@ export async function generateSavingBotAnswer({
             name: CREATE_WEEKLY_CHALLENGE_TOOL,
           },
         }
-      : requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION
+      : isAssetAllocation
         ? { tool_choice: "none" }
       : {}),
   };
@@ -404,8 +428,16 @@ export async function generateSavingBotAnswer({
   );
 
   if (!functionCalls.length) {
+    const parsed = parseStructuredAnswer(initialData);
+
     return {
-      ...parseStructuredAnswer(initialData),
+      ...parsed,
+      ...(isAssetAllocation
+        ? {
+            answer: buildAssetAllocationAnswer(assetAllocation),
+            assetAllocation,
+          }
+        : {}),
       sources: extractFileSources(initialData),
       model,
       responseId: initialData.id,

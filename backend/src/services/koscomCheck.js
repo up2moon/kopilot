@@ -1,4 +1,6 @@
 const koscomBaseUrl = process.env.KOSCOM_BASE_URL || "https://checkapi.koscom.co.kr";
+const productionKoscomProxyUrl =
+  "https://kospay.p-e.kr/api/investment/check-proxy";
 
 export const stockMasterPath = process.env.KOSCOM_STOCK_MASTER_PATH || "/stock/m001/code_info";
 export const etfMasterPath = process.env.KOSCOM_ETF_MASTER_PATH || "/stock/m001/code_etf_info";
@@ -31,15 +33,6 @@ async function runWithKoscomThrottle(task) {
   koscomRequestQueue = queuedTask.catch(() => {});
 
   return queuedTask;
-}
-
-function assertKoscomCheckApiEnabled() {
-  if (process.env.CHECK_API_ENABLED !== "true") {
-    const error = new Error("현재 환경에서는 코스콤 CHECK API 호출이 비활성화되어 있습니다.");
-    error.statusCode = 503;
-    error.code = "CHECK_API_DISABLED";
-    throw error;
-  }
 }
 
 export function getKoscomCredentials() {
@@ -351,17 +344,30 @@ export function normalizeKoscomQuote(raw) {
 }
 
 export async function callKoscom(path, params = {}) {
-  assertKoscomCheckApiEnabled();
   const { custId, authKey } = getKoscomCredentials();
-  const url = new URL(path, koscomBaseUrl);
+  const useProductionProxy = process.env.NODE_ENV !== "production";
+  const url = useProductionProxy
+    ? new URL(productionKoscomProxyUrl)
+    : new URL(path, koscomBaseUrl);
   const requestPayload = {
-    cust_id: custId,
-    auth_key: authKey,
+    ...(useProductionProxy
+      ? { path, params }
+      : {
+          cust_id: custId,
+          auth_key: authKey,
+        }),
   };
 
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      requestPayload[key] = value;
+  if (!useProductionProxy) {
+    for (const [key, value] of Object.entries(params)) {
+      if (
+        !["cust_id", "auth_key"].includes(key) &&
+        value !== undefined &&
+        value !== null &&
+        value !== ""
+      ) {
+        requestPayload[key] = value;
+      }
     }
   }
 
@@ -371,6 +377,12 @@ export async function callKoscom(path, params = {}) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...(useProductionProxy
+          ? {
+              "X-Koscom-Cust-Id": custId,
+              "X-Koscom-Auth-Key": authKey,
+            }
+          : {}),
       },
       body: JSON.stringify(requestPayload),
     }),

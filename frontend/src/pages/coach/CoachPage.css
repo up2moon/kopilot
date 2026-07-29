@@ -235,6 +235,220 @@
   color: #8b95a1;
 }
 
+.coach-message:has(.coach-allocation) {
+  width: 100%;
+  max-width: 344px;
+}
+
+.coach-allocation {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e8eb;
+}
+
+.coach-allocation-header,
+.coach-allocation-asset-heading,
+.coach-allocation-value {
+  display: flex;
+  align-items: center;
+}
+
+.coach-allocation-header {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coach-allocation-header > div {
+  min-width: 0;
+}
+
+.coach-allocation-eyebrow,
+.coach-allocation-header strong {
+  display: block;
+}
+
+.coach-allocation-eyebrow {
+  margin-bottom: 3px;
+  color: #3182f6;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.coach-allocation-header strong {
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.coach-allocation-total {
+  flex: 0 0 auto;
+  color: #333d4b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.coach-allocation-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.coach-allocation-asset {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #dbe9ff;
+  border-radius: 10px;
+  background: #f5f9ff;
+}
+
+.coach-allocation-asset-heading {
+  min-width: 0;
+  gap: 6px;
+}
+
+.coach-allocation-class {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #3182f6;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.coach-allocation-asset-heading strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coach-allocation-code {
+  flex: 0 0 auto;
+  color: #8b95a1;
+  font-size: 10px;
+}
+
+.coach-allocation-value {
+  justify-content: flex-end;
+  gap: 7px;
+  margin: 0;
+}
+
+.coach-allocation-value strong {
+  color: #1769d2;
+  font-size: 15px;
+}
+
+.coach-allocation-value span {
+  color: #4e5968;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.coach-allocation-disclaimer {
+  margin: 7px 0 0;
+  color: #6b7684;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.coach-allocation-disclaimer {
+  padding: 0 2px;
+}
+
+.coach-allocation-amount-form {
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  padding: 14px;
+  border: 1px solid #dbe9ff;
+  border-radius: 16px;
+  background: #f7faff;
+  text-align: left;
+}
+
+.coach-allocation-amount-form label {
+  display: block;
+  margin-bottom: 9px;
+  color: #191f28;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.coach-allocation-amount-form > div:first-of-type {
+  position: relative;
+}
+
+.coach-allocation-amount-form input {
+  width: 100%;
+  height: 44px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #c9ddff;
+  border-radius: 11px;
+  background: #fff;
+  box-sizing: border-box;
+  color: #191f28;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  outline: 0;
+}
+
+.coach-allocation-amount-form input:focus {
+  border-color: #3182f6;
+}
+
+.coach-allocation-amount-form > div:first-of-type > span {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: #6b7684;
+  font-size: 13px;
+  transform: translateY(-50%);
+}
+
+.coach-allocation-amount-form p {
+  margin: 7px 0 0;
+  color: #6b7684;
+  font-size: 10px;
+}
+
+.coach-allocation-amount-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.coach-allocation-amount-actions button {
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.coach-allocation-amount-actions button:first-child {
+  background: #e5e8eb;
+  color: #4e5968;
+}
+
+.coach-allocation-amount-actions button:last-child {
+  background: #3182f6;
+  color: #fff;
+}
+
+.coach-allocation-amount-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .coach-suggestions {
   flex: 0 0 auto;
   margin-bottom: 10px;

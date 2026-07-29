@@ -119,6 +119,12 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
     typeof req.body.requestedAction === "string"
       ? req.body.requestedAction.trim()
       : null;
+  const effectiveRequestedAction =
+    requestedAction ||
+    (message === ASSET_ALLOCATION_QUESTION
+      ? ANALYZE_ASSET_ALLOCATION_ACTION
+      : null);
+  const allocationBaseAmount = Number(req.body.allocationBaseAmount);
 
   if (!message) {
     return res.status(400).json({
@@ -132,14 +138,31 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
     });
   }
 
-  if (requestedAction && !allowedRequestedActions.has(requestedAction)) {
+  if (
+    effectiveRequestedAction &&
+    !allowedRequestedActions.has(effectiveRequestedAction)
+  ) {
     return res.status(400).json({
       message: "지원하지 않는 채팅 액션이에요.",
       code: "INVALID_REQUESTED_ACTION",
     });
   }
 
-  if (isClearlyOutOfScope(message, requestedAction)) {
+  if (
+    effectiveRequestedAction === ANALYZE_ASSET_ALLOCATION_ACTION &&
+    (
+      !Number.isInteger(allocationBaseAmount) ||
+      allocationBaseAmount < 10000 ||
+      allocationBaseAmount > 1000000000
+    )
+  ) {
+    return res.status(400).json({
+      message: "배분할 금액을 10,000원 이상 10억원 이하로 입력해주세요.",
+      code: "ALLOCATION_AMOUNT_REQUIRED",
+    });
+  }
+
+  if (isClearlyOutOfScope(message, effectiveRequestedAction)) {
     const answer = getOutOfScopeAnswer();
 
     await saveChatExchange(req.user.id, message, answer);
@@ -163,14 +186,14 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
       req.body.recentMessages,
     );
     const { profile, coaching, assetAllocation } =
-      await getSavingBotContext(req.user.id);
+      await getSavingBotContext(req.user.id, { allocationBaseAmount });
     const answer = await generateSavingBotAnswer({
       message,
       recentMessages,
       profile,
       coaching,
       assetAllocation,
-      requestedAction,
+      requestedAction: effectiveRequestedAction,
       executeTool: (name, args) => executeSavingBotTool(name, {
         ...args,
         userId: req.user.id,
