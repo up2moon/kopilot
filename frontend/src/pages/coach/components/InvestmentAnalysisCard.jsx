@@ -1,3 +1,7 @@
+import { useState } from "react";
+
+const DEFAULT_VISIBLE_NEWS_COUNT = 5;
+
 function formatWon(value) {
   return `${Math.round(Number(value) || 0).toLocaleString("ko-KR")}원`;
 }
@@ -167,9 +171,15 @@ function Perspective({ title, tone, data, newsByUrl }) {
 }
 
 export default function InvestmentAnalysisCard({ analysis }) {
+  const [isNewsExpanded, setIsNewsExpanded] = useState(false);
+
   if (!analysis) return null;
 
   const news = analysis.information?.news?.results || [];
+  const visibleNews = isNewsExpanded
+    ? news
+    : news.slice(0, DEFAULT_VISIBLE_NEWS_COUNT);
+  const hiddenNewsCount = news.length - visibleNews.length;
   const evidenceCounts =
     analysis.information?.news?.evidenceCounts || {};
   const quote = analysis.information?.koscom?.quote;
@@ -227,19 +237,33 @@ export default function InvestmentAnalysisCard({ analysis }) {
           </p>
         ) : null}
         {news.length ? (
-          <ul>
-            {news.map((item) => (
-              <li key={item.url || item.title}>
-                <a href={item.url} target="_blank" rel="noreferrer">
-                  <strong>{item.title}</strong>
-                  <span>
-                    {getEvidenceTierLabel(item.evidenceTier)} · {item.source} ·{" "}
-                    {formatPublishedDate(item.publishedAt)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul>
+              {visibleNews.map((item) => (
+                <li key={item.url || item.title}>
+                  <a href={item.url} target="_blank" rel="noreferrer">
+                    <strong>{item.title}</strong>
+                    <span>
+                      {getEvidenceTierLabel(item.evidenceTier)} · {item.source} ·{" "}
+                      {formatPublishedDate(item.publishedAt)}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            {news.length > DEFAULT_VISIBLE_NEWS_COUNT ? (
+              <button
+                className="investment-analysis-sources-toggle"
+                type="button"
+                aria-expanded={isNewsExpanded}
+                onClick={() => setIsNewsExpanded((expanded) => !expanded)}
+              >
+                {isNewsExpanded
+                  ? "기사 목록 접기"
+                  : `기사 ${hiddenNewsCount}건 더 보기`}
+              </button>
+            ) : null}
+          </>
         ) : (
           <p className="investment-analysis-no-sources">
             최근 {lookbackDays}일 내 발행일과 언론사를 확인한 관련 기사가

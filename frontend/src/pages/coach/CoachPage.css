@@ -383,6 +383,15 @@
   list-style: none;
 }
 
+.investment-analysis-sources ul {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.investment-analysis-sources li,
+.investment-analysis-sources a {
+  min-width: 0;
+}
+
 .investment-analysis-perspective li strong,
 .investment-analysis-perspective li span {
   display: block;
@@ -519,6 +528,31 @@
   margin-top: 2px;
   color: #8b95a1;
   font-size: 9px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.investment-analysis-sources-toggle {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: #eef6ff;
+  color: #3182f6;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.investment-analysis-sources-toggle:hover {
+  background: #e2efff;
+}
+
+.investment-analysis-sources-toggle:focus-visible {
+  outline: 2px solid #3182f6;
+  outline-offset: 2px;
 }
 
 .investment-analysis-perspective .investment-analysis-evidence-link {
@@ -658,13 +692,6 @@
   background: #f7f9fc;
   color: #6b7684;
   font-size: 9px;
-  line-height: 1.4;
-}
-
-.investment-agent-source-warning {
-  margin: 6px 0 0;
-  color: #e5484d;
-  font-size: 8px;
   line-height: 1.4;
 }
 

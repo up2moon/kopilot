@@ -51,9 +51,6 @@ function PartialPerspective({ preview, title, result, tone }) {
 
 export default function InvestmentAnalysisProgress({ progress }) {
   if (!progress) return null;
-  const hasFailedSearch = (progress.information?.providers || []).some(
-    (provider) => provider.status !== "OK",
-  );
 
   return (
     <article className="investment-agent-progress" aria-live="polite">
@@ -74,20 +71,13 @@ export default function InvestmentAnalysisProgress({ progress }) {
         ))}
       </div>
       {progress.information ? (
-        <>
-          <p className="investment-agent-information">
-            news_agent · 코스콤 시세{" "}
-            {progress.information.quote ? "확인 완료" : "확인 불가"} · 검색{" "}
-            {progress.information.newsQueryCount}회 · 후보{" "}
-            {progress.information.newsCandidateCount}건 중 근거{" "}
-            {progress.information.newsCount}건 정리
-          </p>
-          {hasFailedSearch ? (
-            <p className="investment-agent-source-warning">
-              일부 뉴스 검색은 실패했지만 성공한 결과로 분석했어요.
-            </p>
-          ) : null}
-        </>
+        <p className="investment-agent-information">
+          news_agent · 코스콤 시세{" "}
+          {progress.information.quote ? "확인 완료" : "확인 불가"} · 검색{" "}
+          {progress.information.newsQueryCount}회 · 후보{" "}
+          {progress.information.newsCandidateCount}건 중 근거{" "}
+          {progress.information.newsCount}건 정리
+        </p>
       ) : null}
       <div className="investment-agent-partials">
         <PartialPerspective
