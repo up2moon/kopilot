@@ -26,6 +26,7 @@ export default function SpendingSummaryCard({ onOpenDetails, summary }) {
         className="dash-blue-btn"
         onClick={onOpenDetails}
       >
+        <span className="detail-button-icon" aria-hidden="true">▤</span>
         <span>소비 상세 보기</span>
         <img
           className="btn-arrow is-light"

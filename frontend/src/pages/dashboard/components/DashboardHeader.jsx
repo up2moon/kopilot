@@ -10,6 +10,9 @@ export default function DashboardHeader() {
           alt=""
           aria-hidden="true"
         />
+        <span className="dash-brand-name">
+          <span>Kos</span>pay
+        </span>
       </div>
     </header>
   );

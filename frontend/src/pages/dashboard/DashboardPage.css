@@ -1,8 +1,10 @@
 .dashboard-page {
   position: relative;
   min-height: 100%;
-  padding-bottom: 24px;
-  background: #f7f9fc;
+  padding-bottom: 32px;
+  background:
+    radial-gradient(circle at 78% 16%, rgba(255, 192, 92, 0.22), transparent 24%),
+    linear-gradient(180deg, #fff8ef 0, #fffdf9 270px, #f7f9fc 470px);
   box-sizing: border-box;
   color: #191f28;
 }
@@ -10,46 +12,66 @@
 .dash-top-bar {
   display: flex;
   align-items: center;
-  padding: 20px 24px 12px;
+  padding: 18px 24px 10px;
 }
 
 .brand-lockup {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.brand-name {
+.dash-top-bar .logo-mark {
+  width: 38px;
+  height: 38px;
+}
+
+.dash-brand-name {
   font-family: Inter, system-ui, sans-serif;
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 800;
   color: #191f28;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
+}
+
+.dash-brand-name span {
+  color: #ff6b1a;
 }
 
 .dash-greeting-section {
-  padding: 16px 24px 20px;
+  position: relative;
+  padding: 24px 24px 30px;
   text-align: left;
+}
+
+.dash-greeting-section::after {
+  content: '✦';
+  position: absolute;
+  right: 34px;
+  top: 22px;
+  color: #ffc85a;
+  font-size: 34px;
+  opacity: 0.75;
 }
 
 .greeting-title {
   margin: 0;
   font-size: var(--font-size-hero-title);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.4;
   color: #191f28;
   letter-spacing: -0.5px;
 }
 
 .greeting-subtitle {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: var(--font-size-body);
   color: #6b7684;
   line-height: 1.4;
 }
 
 .dash-cards-container {
-  padding: 0 20px;
+  padding: 0 18px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -58,26 +80,26 @@
 /* Card 1: 이번 달 소비 */
 .dash-white-card {
   background: #ffffff;
-  border-radius: 24px;
-  padding: 24px 20px 20px;
-  border: 1px solid #e5e8eb;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border-radius: 30px;
+  padding: 26px 22px 22px;
+  border: 1px solid rgba(25, 31, 40, 0.04);
+  box-shadow: 0 14px 36px rgba(42, 58, 82, 0.1);
   text-align: left;
 }
 
 .card-subhead {
   display: block;
-  font-size: 15px;
-  font-weight: 600;
-  color: #6b7684;
+  font-size: 17px;
+  font-weight: 800;
+  color: #191f28;
 }
 
 .spending-main-amount {
-  font-size: var(--font-size-metric);
+  font-size: 34px;
   font-weight: 800;
   color: #191f28;
   letter-spacing: -0.5px;
-  margin: 8px 0 16px;
+  margin: 12px 0 18px;
 }
 
 .spending-meta-row {
@@ -90,8 +112,8 @@
 .change-rate-pill {
   font-size: 13px;
   font-weight: 700;
-  color: #f06d00;
-  background: #fff5eb;
+  color: #ff5a13;
+  background: #fff1e7;
   padding: 6px 12px;
   border-radius: 12px;
 }
@@ -116,23 +138,24 @@
 .dash-blue-btn {
   width: 100%;
   height: 54px;
-  border-radius: 14px;
-  background: #3182f6;
-  color: #ffffff;
+  border-radius: 16px;
+  background: #eef5ff;
+  color: #246fe5;
   border: none;
   font-size: 16px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(49, 130, 246, 0.25);
+  padding: 0 16px;
+  box-shadow: none;
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .dash-blue-btn:hover {
-  background: #1b64da;
+  background: #e2eeff;
 }
 
 .dash-blue-btn:active {
@@ -141,24 +164,46 @@
 
 /* Card 2: AI 절약 코치 */
 .dash-blue-card {
-  background: #3182f6;
-  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2f6cf5 0%, #5b91ff 100%);
+  border-radius: 28px;
   padding: 24px 20px 20px;
   color: #ffffff;
   text-align: left;
   box-shadow: 0 8px 24px rgba(49, 130, 246, 0.3);
 }
 
+.dash-blue-card::before {
+  content: '';
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  right: -88px;
+  top: -92px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.coach-card-copy {
+  position: relative;
+  z-index: 1;
+  width: 73%;
+}
+
 .ai-coach-label {
-  display: block;
-  font-size: 15px;
-  font-weight: 600;
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.95);
 }
 
 .ai-coach-advice {
-  margin: 12px 0 20px;
-  font-size: 19px;
+  margin: 14px 0 0;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.4;
   color: #ffffff;
@@ -167,6 +212,8 @@
 }
 
 .dash-white-btn {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 54px;
   border-radius: 14px;
@@ -177,10 +224,12 @@
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+  padding: 0 16px;
+  box-shadow: 0 5px 16px rgba(21, 62, 142, 0.14);
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
@@ -193,8 +242,9 @@
 }
 
 .ai-coach-footer-note {
-  margin: 14px 0 0;
-  font-size: 13px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -205,8 +255,13 @@
   margin-left: 6px;
 }
 
+.dash-blue-btn .btn-arrow,
+.dash-white-btn .btn-arrow {
+  margin-left: auto;
+}
+
 .btn-arrow.is-light {
-  filter: brightness(0) invert(1);
+  filter: brightness(0) saturate(100%) invert(45%) sepia(92%) saturate(2614%) hue-rotate(201deg) brightness(99%) contrast(95%);
 }
 
 .btn-arrow.is-primary {
@@ -218,4 +273,68 @@
   padding: 60px 24px;
   text-align: center;
   color: #6b7684;
+}
+
+.detail-button-icon {
+  color: #246fe5;
+  font-size: 20px;
+}
+
+.coach-button-icon {
+  min-width: 28px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50% 50% 50% 8px;
+  background: #3e7df2;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.coach-robot {
+  position: absolute;
+  z-index: 1;
+  top: 67px;
+  right: 22px;
+  width: 68px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 6px solid rgba(255, 255, 255, 0.55);
+  border-radius: 26px;
+  background: linear-gradient(145deg, #fff, #cfe0ff);
+  box-shadow: 0 8px 18px rgba(20, 55, 130, 0.2);
+}
+
+.robot-face {
+  width: 47px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background: #26375a;
+  color: #8ee8ff;
+  font-size: 24px;
+  font-weight: 800;
+  transform: rotate(180deg);
+}
+
+.coach-idea {
+  position: absolute;
+  right: 3px;
+  top: -28px;
+  color: #ffe071;
+  font-size: 24px;
+}
+
+@media (max-width: 350px) {
+  .coach-card-copy {
+    width: 70%;
+  }
+
+  .coach-robot {
+    right: 14px;
+    transform: scale(0.9);
+  }
 }
