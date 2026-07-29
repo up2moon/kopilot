@@ -11,6 +11,7 @@ const routes = {
   challenge: "/challenge",
   investmentEffect: "/investment-effect",
   my: "/my",
+  pointShop: "/point-shop",
   test: "/test",
 };
 

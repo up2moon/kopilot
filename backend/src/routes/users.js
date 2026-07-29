@@ -674,6 +674,12 @@ router.get("/me/ranking", requireAuth, async (req, res) => {
   }
 });
 
+router.get("/me/reward-points", requireAuth, (req, res) => {
+  return res.status(200).json({
+    totalPoints: Number(req.user.total_points || 0),
+  });
+});
+
 router.get("/me/consumption-dna", requireAuth, async (req, res) => {
   try {
     const data = await getConsumptionDna(req.user.id, req.query.month, {

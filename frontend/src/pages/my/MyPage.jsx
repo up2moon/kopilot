@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import MyDataConnectionAnimation from '../../components/MyDataConnectionAnimation'
 import NavigationPageLayout from '../../components/NavigationPageLayout'
+import routes from '../../routes'
 import DisconnectMyDataDialog from './components/DisconnectMyDataDialog'
 import MyProfileCard from './components/MyProfileCard'
 import MySettingsSection from './components/MySettingsSection'
+import RewardBalanceCard from './components/RewardBalanceCard'
+import RewardWalletSheet from './components/RewardWalletSheet'
 import useNotificationPreference from './hooks/useNotificationPreference'
+import useRewardStore from './hooks/useRewardStore'
 import './MyPage.css'
 
 export default function MyPage({
   auth,
+  onNavigate,
   onLogout,
   mydataBusy = false,
   mydataError = '',
@@ -18,7 +23,20 @@ export default function MyPage({
   const user = auth?.user
   const isConnected = Boolean(user?.myDataConnected)
   const [pendingDisconnect, setPendingDisconnect] = useState(false)
+  const [walletOpen, setWalletOpen] = useState(false)
   const [notificationsOn, toggleNotifications] = useNotificationPreference()
+  const {
+    points,
+    earnedPoints,
+    spentPoints,
+    pointsLoading,
+    pointsError,
+    purchasedGifts,
+    reloadPoints,
+  } = useRewardStore(
+    auth?.accessToken,
+    user?.id || user?.email || 'demo',
+  )
 
   const handleMyDataClick = () => {
     if (mydataBusy) return
@@ -40,9 +58,21 @@ export default function MyPage({
     <NavigationPageLayout
       className="mypage"
       title="마이"
-      content="계정과 서비스 설정을 관리해요."
+      content="모은 포인트와 내 정보를 한곳에서 관리해요."
     >
       <MyProfileCard user={user} />
+
+      <RewardBalanceCard
+        points={points}
+        earnedPoints={earnedPoints}
+        spentPoints={spentPoints}
+        pointsLoading={pointsLoading}
+        pointsError={pointsError}
+        giftCount={purchasedGifts.length}
+        onOpenShop={() => onNavigate?.(routes.pointShop)}
+        onOpenWallet={() => setWalletOpen(true)}
+        onRetryPoints={reloadPoints}
+      />
 
       <MySettingsSection
         isConnected={isConnected}
@@ -80,6 +110,13 @@ export default function MyPage({
         onCancel={() => setPendingDisconnect(false)}
         onConfirm={confirmDisconnect}
       />
+
+      {walletOpen ? (
+        <RewardWalletSheet
+          gifts={purchasedGifts}
+          onClose={() => setWalletOpen(false)}
+        />
+      ) : null}
     </NavigationPageLayout>
   )
 }

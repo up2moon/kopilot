@@ -40,6 +40,7 @@
 - `POST /api/users/me/saving-bot/chat`: 사용자 대화 질문을 수신하여 OpenAI ChatGPT 및 RAG Context(마이데이터 거래/카테고리/예산 통계)를 활용한 답변을 생성합니다. 절약/소비 범주 외 질문은 Guardrail로 감지하여 거절 안내를 반환하고, 절약 질문에는 무리한 절약 대신 점진적·현실적인 실천 조언을 반환합니다. 선택적인 `requestedAction=CREATE_WEEKLY_CHALLENGE` 또는 명확한 자유 입력 생성 요청은 OpenAI Function Tool `create_weekly_saving_challenge`로 이번 주 챌린지 1개를 추가합니다. 성공하면 추가된 ID를 포함한 `toolResult`와 `/challenge` 이동 및 카드 강조용 `clientAction`을 반환합니다. 사용자 질문과 최종 AI 답변은 Redis에 저장하며 내부 Tool 입출력은 대화 기록에 저장하지 않습니다.
 - `GET /api/users/me/saving-bot/chat/history`: Redis에 저장된 현재 사용자의 최근 AI 절약 챗봇 대화를 반환합니다. 대화는 사용자별 List에 최대 100개까지 저장되며 마지막 대화 이후 기본 3일 동안 유지됩니다.
 - `GET /api/users/me/ranking`: 현재 로그인한 사용자의 익명 닉네임, 아바타 이모지, 내 순위(rank), 지출 절약액 및 퀘스트 포인트를 반환합니다.
+- `GET /api/users/me/reward-points`: 현재 로그인한 사용자의 챌린지 성공으로 DB `users.total_points`에 실제 적립된 리워드 포인트를 반환합니다. 랭킹의 절약액 환산 점수(`rankScore`)와 구분해 포인트 상점 잔액의 원장으로 사용합니다.
 - `GET /api/users/me/consumption-dna?month=YYYY-MM&refresh=true`: 해당 월의 마이데이터 결제 내역을 최소화해 OpenAI Responses API로 분석하고, 월별 소비 DNA 별명·요약·4개 성향 축을 저장해 반환합니다. 저장된 월간 결과는 기본적으로 재사용하며 `refresh=true`일 때 다시 분석합니다.
 - `GET /api/users/ranking/top?limit=20`: 상위 랭킹 리스트(순위, 익명 닉네임, 프로필 아바타, 절약 금액/퀘스트 포인트)를 반환합니다 (Redis ZSET 또는 1시간 배치 캐시 응답).
 - `GET /api/users/me/challenges?week=YYYY-MM-DD`: 월요일부터 금요일까지 함께 수행하는 AI 주간 미션 전체, 수행 기간, `verificationOpensAt`, `verificationClosesAt`, `canVerify`, 성공 개수를 반환합니다. 현재 주 미션이 비어 있으면 기본 추천 미션을 생성하며 AI 채팅으로 추가된 미션까지 모두 반환합니다.

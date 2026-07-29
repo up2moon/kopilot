@@ -10,6 +10,34 @@
   margin-bottom: 20px;
 }
 
+.navigation-page-back {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin: -8px 0 14px -8px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #191f28;
+  cursor: pointer;
+}
+
+.navigation-page-back:active {
+  background: #e8ebef;
+}
+
+.navigation-page-back svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .navigation-page-header h1 {
   margin: 0 0 6px;
   font-size: var(--font-size-page-title);
