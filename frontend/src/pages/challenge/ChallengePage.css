@@ -114,7 +114,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #3182f6;
+  background: linear-gradient(90deg, #ff7a3d, #e85b26);
   transition: width 0.25s ease;
 }
 

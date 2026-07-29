@@ -13,6 +13,7 @@ function BrandHeader({ chip }) {
           alt=""
           aria-hidden="true"
         />
+        <strong>Kospay</strong>
       </div>
 
       {chip ? <span className="value-chip">{chip}</span> : null}
