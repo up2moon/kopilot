@@ -8,6 +8,7 @@ export default function InvestmentResults({
   isRefreshing,
   onOpenChallenges,
   selectedAssets,
+  selectedResultRef,
 }) {
   const primaryBenchmark = data?.benchmarks?.[0]
   const comparisons = isRefreshing ? [] : data?.comparisons || []
@@ -70,6 +71,7 @@ export default function InvestmentResults({
       <SelectedAssetResults
         comparisons={comparisons}
         selectedAssets={selectedAssets}
+        resultRef={selectedResultRef}
       />
 
       <p className="investment-disclaimer">

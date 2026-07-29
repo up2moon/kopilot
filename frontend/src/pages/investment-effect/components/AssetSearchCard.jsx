@@ -8,6 +8,7 @@ export default function AssetSearchCard({
   searchError,
   setSearchKeyword,
   onSelectAsset,
+  selectedAssetCode,
 }) {
   return (
     <section className="investment-search-card">
@@ -48,13 +49,17 @@ export default function AssetSearchCard({
             <button
               type="button"
               key={getAssetKey(asset)}
+              className={
+                selectedAssetCode === asset.assetCode ? 'is-selected' : ''
+              }
               onClick={() => onSelectAsset(asset)}
+              aria-pressed={selectedAssetCode === asset.assetCode}
             >
               <strong>{asset.label}</strong>
               <span className="investment-search-price">
                 {formatPrice(asset.currentPrice)}
               </span>
-              <em>보기</em>
+              <em aria-hidden="true">›</em>
             </button>
           ))}
         </div>

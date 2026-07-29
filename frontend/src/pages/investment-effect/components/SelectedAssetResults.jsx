@@ -8,10 +8,11 @@ import {
 export default function SelectedAssetResults({
   comparisons,
   selectedAssets,
+  resultRef,
 }) {
   if (selectedAssets.length > 0 && comparisons.length === 0) {
     return (
-      <section className="investment-selected-list">
+      <section className="investment-selected-list" ref={resultRef}>
         <article className="investment-selected-card">
           <div>
             <span>계산 대상</span>
@@ -28,7 +29,7 @@ export default function SelectedAssetResults({
   if (!comparisons.length) return null
 
   return (
-    <section className="investment-selected-list">
+    <section className="investment-selected-list" ref={resultRef}>
       {comparisons.map((comparison) => (
         <article
           className="investment-selected-card"

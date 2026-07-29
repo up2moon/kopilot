@@ -178,7 +178,74 @@
 
 /* My Ranking Card */
 .my-ranking-card-section {
+  margin-bottom: 10px;
+}
+
+.ranking-share {
+  position: relative;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 22px;
+  color: #6b7684;
+  font-size: 11px;
+}
+
+.ranking-share > span {
+  margin-right: auto;
+  font-weight: 700;
+}
+
+.ranking-share-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.ranking-share-button {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid #e5e8eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #4e5968;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.ranking-share-button .instagram-mark {
+  width: 17px;
+  height: 17px;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.ranking-share-button.is-linkedin span {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: #0a66c2;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.ranking-share > small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .my-ranking-card {
