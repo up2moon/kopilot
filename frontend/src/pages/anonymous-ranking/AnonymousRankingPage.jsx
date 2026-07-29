@@ -3,7 +3,6 @@ import ConsumptionDnaCard from "./components/ConsumptionDnaCard";
 import MyRankingCard from "./components/MyRankingCard";
 import RankingList from "./components/RankingList";
 import RankingNotice from "./components/RankingNotice";
-import RankingShareButtons from "./components/RankingShareButtons";
 import RankingState from "./components/RankingState";
 import useAnonymousRanking from "./hooks/useAnonymousRanking";
 import "./AnonymousRankingPage.css";
@@ -40,7 +39,6 @@ export default function AnonymousRankingPage({ token }) {
       {!loading && !error ? (
         <>
           <MyRankingCard ranking={myRanking} />
-          <RankingShareButtons />
           <RankingList rankings={topRankings} />
         </>
       ) : null}
