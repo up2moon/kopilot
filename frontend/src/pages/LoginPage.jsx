@@ -85,37 +85,12 @@ function LoginPage({ onNavigate, onAuthSuccess }) {
             <strong>Kospay</strong>
           </div>
         </header>
+      </section>
 
-        <div className="login-hero">
-          <p className="login-eyebrow">SPEND BETTER, GROW FURTHER</p>
-          <h1>
-            소비는 가볍게,
-            <br />
-            내일은 더 든든하게
-          </h1>
-          <p>
-            소비 분석부터 절약 챌린지, 투자효과까지
-            <br />
-            Kospay가 한 흐름으로 연결해요.
-          </p>
-        </div>
-
-        <div className="login-value-list" aria-label="Kospay 주요 기능">
-          <div className="login-value-item">
-            <span>01</span>
-            <strong>소비 분석</strong>
-          </div>
-          <div className="login-value-divider" aria-hidden="true" />
-          <div className="login-value-item">
-            <span>02</span>
-            <strong>절약 코칭</strong>
-          </div>
-          <div className="login-value-divider" aria-hidden="true" />
-          <div className="login-value-item">
-            <span>03</span>
-            <strong>자산 시뮬레이션</strong>
-          </div>
-        </div>
+      <section className="login-welcome" aria-labelledby="login-title">
+        <p>WELCOME BACK</p>
+        <h1 id="login-title">다시 만나 반가워요</h1>
+        <span>계정에 로그인하고 오늘의 소비 흐름을 확인해 보세요.</span>
       </section>
 
       <form className="auth-panel login-panel" onSubmit={handleSubmit}>

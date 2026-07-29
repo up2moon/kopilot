@@ -11,6 +11,7 @@ import MyPage from './pages/my/MyPage'
 import PointShopPage from './pages/my/PointShopPage'
 import ChallengePage from './pages/challenge/ChallengePage'
 import FirstLoginPage from './pages/FirstLoginPage'
+import Home from './pages/Home'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import routes from './routes'
@@ -76,7 +77,11 @@ function App() {
   }
 
   useEffect(() => {
-    const isPublicRoute = route === routes.login || route === routes.signup || route === routes.test
+    const isPublicRoute =
+      route === routes.home ||
+      route === routes.login ||
+      route === routes.signup ||
+      route === routes.test
 
     if (!isPublicRoute && !auth) {
       navigate(routes.login)
@@ -180,7 +185,9 @@ function App() {
 
   let screenContent = null
 
-  if (route === routes.login) {
+  if (route === routes.home) {
+    screenContent = <Home auth={auth} onNavigate={navigate} />
+  } else if (route === routes.login) {
     screenContent = <LoginPage onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
   } else if (route === routes.signup) {
     screenContent = <SignupPage onNavigate={navigate} />
