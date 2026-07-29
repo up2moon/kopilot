@@ -1,4 +1,5 @@
 import {
+  ANALYZE_ASSET_ALLOCATION_ACTION,
   CREATE_WEEKLY_CHALLENGE_ACTION,
   CREATE_WEEKLY_CHALLENGE_TOOL,
   getChallengeClientAction,
@@ -15,6 +16,8 @@ const clearlyOutOfScopePatterns = [
   /코드\s*(작성|짜)|프로그래밍|자바스크립트|파이썬/i,
   /요리법|레시피|날씨|번역/i,
 ];
+const assetAllocationPattern =
+  /(소비\s*패턴|지출\s*패턴).*(자산\s*배분|현금\s*비중|투자\s*비중)|자산\s*배분.*(소비|지출)/i;
 
 const knowledgeCategoryPatterns = [
   {
@@ -119,7 +122,16 @@ function resolveKnowledgeCategories(message, coaching) {
   );
 }
 
-function buildInput({ message, recentMessages, profile, coaching }) {
+function buildInput({
+  message,
+  recentMessages,
+  profile,
+  coaching,
+  assetAllocation,
+  requestedAction,
+}) {
+  const isAssetAllocation =
+    requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION;
   const system = `당신은 KoPilot의 개인 소비 절약 코치다.
 
 역할:
@@ -132,17 +144,20 @@ function buildInput({ message, recentMessages, profile, coaching }) {
 3. File Search 지식은 행동 방법에만 사용하고 사용자 개인 사실처럼 표현하지 않는다.
 4. 사용자를 비난하거나 소비의 전면 중단을 권하지 않는다.
 5. 한 번에 최대 두 가지 행동만 제안한다.
-6. 투자, 대출, 금융상품을 추천하지 않는다.
+6. 개별 종목, 대출, 금융상품을 추천하지 않는다. 단, 소비 패턴 기반 자산 배분 요청에서는 제공된 ASSET_ALLOCATION_GUIDE의 현금·S&P 500 비중만 설명할 수 있다.
 7. 소비와 절약 범위 밖 질문에는 정해진 거절 문구로 답한다.
 8. 한국어 존댓말로 최대 3문장 이내로 답한다.
 9. 답변에 사용한 개인 데이터 근거를 evidence 배열에 넣는다.
 10. 사용자가 이번 주 챌린지를 실제로 만들어 달라고 명확히 요청하면 create_weekly_saving_challenge를 호출한다.
 11. 챌린지 생성 방법, 추천 또는 설명만 묻는 질문에는 Tool을 호출하지 않는다.
 12. Tool 실행 결과의 상태, 금액, 기간을 바꾸거나 만들어내지 않는다.
-13. Tool로 챌린지를 생성했다면 challenge.content를 요약하거나 바꾸지 말고 그대로 안내한다.`;
+13. Tool로 챌린지를 생성했다면 challenge.content를 요약하거나 바꾸지 말고 그대로 안내한다.
+14. 자산 배분 요청이면 ASSET_ALLOCATION_GUIDE의 비중과 금액을 변경하지 말고, 소비 근거 2개와 함께 현금·S&P 500 배분을 명확히 제시한다.
+15. 자산 배분 답변 끝에는 ASSET_ALLOCATION_GUIDE.disclaimer를 짧게 안내한다.${isAssetAllocation ? "\n16. 현재 요청은 소비 패턴 기반 자산 배분 분석이다." : ""}`;
   const context = {
     USER_FACTS: profile,
     CALCULATED_COACHING: coaching,
+    ASSET_ALLOCATION_GUIDE: assetAllocation,
     OUT_OF_SCOPE_ANSWER: outOfScopeAnswer,
   };
 
@@ -292,7 +307,14 @@ function parseFunctionArguments(functionCall) {
   return args;
 }
 
-export function isClearlyOutOfScope(message) {
+export function isClearlyOutOfScope(message, requestedAction = null) {
+  if (
+    requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION ||
+    assetAllocationPattern.test(message)
+  ) {
+    return false;
+  }
+
   return clearlyOutOfScopePatterns.some((pattern) => pattern.test(message));
 }
 
@@ -305,6 +327,7 @@ export async function generateSavingBotAnswer({
   recentMessages,
   profile,
   coaching,
+  assetAllocation,
   requestedAction,
   executeTool,
 }) {
@@ -318,7 +341,13 @@ export async function generateSavingBotAnswer({
     throw error;
   }
 
-  if (!vectorStoreId && requestedAction !== CREATE_WEEKLY_CHALLENGE_ACTION) {
+  if (
+    !vectorStoreId &&
+    ![
+      CREATE_WEEKLY_CHALLENGE_ACTION,
+      ANALYZE_ASSET_ALLOCATION_ACTION,
+    ].includes(requestedAction)
+  ) {
     const error = new Error(
       "OPENAI_SAVING_VECTOR_STORE_ID is required for saving bot File Search",
     );
@@ -344,6 +373,8 @@ export async function generateSavingBotAnswer({
     recentMessages,
     profile,
     coaching,
+    assetAllocation,
+    requestedAction,
   });
   const tools = [
     ...(vectorStoreId ? [fileSearchTool] : []),
@@ -363,6 +394,8 @@ export async function generateSavingBotAnswer({
             name: CREATE_WEEKLY_CHALLENGE_TOOL,
           },
         }
+      : requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION
+        ? { tool_choice: "none" }
       : {}),
   };
   const initialData = await requestOpenAIResponse(apiKey, initialRequest);

@@ -6,6 +6,7 @@ import {
 } from "../../../services/savingBot";
 
 const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
+const ANALYZE_ASSET_ALLOCATION_ACTION = "ANALYZE_ASSET_ALLOCATION";
 const CHALLENGE_PATH = "/challenge";
 const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
 
@@ -176,7 +177,12 @@ export default function useCoachChat(token, onNavigate) {
         recentMessages,
       };
 
-      if (nextRequestedAction === CREATE_WEEKLY_CHALLENGE_ACTION) {
+      if (
+        [
+          CREATE_WEEKLY_CHALLENGE_ACTION,
+          ANALYZE_ASSET_ALLOCATION_ACTION,
+        ].includes(nextRequestedAction)
+      ) {
         payload.requestedAction = nextRequestedAction;
       }
 
@@ -231,8 +237,11 @@ export default function useCoachChat(token, onNavigate) {
     setShowSuggestions(false);
     sendQuestion(
       normalizedSuggestion.label,
-      normalizedSuggestion.action === CREATE_WEEKLY_CHALLENGE_ACTION
-        ? CREATE_WEEKLY_CHALLENGE_ACTION
+      [
+        CREATE_WEEKLY_CHALLENGE_ACTION,
+        ANALYZE_ASSET_ALLOCATION_ACTION,
+      ].includes(normalizedSuggestion.action)
+        ? normalizedSuggestion.action
         : null,
     );
   };
@@ -240,6 +249,8 @@ export default function useCoachChat(token, onNavigate) {
   const loadingMessage =
     requestedAction === CREATE_WEEKLY_CHALLENGE_ACTION
       ? "이번 주 소비를 살펴보고 미션을 만들고 있어요…"
+      : requestedAction === ANALYZE_ASSET_ALLOCATION_ACTION
+        ? "소비 패턴을 분석해 자산 배분안을 만들고 있어요…"
       : "답변을 생각하고 있어요…";
 
   return {

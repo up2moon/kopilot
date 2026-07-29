@@ -262,7 +262,11 @@ function App() {
   return (
     <main className="app-shell">
       <section className="phone-frame">
-        <div className={`app-scroll-area${showNavAndChatbot ? ' has-bottom-nav' : ''}`}>
+        <div
+          className={`app-scroll-area${showNavAndChatbot ? ' has-bottom-nav' : ''}${
+            route === routes.coach ? ' is-coach' : ''
+          }`}
+        >
           {screenContent}
         </div>
         {showNavAndChatbot && (

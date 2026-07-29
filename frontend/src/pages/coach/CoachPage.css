@@ -1,8 +1,8 @@
 .coach-page {
   --coach-content-gutter: 20px;
   width: min(100%, 390px);
-  height: 844px;
-  min-height: 844px;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
@@ -174,22 +174,11 @@
   padding: 0 2px 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: #d8dee8 transparent;
+  scrollbar-width: none;
 }
 
 .coach-message-list::-webkit-scrollbar {
-  width: 5px;
-}
-
-.coach-message-list::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: #d8dee8;
-}
-
-.coach-message-list::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 .coach-message {
@@ -453,7 +442,7 @@
 
 @media (max-width: 440px) {
   .coach-page {
-    height: 100svh;
+    height: 100%;
     min-height: 0;
   }
 

@@ -13,22 +13,34 @@ import {
   isClearlyOutOfScope,
 } from "../services/savingBotOpenAI.js";
 import {
+  ANALYZE_ASSET_ALLOCATION_ACTION,
   CREATE_WEEKLY_CHALLENGE_ACTION,
   executeSavingBotTool,
 } from "../services/savingBotTools.js";
 
 const router = express.Router();
-const allowedRequestedActions = new Set([CREATE_WEEKLY_CHALLENGE_ACTION]);
+const allowedRequestedActions = new Set([
+  CREATE_WEEKLY_CHALLENGE_ACTION,
+  ANALYZE_ASSET_ALLOCATION_ACTION,
+]);
+const ASSET_ALLOCATION_QUESTION = "소비 패턴으로 자산 배분 받기";
 
 function toSuggestedQuestion(label, index) {
   const isChallengeCreation = label === "이번 주 미션 만들기";
+  const isAssetAllocation = label === ASSET_ALLOCATION_QUESTION;
 
   return {
     id: isChallengeCreation
       ? "create-weekly-challenge"
+      : isAssetAllocation
+        ? "analyze-asset-allocation"
       : `suggestion-${index + 1}`,
     label,
-    action: isChallengeCreation ? CREATE_WEEKLY_CHALLENGE_ACTION : "ASK",
+    action: isChallengeCreation
+      ? CREATE_WEEKLY_CHALLENGE_ACTION
+      : isAssetAllocation
+        ? ANALYZE_ASSET_ALLOCATION_ACTION
+        : "ASK",
   };
 }
 
@@ -55,6 +67,10 @@ async function saveChatExchange(userId, message, answer) {
 router.get("/me/saving-bot/coaching", requireAuth, async (req, res) => {
   try {
     const { profile, coaching } = await getSavingBotContext(req.user.id);
+    const suggestedQuestions = [
+      ...coaching.suggestedQuestions,
+      ASSET_ALLOCATION_QUESTION,
+    ];
 
     return res.status(200).json({
       status: profile.paymentCount > 0 ? "COMPLETED" : "INSUFFICIENT_DATA",
@@ -68,7 +84,7 @@ router.get("/me/saving-bot/coaching", requireAuth, async (req, res) => {
         evidence: coaching.evidence,
       },
       greeting: coaching.greeting,
-      suggestedQuestions: coaching.suggestedQuestions.map(toSuggestedQuestion),
+      suggestedQuestions: suggestedQuestions.map(toSuggestedQuestion),
     });
   } catch (error) {
     console.error("Saving bot coaching failed:", error);
@@ -123,7 +139,7 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
     });
   }
 
-  if (isClearlyOutOfScope(message)) {
+  if (isClearlyOutOfScope(message, requestedAction)) {
     const answer = getOutOfScopeAnswer();
 
     await saveChatExchange(req.user.id, message, answer);
@@ -146,12 +162,14 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
       req.user.id,
       req.body.recentMessages,
     );
-    const { profile, coaching } = await getSavingBotContext(req.user.id);
+    const { profile, coaching, assetAllocation } =
+      await getSavingBotContext(req.user.id);
     const answer = await generateSavingBotAnswer({
       message,
       recentMessages,
       profile,
       coaching,
+      assetAllocation,
       requestedAction,
       executeTool: (name, args) => executeSavingBotTool(name, {
         ...args,

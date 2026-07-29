@@ -1,6 +1,7 @@
 import { appendCurrentWeeklyChallenge } from "./challengeService.js";
 
 export const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
+export const ANALYZE_ASSET_ALLOCATION_ACTION = "ANALYZE_ASSET_ALLOCATION";
 export const CREATE_WEEKLY_CHALLENGE_TOOL = "create_weekly_saving_challenge";
 
 const allowedToolNames = new Set([CREATE_WEEKLY_CHALLENGE_TOOL]);

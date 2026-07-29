@@ -11,7 +11,7 @@ function getCoachStatus(coaching, errorMessage, isLoading) {
     return { label: "데이터 부족", tone: "insufficient" };
   }
 
-  return { label: "분석 완료", tone: "completed" };
+  return null;
 }
 
 export default function CoachHeader({
@@ -46,9 +46,11 @@ export default function CoachHeader({
         </svg>
       </button>
       <h1>AI 절약 챗봇</h1>
-      <span className={`coach-status coach-status-${status.tone}`}>
-        {status.label}
-      </span>
+      {status ? (
+        <span className={`coach-status coach-status-${status.tone}`}>
+          {status.label}
+        </span>
+      ) : null}
     </header>
   );
 }

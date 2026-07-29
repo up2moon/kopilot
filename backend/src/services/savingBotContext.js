@@ -7,6 +7,13 @@ import {
 } from "../models/index.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const discretionaryCategories = new Set([
+  "카페·간식",
+  "배달",
+  "구독",
+  "쇼핑",
+  "문화",
+]);
 
 const categoryNameByCode = {
   "01": "카페·간식",
@@ -287,6 +294,69 @@ function buildCoaching(profile) {
   };
 }
 
+// 소비 변동성과 선택 지출 비중을 바탕으로 현금·S&P 500 임시 배분 기준을 만든다.
+// 투자 성향과 비상자금 정보가 없는 상태이므로 현금 비중을 최소 50%로 유지한다.
+function buildAssetAllocationGuide(profile, coaching) {
+  const recentAmount = profile.categories.reduce(
+    (sum, category) => sum + category.recentAmount,
+    0,
+  );
+  const previousAmount = profile.categories.reduce(
+    (sum, category) => sum + category.previousAmount,
+    0,
+  );
+  const spendingTrendRate =
+    previousAmount > 0
+      ? Math.round(((recentAmount - previousAmount) / previousAmount) * 1000) /
+        10
+      : null;
+  const discretionaryAmount = profile.categories
+    .filter((category) => discretionaryCategories.has(category.category))
+    .reduce((sum, category) => sum + category.totalAmount, 0);
+  const discretionaryShare =
+    profile.totalAmount > 0
+      ? Math.round((discretionaryAmount / profile.totalAmount) * 1000) / 10
+      : 0;
+  const overBudgetCategories = profile.categories
+    .filter((category) => category.budgetUsageRate > 100)
+    .map((category) => category.category);
+
+  let cashRatio = 50;
+
+  if (
+    spendingTrendRate === null ||
+    spendingTrendRate >= 15 ||
+    discretionaryShare >= 45 ||
+    overBudgetCategories.length >= 2
+  ) {
+    cashRatio = 70;
+  } else if (
+    spendingTrendRate >= 5 ||
+    discretionaryShare >= 30 ||
+    overBudgetCategories.length === 1
+  ) {
+    cashRatio = 60;
+  }
+
+  const allocationBaseAmount = coaching.estimatedSavingAmount;
+
+  return {
+    status: profile.paymentCount > 0 ? "AVAILABLE" : "INSUFFICIENT_DATA",
+    cashRatio,
+    sp500Ratio: 100 - cashRatio,
+    allocationBaseAmount,
+    cashAmount: Math.round((allocationBaseAmount * cashRatio) / 100),
+    sp500Amount: Math.round(
+      (allocationBaseAmount * (100 - cashRatio)) / 100,
+    ),
+    spendingTrendRate,
+    discretionaryShare,
+    overBudgetCategories,
+    disclaimer:
+      "소비 패턴만 반영한 임시 배분안이며 투자 성향과 비상자금 규모를 확인한 뒤 조정해야 합니다.",
+  };
+}
+
 // 사용자 예산과 거래 내역을 결합해 Saving Bot이 사용할 개인화 컨텍스트를 만든다.
 export async function getSavingBotContext(userId) {
   const period = getPeriod();
@@ -341,9 +411,12 @@ export async function getSavingBotContext(userId) {
     categories,
   };
 
+  const coaching = buildCoaching(profile);
+
   return {
     profile,
-    coaching: buildCoaching(profile),
+    coaching,
+    assetAllocation: buildAssetAllocationGuide(profile, coaching),
   };
 }
 

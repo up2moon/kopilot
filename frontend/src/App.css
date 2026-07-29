@@ -37,6 +37,10 @@
   box-sizing: border-box;
 }
 
+.app-scroll-area.is-coach {
+  overflow: hidden;
+}
+
 .auth-screen {
   position: relative;
   min-height: 844px;
