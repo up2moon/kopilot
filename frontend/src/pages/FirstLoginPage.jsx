@@ -299,7 +299,7 @@ function TermsAgreementModal({ isOpen, onClose, onConfirm }) {
             {expandedSection === 'privacyThirdParty' && (
               <div className="terms-detail-box">
                 <p>
-                  <strong>제공받는 자:</strong> KoPilot AI 분석 및 챌린지 모듈
+                  <strong>제공받는 자:</strong> Kospay AI 분석 및 챌린지 모듈
                 </p>
                 <p>
                   <strong>제공 목적:</strong> AI 절약 코치 추천 메시지 생성, 카테고리별 예산 추천 및 주간 챌린지 미션 검증
