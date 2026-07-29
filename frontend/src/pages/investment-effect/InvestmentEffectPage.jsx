@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import NavigationPageLayout from "../../components/NavigationPageLayout";
 import AssetSearchCard from "./components/AssetSearchCard";
 import InvestmentFilters from "./components/InvestmentFilters";
@@ -11,19 +10,8 @@ import "./InvestmentEffectPage.css";
 export default function InvestmentEffectPage({ onNavigate, token }) {
   const simulation = useInvestmentSimulation(token);
   const search = useAssetSearch(token);
-  const selectedResultRef = useRef(null);
-  const pendingScrollAssetCodeRef = useRef(null);
 
   const handleSelectAsset = (asset) => {
-    if (simulation.selectedAssets[0]?.assetCode === asset.assetCode) {
-      selectedResultRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
-      return;
-    }
-
-    pendingScrollAssetCodeRef.current = asset.assetCode;
     simulation.selectAsset(asset);
   };
 
@@ -39,23 +27,6 @@ export default function InvestmentEffectPage({ onNavigate, token }) {
 
     onNavigate(`/coach?${query.toString()}`);
   };
-
-  useEffect(() => {
-    const pendingAssetCode = pendingScrollAssetCodeRef.current;
-    const resultIsReady = simulation.data?.comparisons?.some(
-      (comparison) => comparison.assetCode === pendingAssetCode,
-    );
-
-    if (!pendingAssetCode || simulation.isRefreshing || !resultIsReady) return;
-
-    pendingScrollAssetCodeRef.current = null;
-    window.requestAnimationFrame(() => {
-      selectedResultRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
-    });
-  }, [simulation.data, simulation.isRefreshing]);
 
   return (
     <NavigationPageLayout
@@ -98,9 +69,9 @@ export default function InvestmentEffectPage({ onNavigate, token }) {
             data={simulation.data}
             isRefreshing={simulation.isRefreshing}
             onAnalyzeAsset={handleAnalyzeAsset}
+            onCloseSelectedAsset={simulation.clearSelectedAsset}
             onOpenChallenges={() => onNavigate("/challenge")}
             selectedAssets={simulation.selectedAssets}
-            selectedResultRef={selectedResultRef}
           >
             <AssetSearchCard
               {...search}
