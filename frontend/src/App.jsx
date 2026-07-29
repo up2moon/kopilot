@@ -8,6 +8,7 @@ import SpendingDetailPage from './pages/spending-detail/SpendingDetailPage'
 import AnonymousRankingPage from './pages/anonymous-ranking/AnonymousRankingPage'
 import InvestmentEffectPage from './pages/investment-effect/InvestmentEffectPage'
 import MyPage from './pages/my/MyPage'
+import PointShopPage from './pages/my/PointShopPage'
 import ChallengePage from './pages/challenge/ChallengePage'
 import FirstLoginPage from './pages/FirstLoginPage'
 import LoginPage from './pages/LoginPage'
@@ -244,6 +245,14 @@ function App() {
         mydataError={mydataError}
         onMydataConnect={handleMydataConnect}
         onMydataDisconnect={handleMydataDisconnect}
+      />
+    )
+  } else if (route === routes.pointShop) {
+    if (!auth) return null
+    screenContent = (
+      <PointShopPage
+        auth={auth}
+        onBack={() => navigate(routes.my)}
       />
     )
   } else {
