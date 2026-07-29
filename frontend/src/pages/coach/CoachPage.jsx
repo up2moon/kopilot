@@ -24,6 +24,8 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
     selectSuggestion,
     sendQuestion,
     handleMessageAction,
+    investmentContext,
+    isInvestmentMode,
   } = useCoachChat(auth?.accessToken, onNavigate);
 
   const hasSuggestions = suggestions.length > 0;
@@ -34,32 +36,49 @@ export default function CoachPage({ auth, onBack, onNavigate }) {
       <CoachHeader
         coaching={coaching}
         errorMessage={errorMessage}
-        isLoading={isLoading}
+        isLoading={isLoading || isSending}
         onBack={onBack}
+        title={isInvestmentMode ? "AI 종목 분석" : "AI 절약 챗봇"}
       />
 
-      <CoachingInsightCard
-        coaching={coaching}
-        isLoading={isLoading}
-        onRetry={() => loadCoaching()}
-      />
+      {isInvestmentMode ? (
+        <section className="coach-investment-context">
+          <span>선택 종목</span>
+          <strong>{investmentContext?.assetName}</strong>
+          <p>
+            월 절약액{" "}
+            {Number(investmentContext?.monthlyAmount || 0).toLocaleString(
+              "ko-KR",
+            )}
+            원을 기준으로 균형 있게 살펴봐요.
+          </p>
+        </section>
+      ) : (
+        <CoachingInsightCard
+          coaching={coaching}
+          isLoading={isLoading}
+          onRetry={() => loadCoaching()}
+        />
+      )}
 
       <CoachConversation
         expanded={!hasVisibleSuggestions}
-        isSending={isSending}
+        isSending={isSending && !isInvestmentMode}
         loadingMessage={loadingMessage}
         messageListRef={messageListRef}
         messages={messages}
         onMessageAction={handleMessageAction}
       />
 
-      <CoachSuggestions
-        isSending={isSending}
-        onSelect={selectSuggestion}
-        onToggle={toggleSuggestions}
-        open={hasVisibleSuggestions}
-        suggestions={suggestions}
-      />
+      {!isInvestmentMode ? (
+        <CoachSuggestions
+          isSending={isSending}
+          onSelect={selectSuggestion}
+          onToggle={toggleSuggestions}
+          open={hasVisibleSuggestions}
+          suggestions={suggestions}
+        />
+      ) : null}
 
       {errorMessage ? (
         <p className="coach-error" role="alert">

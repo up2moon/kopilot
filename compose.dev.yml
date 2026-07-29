@@ -17,12 +17,13 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: backend/Dockerfile.dev
     ports:
       - "3001:3000"
     volumes:
       - ./backend:/app
+      - ./news_agent:/news_agent:ro
       - /app/node_modules
       - ./backend/data/payment_transactions_dummy_30.json:/app/data/payment_transactions_dummy_30.json:ro
     environment:
@@ -39,6 +40,16 @@ services:
       JWT_SECRET: ${JWT_SECRET:-kopilot-local-compose-secret}
       OPEN_AI_KEY: ${OPEN_AI_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      OPENAI_INVESTMENT_AGENT_MODEL: ${OPENAI_INVESTMENT_AGENT_MODEL:-}
+      NAVER_API_CLIENT_ID: ${NAVER_API_CLIENT_ID:-}
+      NAVER_API_SECRET_KEY: ${NAVER_API_SECRET_KEY:-}
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+      FIRECRALW_API_KEY: ${FIRECRALW_API_KEY:-}
+      INVESTMENT_NEWS_LOOKBACK_DAYS: ${INVESTMENT_NEWS_LOOKBACK_DAYS:-90}
+      INVESTMENT_NEWS_MAX_RESULTS: ${INVESTMENT_NEWS_MAX_RESULTS:-24}
+      INVESTMENT_NEWS_NAVER_DISPLAY: ${INVESTMENT_NEWS_NAVER_DISPLAY:-30}
+      INVESTMENT_NEWS_FIRECRAWL_LIMIT: ${INVESTMENT_NEWS_FIRECRAWL_LIMIT:-15}
+      INVESTMENT_NEWS_ALLOWED_DOMAINS: ${INVESTMENT_NEWS_ALLOWED_DOMAINS:-}
       CHALLENGE_TEST_NOW: ${CHALLENGE_TEST_NOW:-}
       MYDATA_TRANSACTION_SOURCE: ${MYDATA_TRANSACTION_SOURCE:-openai}
       OPENAI_SAVING_VECTOR_STORE_ID: ${OPENAI_SAVING_VECTOR_STORE_ID:-}

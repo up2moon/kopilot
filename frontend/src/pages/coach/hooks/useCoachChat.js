@@ -3,11 +3,40 @@ import {
   getSavingBotChatHistory,
   getSavingBotCoaching,
   sendSavingBotMessage,
+  streamInvestmentAnalysis,
 } from "../../../services/savingBot";
 
 const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
 const CHALLENGE_PATH = "/challenge";
 const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
+
+function getInvestmentContext() {
+  const query = new URLSearchParams(window.location.search);
+
+  if (query.get("mode") !== "investment") {
+    return null;
+  }
+
+  const assetCode = query.get("assetCode")?.trim() || "";
+  const assetName = query.get("assetName")?.trim() || assetCode;
+  const month = query.get("month") || "";
+  const monthlyAmount = Math.round(Number(query.get("amount")));
+
+  if (
+    !assetCode ||
+    !Number.isFinite(monthlyAmount) ||
+    monthlyAmount <= 0
+  ) {
+    return null;
+  }
+
+  return {
+    assetCode,
+    assetName,
+    month: /^\d{4}-\d{2}$/.test(month) ? month : null,
+    monthlyAmount,
+  };
+}
 
 export default function useCoachChat(token, onNavigate) {
   const [coaching, setCoaching] = useState(null);
@@ -21,19 +50,35 @@ export default function useCoachChat(token, onNavigate) {
   const [errorMessage, setErrorMessage] = useState("");
   const messageListRef = useRef(null);
   const nextMessageIdRef = useRef(1);
+  const investmentContextRef = useRef(getInvestmentContext());
+  const autoAnalysisStartedRef = useRef(false);
+  const sendQuestionRef = useRef(null);
+  const investmentContext = investmentContextRef.current;
+  const isInvestmentMode = Boolean(investmentContext);
 
-  const createMessage = useCallback((role, text, action = null) => {
-    const message = {
-      id: nextMessageIdRef.current,
+  const createMessage = useCallback(
+    (
       role,
       text,
-      action,
-    };
+      action = null,
+      analysis = null,
+      analysisProgress = null,
+    ) => {
+      const message = {
+        id: nextMessageIdRef.current,
+        role,
+        text,
+        action,
+        analysis,
+        analysisProgress,
+      };
 
-    nextMessageIdRef.current += 1;
+      nextMessageIdRef.current += 1;
 
-    return message;
-  }, []);
+      return message;
+    },
+    [],
+  );
 
   const isSafeClientAction = useCallback(
     (action) =>
@@ -100,15 +145,19 @@ export default function useCoachChat(token, onNavigate) {
             return { messages: [] };
           }),
         ]);
-        const savedMessages = (historyResult.messages || []).map((message) =>
-          createMessage(message.role, message.content),
-        );
+        const savedMessages = isInvestmentMode
+          ? []
+          : (historyResult.messages || []).map((message) =>
+              createMessage(message.role, message.content),
+            );
 
         setCoaching(data);
         setSuggestions(data.suggestedQuestions || []);
         setMessages((current) =>
           current.length
             ? current
+            : isInvestmentMode
+              ? []
             : savedMessages.length
               ? savedMessages
               : data.greeting
@@ -125,7 +174,7 @@ export default function useCoachChat(token, onNavigate) {
         }
       }
     },
-    [createMessage, token],
+    [createMessage, isInvestmentMode, token],
   );
 
   useEffect(() => {
@@ -169,8 +218,114 @@ export default function useCoachChat(token, onNavigate) {
     setErrorMessage("");
     setIsSending(true);
     setRequestedAction(nextRequestedAction);
+    let investmentProgressMessageId = null;
 
     try {
+      if (isInvestmentMode) {
+        const progressMessage = createMessage(
+          "assistant",
+          "",
+          null,
+          null,
+          {
+            message: "분석 요청을 준비하고 있어요.",
+            stages: {
+              information: "running",
+              risk: "waiting",
+              opportunity: "waiting",
+              report: "waiting",
+            },
+            information: null,
+            perspectives: {
+              risk: null,
+              opportunity: null,
+            },
+            streamPreviews: {
+              risk: "",
+              opportunity: "",
+            },
+          },
+        );
+        investmentProgressMessageId = progressMessage.id;
+
+        setMessages((current) => [...current, progressMessage]);
+
+        await streamInvestmentAnalysis(
+          token,
+          {
+            ...investmentContext,
+            question: trimmedQuestion,
+          },
+          (event) => {
+            setMessages((current) =>
+              current.map((message) => {
+                if (message.id !== progressMessage.id) {
+                  return message;
+                }
+
+                if (event.type === "analysis.completed") {
+                  return {
+                    ...message,
+                    text: event.answer,
+                    analysis: event.analysis,
+                    analysisProgress: null,
+                  };
+                }
+
+                const progress = message.analysisProgress;
+
+                if (!progress) return message;
+
+                const nextProgress = {
+                  ...progress,
+                  message: event.message || progress.message,
+                  stages: {
+                    ...progress.stages,
+                  },
+                  perspectives: {
+                    ...progress.perspectives,
+                  },
+                  streamPreviews: {
+                    ...progress.streamPreviews,
+                  },
+                };
+
+                if (event.type === "information.completed") {
+                  nextProgress.stages.information = "completed";
+                  nextProgress.information = event.result;
+                } else if (event.type === "perspectives.started") {
+                  nextProgress.stages.risk = "running";
+                  nextProgress.stages.opportunity = "running";
+                } else if (event.type === "perspective.completed") {
+                  const key =
+                    event.agent === "risk_agent"
+                      ? "risk"
+                      : "opportunity";
+                  nextProgress.stages[key] = "completed";
+                  nextProgress.perspectives[key] = event.result;
+                  nextProgress.streamPreviews[key] = "";
+                } else if (event.type === "perspective.delta") {
+                  const key =
+                    event.agent === "risk_agent"
+                      ? "risk"
+                      : "opportunity";
+                  nextProgress.streamPreviews[key] = event.preview || "";
+                } else if (event.type === "report.started") {
+                  nextProgress.stages.report = "running";
+                }
+
+                return {
+                  ...message,
+                  analysisProgress: nextProgress,
+                };
+              }),
+            );
+          },
+        );
+
+        return;
+      }
+
       const payload = {
         message: trimmedQuestion,
         recentMessages,
@@ -190,7 +345,12 @@ export default function useCoachChat(token, onNavigate) {
 
       setMessages((current) => [
         ...current,
-        createMessage("assistant", data.answer, clientAction),
+        createMessage(
+          "assistant",
+          data.answer,
+          clientAction,
+          data.investmentAnalysis || null,
+        ),
       ]);
       setSuggestions(
         (data.suggestedQuestions || []).map((suggestion, index) =>
@@ -205,18 +365,51 @@ export default function useCoachChat(token, onNavigate) {
       setShowSuggestions(true);
     } catch (error) {
       setErrorMessage(error.message);
-      setMessages((current) => [
-        ...current,
-        createMessage(
-          "assistant",
-          "답변을 불러오지 못했어요. 잠시 후 다시 질문해주세요.",
-        ),
-      ]);
+      setMessages((current) => {
+        if (investmentProgressMessageId) {
+          return current.map((message) =>
+            message.id === investmentProgressMessageId
+              ? {
+                  ...message,
+                  text:
+                    error.message ||
+                    "종목 분석을 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+                  analysisProgress: null,
+                }
+              : message,
+          );
+        }
+
+        return [
+          ...current,
+          createMessage(
+            "assistant",
+            "답변을 불러오지 못했어요. 잠시 후 다시 질문해주세요.",
+          ),
+        ];
+      });
     } finally {
       setIsSending(false);
       setRequestedAction(null);
     }
   };
+  sendQuestionRef.current = sendQuestion;
+
+  useEffect(() => {
+    if (
+      !isInvestmentMode ||
+      isLoading ||
+      isSending ||
+      autoAnalysisStartedRef.current
+    ) {
+      return;
+    }
+
+    autoAnalysisStartedRef.current = true;
+    sendQuestionRef.current?.(
+      `${investmentContext.assetName} 종목을 분석해줘`,
+    );
+  }, [isInvestmentMode, isLoading, isSending, investmentContext]);
 
   const toggleSuggestions = () => {
     setShowSuggestions((current) => !current);
@@ -238,7 +431,9 @@ export default function useCoachChat(token, onNavigate) {
   };
 
   const loadingMessage =
-    requestedAction === CREATE_WEEKLY_CHALLENGE_ACTION
+    isInvestmentMode
+      ? "시세와 뉴스를 모으고 찬반 관점을 분석하고 있어요…"
+      : requestedAction === CREATE_WEEKLY_CHALLENGE_ACTION
       ? "이번 주 소비를 살펴보고 미션을 만들고 있어요…"
       : "답변을 생각하고 있어요…";
 
@@ -259,5 +454,7 @@ export default function useCoachChat(token, onNavigate) {
     selectSuggestion,
     sendQuestion,
     handleMessageAction,
+    investmentContext,
+    isInvestmentMode,
   };
 }

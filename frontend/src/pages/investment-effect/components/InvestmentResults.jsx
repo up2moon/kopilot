@@ -6,6 +6,7 @@ export default function InvestmentResults({
   children,
   data,
   isRefreshing,
+  onAnalyzeAsset,
   onOpenChallenges,
   selectedAssets,
   selectedResultRef,
@@ -70,6 +71,7 @@ export default function InvestmentResults({
 
       <SelectedAssetResults
         comparisons={comparisons}
+        onAnalyzeAsset={onAnalyzeAsset}
         selectedAssets={selectedAssets}
         resultRef={selectedResultRef}
       />

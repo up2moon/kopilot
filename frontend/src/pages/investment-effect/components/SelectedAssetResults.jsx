@@ -7,6 +7,7 @@ import {
 
 export default function SelectedAssetResults({
   comparisons,
+  onAnalyzeAsset,
   selectedAssets,
   resultRef,
 }) {
@@ -66,6 +67,13 @@ export default function SelectedAssetResults({
             </strong>
             <span>{formatRate(comparison.returnRate)}</span>
           </div>
+          <button
+            className="investment-analyze-button"
+            type="button"
+            onClick={() => onAnalyzeAsset(comparison)}
+          >
+            이 종목 분석하기
+          </button>
         </article>
       ))}
     </section>

@@ -16,9 +16,60 @@ import {
   CREATE_WEEKLY_CHALLENGE_ACTION,
   executeSavingBotTool,
 } from "../services/savingBotTools.js";
+import { runInvestmentAnalysis } from "../services/investmentAgents.js";
 
 const router = express.Router();
 const allowedRequestedActions = new Set([CREATE_WEEKLY_CHALLENGE_ACTION]);
+
+function parseInvestmentAnalysisRequest(body = {}) {
+  const assetCode =
+    typeof body.assetCode === "string" ? body.assetCode.trim() : "";
+  const assetName =
+    typeof body.assetName === "string"
+      ? body.assetName.trim().slice(0, 80)
+      : "";
+  const month =
+    typeof body.month === "string" && /^\d{4}-\d{2}$/.test(body.month)
+      ? body.month
+      : null;
+  const monthlyAmount = Math.round(Number(body.monthlyAmount));
+  const question =
+    typeof body.question === "string"
+      ? body.question.trim().slice(0, 1000)
+      : "";
+
+  if (!/^[A-Za-z0-9_-]{1,30}$/.test(assetCode)) {
+    const error = new Error("분석할 종목 코드를 확인해주세요.");
+    error.code = "INVALID_ASSET_CODE";
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (
+    !Number.isFinite(monthlyAmount) ||
+    monthlyAmount <= 0 ||
+    monthlyAmount > 1_000_000_000
+  ) {
+    const error = new Error("분석 기준 절약액을 확인해주세요.");
+    error.code = "INVALID_MONTHLY_AMOUNT";
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    assetCode,
+    assetName,
+    month,
+    monthlyAmount,
+    question:
+      question || `${assetName || assetCode} 종목을 장기 관점에서 분석해줘`,
+  };
+}
+
+function writeServerSentEvent(res, event) {
+  res.write(`event: ${event.type}\n`);
+  res.write(`data: ${JSON.stringify(event)}\n\n`);
+}
 
 function toSuggestedQuestion(label, index) {
   const isChallengeCreation = label === "이번 주 미션 만들기";
@@ -182,5 +233,102 @@ router.post("/me/saving-bot/chat", requireAuth, async (req, res) => {
     });
   }
 });
+
+router.post(
+  "/me/saving-bot/investment-analysis",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const input = parseInvestmentAnalysisRequest(req.body);
+      const investmentAnalysis = await runInvestmentAnalysis({
+        ...input,
+      });
+      const answer = investmentAnalysis.report.summary;
+
+      await saveChatExchange(req.user.id, input.question, answer);
+
+      return res.status(200).json({
+        answer,
+        inScope: true,
+        investmentAnalysis,
+        evidence: [
+          `코스콤 시세 기준: ${
+            investmentAnalysis.information.koscom.quote?.tradeDate ||
+            "시세 없음"
+          }`,
+          `검색 뉴스 ${
+            investmentAnalysis.information.news.results.length
+          }건`,
+        ],
+        suggestedQuestions: [],
+      });
+    } catch (error) {
+      console.error("Investment agent analysis failed:", error);
+
+      if (error.code === "OPENAI_NOT_CONFIGURED") {
+        return res.status(503).json({
+          code: error.code,
+          message: error.message,
+        });
+      }
+
+      return res.status(502).json({
+        code: error.code || "INVESTMENT_AGENT_FAILED",
+        message: "종목 분석 리포트를 생성하지 못했습니다.",
+      });
+    }
+  },
+);
+
+router.post(
+  "/me/saving-bot/investment-analysis/stream",
+  requireAuth,
+  async (req, res) => {
+    let input;
+
+    try {
+      input = parseInvestmentAnalysisRequest(req.body);
+    } catch (error) {
+      return res.status(error.statusCode || 400).json({
+        code: error.code,
+        message: error.message,
+      });
+    }
+
+    res.status(200);
+    res.set({
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    res.flushHeaders();
+
+    try {
+      const investmentAnalysis = await runInvestmentAnalysis({
+        ...input,
+        onEvent: (event) => writeServerSentEvent(res, event),
+      });
+
+      await saveChatExchange(
+        req.user.id,
+        input.question,
+        investmentAnalysis.report.summary,
+      );
+    } catch (error) {
+      console.error("Investment agent stream failed:", error);
+      writeServerSentEvent(res, {
+        type: "analysis.error",
+        code: error.code || "INVESTMENT_AGENT_FAILED",
+        message:
+          error.code === "OPENAI_NOT_CONFIGURED"
+            ? error.message
+            : "종목 분석 리포트를 생성하지 못했습니다.",
+      });
+    } finally {
+      res.end();
+    }
+  },
+);
 
 export default router;

@@ -27,6 +27,19 @@ export default function InvestmentEffectPage({ onNavigate, token }) {
     simulation.selectAsset(asset);
   };
 
+  const handleAnalyzeAsset = (asset) => {
+    const query = new URLSearchParams({
+      mode: "investment",
+      assetCode: asset.assetCode,
+      assetName: asset.label,
+      month: simulation.data?.month || simulation.selectedMonth,
+      amount: String(simulation.data?.investmentAmount || 0),
+      category: simulation.data?.category || simulation.selectedCategory,
+    });
+
+    onNavigate(`/coach?${query.toString()}`);
+  };
+
   useEffect(() => {
     const pendingAssetCode = pendingScrollAssetCodeRef.current;
     const resultIsReady = simulation.data?.comparisons?.some(
@@ -84,6 +97,7 @@ export default function InvestmentEffectPage({ onNavigate, token }) {
           <InvestmentResults
             data={simulation.data}
             isRefreshing={simulation.isRefreshing}
+            onAnalyzeAsset={handleAnalyzeAsset}
             onOpenChallenges={() => onNavigate("/challenge")}
             selectedAssets={simulation.selectedAssets}
             selectedResultRef={selectedResultRef}
