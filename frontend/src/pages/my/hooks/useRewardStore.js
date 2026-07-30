@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getRewardPoints } from '../../../services/rewards.js'
 import { mockRewardProducts } from '../data/mockRewards.js'
 
-const rewardStoragePrefix = 'kopilot.rewardStore.v2'
+const rewardStoragePrefix = 'kospay.rewardStore.v2'
 
 function getStorageKey(userKey) {
   return `${rewardStoragePrefix}.${userKey || 'demo'}`

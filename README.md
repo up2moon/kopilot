@@ -51,7 +51,7 @@ Kospay는 다음 흐름을 하나의 서비스로 연결합니다.
 | 프로젝트    | Kospay                                                              |
 | 구분        | 미니프로젝트 2조                                                    |
 | 형태        | 모바일 우선 반응형 웹 서비스                                        |
-| 저장소      | [github.com/up2moon/kopilot](https://github.com/up2moon/kopilot)    |
+| 저장소      | [github.com/up2moon/kospay](https://github.com/up2moon/kospay)    |
 | 핵심 키워드 | MyData, AI Coaching, Challenge, Gamification, Investment Simulation |
 
 > **MVP 범위:** 현재 마이데이터 연동은 실제 금융기관 전송요구 API 대신 OpenAI 합성 거래 또는 고정 Fixture로 결제내역을 생성합니다. 실제 서비스에서는 사용자 동의를 거친 금융 마이데이터 API로 대체하는 구조를 가정합니다.
@@ -206,7 +206,7 @@ Kospay는 React와 Nginx로 구성된 Web 계층, Node.js와 Express 기반의 W
 ## 프로젝트 구조
 
 ```text
-kopilot/
+kospay/
 ├── frontend/                         # React + Vite 클라이언트
 │   ├── public/                       # 정적 리소스
 │   └── src/
@@ -223,7 +223,7 @@ kopilot/
 │       ├── models/                   # Sequelize 모델
 │       ├── routes/                   # REST API 라우터
 │       └── services/                 # AI·랭킹·챌린지·투자 로직
-├── kopilot-design/                   # PRD, 디자인 및 기능 명세
+├── kospay-design/                   # PRD, 디자인 및 기능 명세
 ├── .github/workflows/deploy.yml      # 운영 롤링 배포
 ├── compose.yml                       # 운영 Web/WAS 프로필
 ├── compose.dev.yml                   # 로컬 통합 개발 환경
@@ -272,7 +272,7 @@ kopilot/
 
 1. GitHub Actions의 NCP 서버별 Self-hosted Runner에서 실행합니다.
 2. 배포 대상을 Load Balancer Target Group에서 먼저 제거합니다.
-3. `/opt/kopilot`의 소스를 배포 커밋으로 동기화합니다.
+3. `/opt/kospay`의 소스를 배포 커밋으로 동기화합니다.
 4. Docker Compose로 해당 Web 또는 WAS 컨테이너만 재빌드합니다.
 5. Web은 `/health`, WAS는 `/api/health`로 로컬 헬스체크를 수행합니다.
 6. 정상 응답을 확인한 서버만 Load Balancer에 다시 등록합니다.
@@ -301,8 +301,8 @@ kopilot/
 ### 1. 저장소 복제
 
 ```bash
-git clone https://github.com/up2moon/kopilot.git
-cd kopilot
+git clone https://github.com/up2moon/kospay.git
+cd kospay
 ```
 
 ### 2. 환경변수 설정
@@ -310,8 +310,8 @@ cd kopilot
 루트에 `.env` 파일을 생성합니다.
 
 ```dotenv
-DB_NAME=kopilot
-DB_USER=kopilot
+DB_NAME=kospay
+DB_USER=kospay
 DB_PASSWORD=change-me
 MYSQL_ROOT_PASSWORD=change-root-password
 
@@ -452,9 +452,9 @@ curl http://localhost:3001/api/hello
 | [`frontend/FRONT.md`](./frontend/FRONT.md)                         | 프론트엔드 화면·라우팅·구현 기준 |
 | [`backend/BACK.md`](./backend/BACK.md)                             | API·AI·데이터 구조               |
 | [`INFRA.md`](./INFRA.md)                                           | NCP 네트워크·서버·배포 상세      |
-| [`kopilot-design/PRD.md`](./kopilot-design/PRD.md)                 | 제품 요구사항                    |
-| [`kopilot-design/DESIGN.md`](./kopilot-design/DESIGN.md)           | 디자인 가이드와 Figma 링크       |
-| [`kopilot-design/docs/features/`](./kopilot-design/docs/features/) | 기능별 상세 명세                 |
+| [`kospay-design/PRD.md`](./kospay-design/PRD.md)                 | 제품 요구사항                    |
+| [`kospay-design/DESIGN.md`](./kospay-design/DESIGN.md)           | 디자인 가이드와 Figma 링크       |
+| [`kospay-design/docs/features/`](./kospay-design/docs/features/) | 기능별 상세 명세                 |
 
 ---
 

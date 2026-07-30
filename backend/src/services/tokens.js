@@ -16,7 +16,7 @@ function getJwtSecret() {
     throw new Error("JWT_SECRET is required in production");
   }
 
-  return "kopilot-local-development-secret";
+  return "kospay-local-development-secret";
 }
 
 function base64Url(input) {

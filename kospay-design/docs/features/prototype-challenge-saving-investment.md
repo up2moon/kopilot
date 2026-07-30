@@ -351,11 +351,11 @@ GET /api/users/me/investment-effect/simulation
 
 - `frontend/FRONT.md`
 - `backend/BACK.md`
-- `kopilot-design/DESIGN.md`
-- `kopilot-design/PRD.md`
-- `kopilot-design/docs/features/ai-challenge.md`
-- `kopilot-design/docs/features/ai-challenge-verification.md`
-- `kopilot-design/docs/features/investment-effect.md`
+- `kospay-design/DESIGN.md`
+- `kospay-design/PRD.md`
+- `kospay-design/docs/features/ai-challenge.md`
+- `kospay-design/docs/features/ai-challenge-verification.md`
+- `kospay-design/docs/features/investment-effect.md`
 
 ---
 

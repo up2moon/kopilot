@@ -1,33 +1,33 @@
-# Kopilot PRD
+# Kospay PRD
 
 ## 1. 제품 개요
 
-**Kopilot(코파일럿)**은 사용자의 절약과 자산 형성을 함께하는 AI 금융 코파일럿이다. 마이데이터 기반 소비 분석, 생성형 AI 절약 코칭, 절약 챌린지, 익명 랭킹, 미래 자산 가치 시뮬레이션을 통해 사용자가 소비 습관을 개선하고 절약을 실제 자산 형성 행동으로 연결하도록 돕는다.
+**Kospay(코파일럿)**은 사용자의 절약과 자산 형성을 함께하는 AI 금융 코파일럿이다. 마이데이터 기반 소비 분석, 생성형 AI 절약 코칭, 절약 챌린지, 익명 랭킹, 미래 자산 가치 시뮬레이션을 통해 사용자가 소비 습관을 개선하고 절약을 실제 자산 형성 행동으로 연결하도록 돕는다.
 
 MVP는 모바일 웹 화면을 우선한다. 현재 와이어프레임 기준 화면 크기는 기본 `390 x 844`이며, 스크롤이 필요한 화면은 너비 `390px`을 유지하고 콘텐츠 길이에 맞춰 높이를 확장한다.
 
 ## 2. 참고 와이어프레임
 
-Figma 파일: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot
+Figma 파일: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay
 
 | 화면 | Figma 링크 |
 | --- | --- |
-| 모바일 로그인 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=2-2&m=dev |
-| 모바일 회원가입 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=2-63&m=dev |
-| 모바일 첫 로그인 초기 설정 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=149-2&m=dev |
-| 모바일 대시보드 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=8-30&m=dev |
-| 모바일 내 소비 상세 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=66-6&m=dev |
-| 모바일 AI 절약 챗봇 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=74-6&m=dev |
-| 모바일 랭킹 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-2&m=dev |
-| 모바일 챌린지 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-3&m=dev |
-| 모바일 투자효과 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-4&m=dev |
-| 모바일 마이 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-5&m=dev |
+| 모바일 로그인 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=2-2&m=dev |
+| 모바일 회원가입 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=2-63&m=dev |
+| 모바일 첫 로그인 초기 설정 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=149-2&m=dev |
+| 모바일 대시보드 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=8-30&m=dev |
+| 모바일 내 소비 상세 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=66-6&m=dev |
+| 모바일 AI 절약 챗봇 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=74-6&m=dev |
+| 모바일 랭킹 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-2&m=dev |
+| 모바일 챌린지 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-3&m=dev |
+| 모바일 투자효과 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-4&m=dev |
+| 모바일 마이 | https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-5&m=dev |
 
 ## 3. 기획 배경과 문제 정의
 
 마이데이터 확산으로 개인 금융 데이터를 통합 활용할 수 있는 환경이 마련되었다. 동시에 20~30대 사회초년생을 중심으로 소비 관리와 자산 형성에 대한 관심이 증가하고 있다. 그러나 기존 금융 서비스는 소비 내역 기록과 분석에 머무르는 경우가 많아 사용자의 행동 변화를 지속적으로 이끌어내는 데 한계가 있다.
 
-Kopilot은 소비 기록을 분석, 코칭, 챌린지, 시뮬레이션으로 연결해 사용자가 실천 가능한 절약 행동을 반복하도록 만든다.
+Kospay은 소비 기록을 분석, 코칭, 챌린지, 시뮬레이션으로 연결해 사용자가 실천 가능한 절약 행동을 반복하도록 만든다.
 
 주요 문제는 다음과 같다.
 
@@ -109,7 +109,7 @@ Kopilot은 소비 기록을 분석, 코칭, 챌린지, 시뮬레이션으로 연
 
 ### 7.1 인증
 
-로그인 화면은 Kopilot의 핵심 가치와 로그인 폼을 함께 보여준다.
+로그인 화면은 Kospay의 핵심 가치와 로그인 폼을 함께 보여준다.
 
 - 브랜드 아이콘: 대시보드 헤더와 동일한 Kospay 로고
 - 히어로 문구: `소비는 가볍게, 내일은 더 든든하게`
@@ -151,7 +151,7 @@ Step 1. 환영
 
 Step 1 환영 화면 요구사항:
 
-- 문구: `절약과 자산 형성을 함께하는 AI 코파일럿, KoPilot`
+- 문구: `절약과 자산 형성을 함께하는 AI 코파일럿, Kospay`
 - 제공 가치: 소비 분석, AI 절약 코치, 절약 챌린지
 - 투자효과는 절약액의 참고용 시뮬레이션임을 하단에 고지
 - CTA: `시작하기`

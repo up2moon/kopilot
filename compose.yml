@@ -4,7 +4,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
 
-    container_name: kopilot-frontend
+    container_name: kospay-frontend
 
     ports:
       - "80:80"
@@ -29,7 +29,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
 
-    container_name: kopilot-backend
+    container_name: kospay-backend
 
     ports:
       - "3000:3000"

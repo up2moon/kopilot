@@ -126,7 +126,7 @@ const vectorStore = await openAIRequest("/vector_stores", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: `kopilot-saving-knowledge-${new Date().toISOString().slice(0, 10)}`,
+    name: `kospay-saving-knowledge-${new Date().toISOString().slice(0, 10)}`,
   }),
 });
 

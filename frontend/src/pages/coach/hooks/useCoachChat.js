@@ -8,7 +8,7 @@ import {
 
 const CREATE_WEEKLY_CHALLENGE_ACTION = "CREATE_WEEKLY_CHALLENGE";
 const CHALLENGE_PATH = "/challenge";
-const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kopilot:new-challenge-highlight";
+const CHALLENGE_HIGHLIGHT_STORAGE_KEY = "kospay:new-challenge-highlight";
 
 function getInvestmentContext() {
   const query = new URLSearchParams(window.location.search);

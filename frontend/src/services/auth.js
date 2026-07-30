@@ -1,4 +1,4 @@
-const authStorageKey = 'kopilot.auth'
+const authStorageKey = 'kospay.auth'
 
 export function getStoredAuth() {
   try {

@@ -1,18 +1,18 @@
-# Kopilot 디자인 가이드
+# Kospay 디자인 가이드
 
 ## 참고 화면
 
-- 모바일 로그인 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=2-2&m=dev
-- 모바일 회원가입 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=2-63&m=dev
-- 모바일 대시보드 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=8-30&m=dev
-- 모바일 랭킹 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-2&m=dev
-- 모바일 챌린지 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-3&m=dev
-- 모바일 투자효과 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-4&m=dev
-- 모바일 마이 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-5&m=dev
-- 모바일 내 소비 상세 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=66-6&m=dev
-- 모바일 AI 절약 챗봇: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=74-6&m=dev
-- 모바일 첫 로그인 초기 설정 와이어프레임: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=149-2&m=dev
-- 모바일 첫 로그인 마이데이터 연동 완료 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/KoPilot?node-id=268-36&m=dev
+- 모바일 로그인 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=2-2&m=dev
+- 모바일 회원가입 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=2-63&m=dev
+- 모바일 대시보드 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=8-30&m=dev
+- 모바일 랭킹 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-2&m=dev
+- 모바일 챌린지 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-3&m=dev
+- 모바일 투자효과 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-4&m=dev
+- 모바일 마이 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-5&m=dev
+- 모바일 내 소비 상세 페이지: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=66-6&m=dev
+- 모바일 AI 절약 챗봇: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=74-6&m=dev
+- 모바일 첫 로그인 초기 설정 와이어프레임: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=149-2&m=dev
+- 모바일 첫 로그인 마이데이터 연동 완료 화면: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=268-36&m=dev
 
 ## 디자인 톤
 
@@ -44,7 +44,7 @@
 ## 문구 규칙
 
 - 문구는 짧고 행동 중심으로 작성한다.
-- Kopilot의 핵심 가치인 소비 분석, AI 절약 코치, 절약 챌린지, 미래 자산 가치 시뮬레이션을 자연스럽게 드러낸다.
+- Kospay의 핵심 가치인 소비 분석, AI 절약 코치, 절약 챌린지, 미래 자산 가치 시뮬레이션을 자연스럽게 드러낸다.
 - 챌린지 문구는 최근 거래내역을 구체적으로 언급하되 사용자를 평가하거나 꾸짖지 않는 친근한 제안형 어조를 사용한다. 예: `저번 주에는 커피를 3잔 마셨어요. 이번 주에는 2잔으로 가볍게 줄여볼까요?`
 - 투자 관련 문구는 참고용 시뮬레이션임을 명확히 표현한다.
 

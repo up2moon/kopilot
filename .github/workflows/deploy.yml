@@ -38,7 +38,7 @@ env:
 
   DEPLOY_SCRIPT: |
     COMPOSE_FILE="compose.yml"
-    PROJECT_DIR="/opt/kopilot"
+    PROJECT_DIR="/opt/kospay"
 
     retry_lb_command() {
       local action="$1"

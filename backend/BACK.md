@@ -5,17 +5,17 @@
 
 1. 루트 `AGENTS.md`
 2. `backend/BACK.md`
-3. `kopilot-design/PRD.md`
-4. API가 특정 화면을 지원하면 관련 `kopilot-design/docs/features/*.md`
+3. `kospay-design/PRD.md`
+4. API가 특정 화면을 지원하면 관련 `kospay-design/docs/features/*.md`
 5. 인프라나 배포 변경이 포함되면 루트 `INFRA.md`
 
 ## 와이어프레임 연계 규칙
-백엔드 작업도 화면 요구사항과 연결되면 `kopilot-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. AI 챌린지와 절약액 투자효과 API는 `docs/features/prototype-challenge-saving-investment.md`의 즉시 랜덤 인증, DB 영속화, 예상 절약액 월 집계 규칙을 우선 적용합니다. 투자효과 시세와 종목 비교는 `docs/features/investment-effect.md`를 기준으로 합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
+백엔드 작업도 화면 요구사항과 연결되면 `kospay-design` 문서를 참고합니다. 예를 들어 첫 로그인 초기 설정 API는 `docs/features/first-login.md`의 온보딩 상태, 마이데이터 연동 여부, 카테고리 선택, 예산 설정 흐름을 기준으로 설계합니다. 대시보드 API는 `docs/features/dashboard.md`의 소비 요약, 카테고리별 소비, 최근 결제 내역에 필요한 필드를 기준으로 응답을 구성합니다. 소비 상세 API는 `docs/features/spending-detail.md`의 총소비·결제건수·평균결제액 요약, 카테고리별 비율, 주차/일자별 그래프 집계 및 무한 스크롤 결제 내역 페이징을 기준으로 응답을 구성합니다. AI 절약 챗봇 API는 `docs/features/ai-saving-chatbot.md`의 오늘의 코칭, 연관 인사말, 코칭 기반 추천 질문 3개, RAG+ChatGPT 기반 답변, 소비/절약 범위 외 질문 Guardrail 제어, 점진적·현실적 조언 방침을 기준으로 응답을 구성합니다. 익명 랭킹 API는 `docs/features/anonymous-ranking.md`의 익명 닉네임 조합 생성, 내 랭킹 및 상위 랭킹 리스트, 1시간/5분 주기 캐시 갱신, 절약액 및 퀘스트 포인트 합산 랭킹 구조를 기준으로 응답을 구성합니다. AI 챌린지와 절약액 투자효과 API는 `docs/features/prototype-challenge-saving-investment.md`의 즉시 랜덤 인증, DB 영속화, 예상 절약액 월 집계 규칙을 우선 적용합니다. 투자효과 시세와 종목 비교는 `docs/features/investment-effect.md`를 기준으로 합니다. 마이페이지 API는 `docs/features/mypage.md`의 마이데이터 재연동 및 해제, 알림 설정(UI), 로그아웃 및 Redis 토큰 폐기 처리를 기준으로 응답을 구성합니다. (※ 프론트엔드 프로필 내 절약 레벨/배지는 현재 표시에서 제외합니다.)
 
 프론트엔드가 와이어프레임에 맞춰 표시해야 하는 문구가 있다면 API 응답 필드 이름과 값이 그 요구사항을 명확히 지원해야 합니다. 실제 외부 API가 없는 범위는 mock 데이터와 명시적인 상태값으로 처리합니다.
 
 ## API 경로 관리
-새 API를 만들거나 기존 API 계약을 바꾸면 이 문서에 경로, 메서드, 목적, 주요 요청/응답 필드를 기록하고, 이후 API 작업 전 반드시 참고합니다. 특정 화면을 지원하는 API는 `frontend/FRONT.md`의 페이지 경로와 `kopilot-design`의 화면 요구사항이 서로 맞는지 함께 확인하세요.
+새 API를 만들거나 기존 API 계약을 바꾸면 이 문서에 경로, 메서드, 목적, 주요 요청/응답 필드를 기록하고, 이후 API 작업 전 반드시 참고합니다. 특정 화면을 지원하는 API는 `frontend/FRONT.md`의 페이지 경로와 `kospay-design`의 화면 요구사항이 서로 맞는지 함께 확인하세요.
 
 현재 API 경로:
 
@@ -57,7 +57,7 @@
 
 ## AI 절약 챗봇 연동 및 Guardrail/RAG 설계
 
-AI 절약 챗봇은 `kopilot-design/PRD.md`의 AI 절약 챗봇 요구사항에 따라 다음과 같이 백엔드 로직이 동작하도록 구성합니다.
+AI 절약 챗봇은 `kospay-design/PRD.md`의 AI 절약 챗봇 요구사항에 따라 다음과 같이 백엔드 로직이 동작하도록 구성합니다.
 
 1. **오늘의 코칭 & 인사말 & 추천 질문 3개 제공 (`GET /api/users/me/saving-bot/coaching`)**
    - 사용자의 마이데이터 지출 데이터(최근 2주~1개월 결제 패턴)를 기반으로 감축 가능한 지출 영역(예: 커피, 배달)과 아낄 수 있는 예상 금액을 계산하여 '오늘의 코칭' 메시지를 반환합니다.

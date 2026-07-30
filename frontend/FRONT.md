@@ -6,13 +6,13 @@
 
 1. 루트 `AGENTS.md`
 2. `frontend/FRONT.md`
-3. `kopilot-design/DESIGN.md`
-4. `kopilot-design/PRD.md`
-5. 작업 대상 화면과 관련된 `kopilot-design/docs/features/*.md`
+3. `kospay-design/DESIGN.md`
+4. `kospay-design/PRD.md`
+5. 작업 대상 화면과 관련된 `kospay-design/docs/features/*.md`
 
 ## 와이어프레임 활용 규칙
 
-`kopilot-design/DESIGN.md`와 `kopilot-design/PRD.md`에는 Figma 와이어프레임 링크와 화면별 요구사항이 정리되어 있습니다. 로그인, 회원가입, 첫 로그인 초기 설정, 대시보드, 소비 상세, AI 챗봇, 랭킹, 챌린지, 투자효과, 마이 화면을 구현하거나 수정할 때는 해당 Figma 링크와 기능 문서를 먼저 확인하세요.
+`kospay-design/DESIGN.md`와 `kospay-design/PRD.md`에는 Figma 와이어프레임 링크와 화면별 요구사항이 정리되어 있습니다. 로그인, 회원가입, 첫 로그인 초기 설정, 대시보드, 소비 상세, AI 챗봇, 랭킹, 챌린지, 투자효과, 마이 화면을 구현하거나 수정할 때는 해당 Figma 링크와 기능 문서를 먼저 확인하세요.
 
 화면 구조, 주요 문구, CTA, 하단 탭, 플로팅 챗봇 버튼, 모바일 기준 너비(`390px`)는 와이어프레임을 우선합니다. 구현 중 디자인 문서와 기존 코드가 충돌하면 사용자에게 확인하거나, 변경 이유를 작업 결과에 명시하세요.
 
@@ -48,7 +48,7 @@
 
 랭킹 화면은 소비 DNA 분석 없이 익명 프로필, 절약액과 랭킹 점수만 표시합니다.
 
-최초 마이데이터 연동과 마이페이지 재연동 중에는 카드·은행·간편결제 데이터가 KoPilot로 이동하는 공통 연결 애니메이션을 표시합니다. 마이페이지 재연동 중에는 중복 조작을 막는 모달형 진행 화면을 사용합니다.
+최초 마이데이터 연동과 마이페이지 재연동 중에는 카드·은행·간편결제 데이터가 Kospay로 이동하는 공통 연결 애니메이션을 표시합니다. 마이페이지 재연동 중에는 중복 조작을 막는 모달형 진행 화면을 사용합니다.
 
 투자효과 fallback이 실패하면 로컬 개발 모드에서 백엔드가 제공한 오류 코드, 메시지, 종목/거래일 메타를 접을 수 있는 `실패 상세` 영역에 표시합니다. 운영 빌드에서 이 영역이 필요하면 프론트엔드 빌드 시 `VITE_INVESTMENT_DEBUG_ERRORS=true`, 백엔드 런타임에 `INVESTMENT_DEBUG_ERRORS=true`를 함께 설정해야 합니다.
 로컬 Vite 개발 모드에서는 CHECK API나 투자효과 백엔드 API를 호출하지 않고 프론트엔드 더미 종목·시세·시뮬레이션을 표시합니다. 운영 빌드에서 동일한 데모 데이터를 사용하려면 `VITE_USE_MOCK_INVESTMENT=true`를 설정합니다.
@@ -60,7 +60,7 @@ AI 절약 챗봇의 추천 질문은 입력창 위에서 접고 펼칠 수 있�
 
 - 페이지 컴포넌트: `src/pages/ChallengePage.jsx`
 - API 클라이언트: `src/services/challenges.js`
-- 기능 명세: `kopilot-design/docs/features/ai-challenge.md`
+- 기능 명세: `kospay-design/docs/features/ai-challenge.md`
 - 화면은 로딩, API 오류 재시도, 온보딩 필요, 이번 주 챌린지 미생성, 주간 챌린지 목록과 인증 가능 상태를 구분해 표시한다.
 - 챌린지 생성은 백엔드에서만 수행한다. 프론트엔드는 임의로 챌린지를 만들거나 수정하지 않고 저장된 API 응답을 표시한다.
 - 프로토타입 주간 인증은 요일과 시각 제한 없이 실행한다. 서버가 미인증 챌린지의 결과를 한 번만 무작위 확정하며, 새로고침이나 재인증으로 결과를 다시 뽑지 않는다.

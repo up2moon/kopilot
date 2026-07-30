@@ -4,7 +4,7 @@ import {
   verifyWeeklyChallenges,
 } from '../../../services/challenges.js'
 
-const CHALLENGE_HIGHLIGHT_STORAGE_KEY = 'kopilot:new-challenge-highlight'
+const CHALLENGE_HIGHLIGHT_STORAGE_KEY = 'kospay:new-challenge-highlight'
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))

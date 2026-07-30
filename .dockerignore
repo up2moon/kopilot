@@ -6,6 +6,6 @@
 **/__pycache__
 **/*.pyc
 frontend
-kopilot-design
+kospay-design
 news_agent/*
 !news_agent/tools.mjs

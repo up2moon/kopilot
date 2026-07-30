@@ -47,7 +47,7 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/hello", (req, res) => {
   res.status(200).json({
-    message: "Hello from KoPilot backend",
+    message: "Hello from Kospay backend",
   });
 });
 
@@ -72,7 +72,7 @@ app.get("/api/test/mysql", async (req, res) => {
 
 app.get("/api/test/redis", async (req, res) => {
   try {
-    const key = "kopilot:connection-test";
+    const key = "kospay:connection-test";
     const value = new Date().toISOString();
 
     await redisClient.set(key, value, {

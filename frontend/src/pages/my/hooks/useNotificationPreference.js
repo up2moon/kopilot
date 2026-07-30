@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const notificationsStorageKey = 'kopilot.notificationsEnabled'
+const notificationsStorageKey = 'kospay.notificationsEnabled'
 
 function getStoredNotifications() {
   try {

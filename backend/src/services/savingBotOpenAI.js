@@ -120,7 +120,7 @@ function resolveKnowledgeCategories(message, coaching) {
 }
 
 function buildInput({ message, recentMessages, profile, coaching }) {
-  const system = `당신은 KoPilot의 개인 소비 절약 코치다.
+  const system = `당신은 Kospay의 개인 소비 절약 코치다.
 
 역할:
 - 제공된 사용자 소비 통계와 계산된 코칭 사실을 설명한다.

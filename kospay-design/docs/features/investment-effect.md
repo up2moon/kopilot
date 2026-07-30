@@ -8,7 +8,7 @@
 
 기본 화면은 특정 브랜드 주식을 전면에 내세우지 않고 `S&P500 ETF`, `KOSPI 200 ETF`, `정기예금/CMA`처럼 넓은 시장 지수 또는 안정형 비교군을 우선 보여준다. 개별 주식은 사용자가 검색해서 선택했을 때만 `그때 샀다면 지금 얼마나 달라졌을까`를 확인하는 보조 흐름으로 제공한다.
 
-- Figma 와이어프레임: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kopilot?node-id=81-4&m=dev
+- Figma 와이어프레임: https://www.figma.com/design/097N3w8EmKyENAmjkQO3q4/Kospay?node-id=81-4&m=dev
 - 라우트: `/investment-effect`
 - 하단 탭: `투자효과` 활성화
 - 고지 문구: `투자효과는 투자 권유가 아닌 참고용 시뮬레이션입니다.`
@@ -153,7 +153,7 @@
 
 ## 사용하는 API
 
-투자효과 페이지는 프론트엔드에서 코스콤 CHECK API를 직접 호출하지 않는다. `cust_id`와 `auth_key`가 외부에 노출되지 않도록 백엔드가 코스콤 CHECK API를 호출하고, 프론트엔드는 Kopilot 백엔드 API만 호출한다.
+투자효과 페이지는 프론트엔드에서 코스콤 CHECK API를 직접 호출하지 않는다. `cust_id`와 `auth_key`가 외부에 노출되지 않도록 백엔드가 코스콤 CHECK API를 호출하고, 프론트엔드는 Kospay 백엔드 API만 호출한다.
 
 ### 1. 프론트엔드 호출 API
 
@@ -606,7 +606,7 @@ KOSCOM_HISTORY_QUOTE_PATH=/stock/m001/hist_info
 다음 조건을 만족하면 투자효과 페이지 요구사항을 충족한 것으로 본다.
 
 - `/investment-effect` 화면이 Figma 와이어프레임의 정보 구조와 문구 방향을 따른다.
-- 프론트엔드는 Kopilot 백엔드 API만 호출하고 코스콤 인증값을 직접 다루지 않는다.
+- 프론트엔드는 Kospay 백엔드 API만 호출하고 코스콤 인증값을 직접 다루지 않는다.
 - 백엔드는 `CUST_ID`, `AUTH_KEY` 환경 변수를 사용해 코스콤 CHECK API를 호출한다.
 - 로컬 `.env`와 배포 환경 변수 설정 방식이 문서화되어 있다.
 - 기본 비교군이 S&P500/KOSPI 200 등 지수 ETF와 안정형 비교군 중심으로 구성된다.

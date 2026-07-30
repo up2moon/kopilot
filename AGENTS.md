@@ -4,7 +4,7 @@
 이 저장소는 두 개의 서비스로 구성됩니다. `frontend/`는 React 19 + Vite 앱이며, 소스는 `frontend/src/`, 정적 파일은 `frontend/public/`, 이미지는 `frontend/src/assets/`에 둡니다. `backend/`는 Express 5 API 서비스이며 진입점은 `backend/server.js`입니다. 루트의 `compose.yml`은 `web`, `was` 프로필을 사용하는 운영형 Docker 서비스를 정의하고, `compose.dev.yml`은 로컬 개발 환경에서 두 서비스를 함께 실행합니다. 배포 자동화는 `.github/workflows/deploy.yml`에 있습니다.
 
 ## 작업별 참고 문서
-프론트엔드 작업 전에는 `frontend/FRONT.md`를 먼저 읽고, 화면 구현이나 UI 변경이 포함되면 `kopilot-design/DESIGN.md`, `kopilot-design/PRD.md`, 관련 `kopilot-design/docs/features/*.md` 문서를 함께 확인하세요. Figma 와이어프레임 링크는 디자인 문서에 정리되어 있으므로, 화면 구조와 문구는 해당 와이어프레임을 기준으로 맞춥니다. 백엔드 작업 전에는 `backend/BACK.md`를 먼저 읽고, API 응답이나 데이터 모델이 화면 요구사항과 연결되면 동일한 기획/와이어프레임 문서를 참고하세요.
+프론트엔드 작업 전에는 `frontend/FRONT.md`를 먼저 읽고, 화면 구현이나 UI 변경이 포함되면 `kospay-design/DESIGN.md`, `kospay-design/PRD.md`, 관련 `kospay-design/docs/features/*.md` 문서를 함께 확인하세요. Figma 와이어프레임 링크는 디자인 문서에 정리되어 있으므로, 화면 구조와 문구는 해당 와이어프레임을 기준으로 맞춥니다. 백엔드 작업 전에는 `backend/BACK.md`를 먼저 읽고, API 응답이나 데이터 모델이 화면 요구사항과 연결되면 동일한 기획/와이어프레임 문서를 참고하세요.
 
 ## 빌드, 테스트, 개발 명령
 별도 안내가 없으면 각 서비스 디렉터리에서 명령을 실행합니다.

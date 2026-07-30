@@ -31,7 +31,7 @@ export default function Home({ auth, onNavigate }) {
     <div className="home-page">
       <section className="home-hero">
         <header className="home-header">
-          <a className="home-brand" href="/" aria-label="KoPilot 홈">
+          <a className="home-brand" href="/" aria-label="Kospay 홈">
             <span className="home-brand-mark" aria-hidden="true">
               K
             </span>
